@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="fr" xmlns="http://www.w3.org/1999/xhtml">
+<head>
+	<title>Predictor</title>
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/css/bootstrap.min.css" integrity="sha384-PsH8R72JQ3SOdhVi3uxftmaW6Vc51MKb0q5P2rRUpPvrszuE4W1povHYgTpBfshb" crossorigin="anonymous" />
+	<style type="text/css">
+		.pointer { cursor: pointer; }
+	</style>
+</head>
+<body>
+	<div class="container w-50 pt-5">
+		<nav class="nav nav-tabs" id="TCAP" role="tablist">
+			<a class="nav-item nav-link active" id="nav-allure-tab" data-toggle="tab" href="#nav-allure" role="tab" aria-controls="nav-allure" aria-selected="true">Calculateur d’allure</a>
+			<a class="nav-item nav-link" id="nav-passage-tab" data-toggle="tab" href="#nav-passage" role="tab" aria-controls="nav-passage" aria-selected="false">Temps de passage</a>
+		</nav>
+		<div class="tab-content" id="nav-tabContent">
+			<div class="tab-pane show active pt-4 border border-top-0" id="nav-allure" role="tabpanel" aria-labelledby="nav-allure-tab">
+				<form>
+					<div class="form-group row px-3">
+						<label for="km" class="col-sm-3 col-form-label h4 text-right">Distance&nbsp;:</label>
+						<div class="col-sm-4">
+							<div class="input-group input-group-lg">
+								<input type="number" id="km" name="km" min="0" step="1" class="form-control" aria-label="Nombre de kilomètres" aria-describedby="km-add">
+								<span class="input-group-addon" id="km-add">km</span>
+							</div>
+						</div>
+						<div class="col-sm-4">
+							<div class="input-group input-group-lg">
+								<input type="number" id="m" name="m" min="0" max="999" step="50" class="form-control" aria-label="Nombre de mètres" aria-describedby="m-add">
+								<span class="input-group-addon" id="m-add">m</span>
+							</div>
+						</div>
+					</div>
+					<div class="form-group row px-3">
+						<div class="col text-center">
+							<button type="button" class="btn btn-light pointer" id="10km">10 km</button>
+							<button type="button" class="btn btn-light pointer" id="20km">20 km</button>
+							<button type="button" class="btn btn-light pointer" id="semi">Semi-marathon</button>
+							<button type="button" class="btn btn-light pointer" id="marathon">Marathon</button>
+							<button type="button" class="btn btn-light pointer" id="50km">50 km</button>
+							<button type="button" class="btn btn-light pointer" id="100km">100 km</button>
+						</div>
+					</div>
+					<div class="form-group row px-3">
+						<label for="h" class="col-sm-3 col-form-label h4 text-right">Temps&nbsp;:</label>
+						<div class="col-sm-3">
+							<div class="input-group input-group-lg">
+								<input type="number" id="h" name="h" min="0" step="1" class="form-control" aria-label="Nombre d’heures" aria-describedby="h-add">
+								<span class="input-group-addon" id="h-add">h</span>
+							</div>
+						</div>
+						<div class="col-sm-3">
+							<div class="input-group input-group-lg">
+								<input type="number" id="mn" name="mn" min="0" max="59" step="5" class="form-control" aria-label="Nombre de minutes" aria-describedby="mn-add">
+								<span class="input-group-addon" id="mn-add">mn</span>
+							</div>
+						</div>
+						<div class="col-sm-3">
+							<div class="input-group input-group-lg">
+								<input type="number" id="s" name="s" min="0" max="59" step="5" class="form-control" aria-label="Nombre de secondes" aria-describedby="s-add">
+								<span class="input-group-addon" id="s-add">s</span>
+							</div>
+						</div>
+					</div>
+					<div class="form-group row px-3">
+						<label class="col-sm-3 col-form-label h4 text-right">Vitesse&nbsp;:</label>
+						<output id="vitesse" class="col-sm-9 h1 text-warning">0 km/h</output>
+					</div>
+					<div class="form-group row px-3">
+						<label class="col-sm-3 col-form-label h4 text-right align-middle">Allure&nbsp;:</label>
+						<output id="allure" class="col-sm-9 h1 text-warning">0'00" / km</output>
+					</div>
+				</form>
+			</div>
+			<div class="tab-pane pt-4" id="nav-passage" role="tabpanel" aria-labelledby="nav-passage-tab">
+				<output id="splits" class="row m-1"><p class="col mx-3">Informations insuffisantes</p></output>
+			</div>
+		</div>
+	</div>
+    <script src="https://code.jquery.com/jquery-3.2.1.slim.min.js" integrity="sha384-KJ3o2DKtIkvYIK3UENzmM7KCkRr/rE9/Qpg6aAZGJwFDMVNA/GpGFF93hXpG5KkN" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.3/umd/popper.min.js" integrity="sha384-vFJXuSJphROIrBnz7yo7oB41mKfc8JzQZiCq4NCceLEaO4IHwicKwpJf9c9IpFgh" crossorigin="anonymous"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0-beta.2/js/bootstrap.min.js" integrity="sha384-alpBpkh1PFOepccYVYDB4do5UnbKysX5WZXm3XxPqe5iKTfUKjNkCk9SaVuEZflJ" crossorigin="anonymous"></script>
+    <script src="predictor.js"></script>
+</body>
+</html>
