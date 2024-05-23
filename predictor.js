@@ -134,6 +134,21 @@ function pace() {
 *	Remplissage automatique de la distance
 *	et calcul de l'allure
 */
+$('#300m').click(function() {
+	$('#km').val(null);
+	$('#m').val(300);
+	pace();
+});
+$('#400m').click(function() {
+	$('#km').val(null);
+	$('#m').val(400);
+	pace();
+});
+$('#800m').click(function() {
+	$('#km').val(null);
+	$('#m').val(800);
+	pace();
+});
 $('#10km').click(function() {
 	$('#km').val(10);
 	$('#m').val(null);
