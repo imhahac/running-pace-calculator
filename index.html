@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配速計算機</title>
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="main.css">
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => console.log('SW register success', reg))
+                    .catch(err => console.log('SW register fail', err));
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div class="main-wrapper">
+        <header>
+            <div class="header-top">
+                <h1 class="box title">配速計算機</h1>
+                <div style="display: flex; gap: 10px;">
+                    <button id="lang-toggle" aria-label="Switch Language" style="font-size: 0.9rem; font-weight: bold;">
+                        中/EN
+                    </button>
+                    <button id="theme-toggle" aria-label="Switch Theme">
+                        <span id="theme-icon-text">🌙</span>
+                    </button>
+                </div>
+            </div>
+            <div class="footer subtitle">
+                <button id='slide-button2' aria-label="Info">
+                    <img id="info" src="information.png" alt="info">
+                </button>
+            </div>
+            <div class="helper-text" data-i18n="helper">任意輸入、即刻換算</div>
+            <hr>
+        </header>
+
+        <div id="container2" class="footer float-right animation container2 SlideDown">
+            <span class="highlight-text">時間格式: m:s 分:秒 ; h:m:s 時:分:秒</span><br>
+        </div>
+
+        <!-- Pace Section -->
+        <div class="box input-group">
+            <label>
+                <input class="hidden-radio" type="radio" id="c_pace" name="type" value="pace" checked>
+            </label>
+            <div class="row selected" id="pace_icon">
+                <img src="speedometer.png" alt="Option 1"><span data-i18n="mode_pace">配速</span>
+            </div>
+
+            <div class="column2 inputs-row">
+                <input class="pace_input" type="number" id="pace_input" placeholder="4" autofocus>
+                <span>:</span>
+                <input class="pace_input" type="number" id="pace_input2" placeholder="30">
+                <span id="unit" data-unit="km">/km</span>
+                <button id='mile-button'>
+                    <img src="switch.png" alt="switch"><span id="switch">/mile</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Track Section -->
+        <div class="box input-group">
+            <label>
+                <input class="hidden-radio" type="radio" id="c_track" name="type" value="track">
+            </label>
+            <div class="row" id="track_icon">
+                <img src="track.png" alt="Option 2"><span data-i18n="mode_track">田徑場</span>
+            </div>
+            <div class="column2 inputs-grid">
+                <div class="lane-selector">
+                    <select id="venue-select">
+                        <!-- Options populated by JS -->
+                    </select>
+                    <div class="lane-sub-row">
+                        <select id="laneNumber">
+                            <!-- Options populated by JS default -->
+                        </select>
+                        <span id="lane-length2">400m</span>
+                    </div>
+                </div>
+                <div class="track-input-container">
+                    <input type="number" id="track_input" placeholder="" size="4" maxlength="4">
+                    <span data-i18n="label_sec_lap">秒/圈</span>
+                    <button id='slide-button' aria-label="Expand Splits">+</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Splits Container -->
+        <div class='container animation SlideDown' id='container'>
+            <!-- Split Mode Toggle -->
+            <div class="split-toggle-container">
+                <button id="toggle-track" class="toggle-btn active" data-i18n="tab_track">🏟️ 田徑場</button>
+                <button id="toggle-road" class="toggle-btn" data-i18n="tab_road">🛣️ 路跑分段</button>
+            </div>
+
+            <!-- Track Splits (Default) -->
+            <div id="split-detail">
+                <div class="box indent-text splits-column">
+                    <div class="split-row">
+                        <div class="increment-label">100m</div><input class="increment input-right" type="text"
+                            id="m100_input" disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label">200m</div><input class="increment input-right" type="text"
+                            id="m200_input" disabled><input class="increment diff" type="text" id="m200_increment"
+                            disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label">300m</div><input class="increment input-right" type="text"
+                            id="m300_input" disabled><input class="increment diff" type="text" id="m300_increment"
+                            disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label">400m</div><input class="increment input-right" type="text"
+                            id="m400_input" disabled><input class="increment diff" type="text" id="m400_increment"
+                            disabled>
+                    </div>
+                </div>
+                <div id="laps-result2" class="indent-text splits-column">
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_2">2圈</span><span
+                                id="twolaps">&emsp;800</span></div><input class="increment input-right" type="text"
+                            id="m800_input" disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_3">3圈</span><span
+                                id="threelaps">&ensp;1200</span></div><input class="increment input-right" type="text"
+                            id="m1200_input" disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_4">4圈</span><span id="fourlaps">1600</span>
+                        </div><input class="increment input-right" type="text" id="m1600_input" disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_5">5圈</span><span id="fivelaps">2000</span>
+                        </div><input class="increment input-right" type="text" id="m2000_input" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Road Splits (Hidden by default) -->
+            <div id="road-detail" style="display: none;">
+                <!-- Content populated by JS -->
+            </div>
+
+            <div class="action-row" style="text-align: center; margin-top: 10px;">
+                <button id="copy-btn" class="action-btn">
+                    <span data-i18n="btn_copy">📋 複製結果</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Treadmill Section -->
+        <div class="box input-group">
+            <label>
+                <input class="hidden-radio" type="radio" id="c_treadmill" name="type" value="treadmill">
+            </label>
+            <div class="row" id="treadmill_icon">
+                <img src="treadmill.png" alt="Option 3"><span data-i18n="mode_treadmill">跑步機</span>
+            </div>
+            <div class="column2 inputs-row">
+                <input type="number" id="treadmill_input" placeholder="" step="0.1"><span id="unit2"
+                    data-unit="km">km/h</span>
+                <button id='perHour-button'>
+                    <img src="switch.png" alt="switch2"><span id="switch2">mile/h</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Finish Time Section -->
+        <div class="box input-group">
+            <label>
+                <input class="hidden-radio" type="radio" id="c_finish_time" name="type" value="finish_time">
+            </label>
+            <div class="row" id="finish_time_icon">
+                <img src="stopwatch.png" alt="Option 4"><span data-i18n="mode_finish">完成</span>
+            </div>
+
+            <div class="column2 inputs-row">
+                <input type="text" id="finish_time_input" placeholder="m:s / h:m:s">
+                <select id="dropdown">
+                    <option value="42195" data-i18n="dist_marathon">全馬 Marathon</option>
+                    <option value="21097.5" data-i18n="dist_half">半馬 Half-Marathon</option>
+                    <option value="10000">10K</option>
+                    <option value="5000">5K</option>
+                    <option value="3000">3K</option>
+                    <option value="1600">1 Mile</option>
+                    <option value="1500">1500m</option>
+                    <option value="800">800m</option>
+                    <option value="400">400m</option>
+                </select>
+            </div>
+        </div>
+
+        <!-- Advanced Tools Toggle -->
+        <div style="text-align: center; margin-top: 10px;">
+            <button id="toggle-tools" class="action-btn" style="font-size: 0.8rem; padding: 5px 10px;">
+                <span data-i18n="btn_advanced">🛠️ 進階工具 (區間/預測)</span>
+            </button>
+        </div>
+
+        <!-- Advanced Tools Container -->
+        <div id="advanced-tools" class="container SlideDown" style="margin-top: 10px;">
+            <!-- Training Zones -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;"><span data-i18n="title_zones">🏃 訓練配速區間
+                        (基於當前配速)</span></h3>
+                <div id="zones-table"
+                    style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.9rem;">
+                    <div>Easy (E)</div>
+                    <div id="zone-e" class="mono-text">--</div>
+                    <div>Marathon (M)</div>
+                    <div id="zone-m" class="mono-text">--</div>
+                    <div>Threshold (T)</div>
+                    <div id="zone-t" class="mono-text">--</div>
+                    <div>Interval (I)</div>
+                    <div id="zone-i" class="mono-text">--</div>
+                    <div>Repetition (R)</div>
+                    <div id="zone-r" class="mono-text">--</div>
+                </div>
+            </div>
+
+            <!-- Race Predictor -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;"><span data-i18n="title_predict">🔮 完賽成績預測 (Riegel's
+                        Formula)</span></h3>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
+                    <select id="pred-dist-select" style="flex: 1;">
+                        <option value="5000">5K</option>
+                        <option value="10000">10K</option>
+                        <option value="21097.5" data-i18n="half_marathon">半馬</option>
+                    </select>
+                    <input type="text" id="pred-time-input" placeholder="mm:ss"
+                        style="width: 8ch; text-align: center; border-bottom: 1px solid var(--text-muted);">
+                </div>
+                <div id="predictions-grid"
+                    style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.9rem;">
+                    <div>5K</div>
+                    <div id="pred-5k" class="mono-text">--</div>
+                    <div>10K</div>
+                    <div id="pred-10k" class="mono-text">--</div>
+                    <div>Half</div>
+                    <div id="pred-half" class="mono-text">--</div>
+                    <div>Full</div>
+                    <div id="pred-full" class="mono-text">--</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logic -->
+    <script src="script.js"></script>
+</body>
+
+</html>

@@ -1,0 +1,514 @@
+:root {
+    /* Dark Theme (Pure Black/High Contrast) */
+    --primary-bg: #000000;
+    --text-light: #ffffff;
+    --text-muted: #b0b0b0;
+    --input-placeholder: #555555;
+    --highlight: #fffa65;
+    /* Yellow for high contrast on black */
+    --option-bg: #1a1a1a;
+    --input-underline: #555555;
+    --box-bg: #121212;
+    --split-bg: #191919;
+
+    --font-main: 'Noto Sans TC', sans-serif;
+    --font-mono: 'Roboto Mono', monospace;
+}
+
+[data-theme="light"] {
+    /* Light Theme (Pure White) */
+    --primary-bg: #ffffff;
+    --text-light: #000000;
+    --text-muted: #666666;
+    --input-placeholder: #cccccc;
+    --highlight: #d32f2f;
+    /* Darker red for contrast on white */
+    --option-bg: #f5f5f5;
+    /* Light grey for options */
+    --input-underline: #dddddd;
+    --box-bg: #ffffff;
+    /* Card style with shadow later */
+    --split-bg: #f9f9f9;
+}
+
+html {
+    height: 100%;
+}
+
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100%;
+    /* Allow body to grow */
+    height: auto;
+    /* Remove fixed height */
+    width: 100%;
+    font-family: var(--font-main);
+    background-color: var(--primary-bg);
+    color: var(--text-light);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    /* Essential for scrolling long content */
+    padding-top: 20px;
+    box-sizing: border-box;
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.main-wrapper {
+    width: 100%;
+    max-width: 480px;
+    /* Mobile first constrained width on desktop */
+    padding: 10px 20px 40px 20px;
+    /* Added bottom padding */
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+/* Typography */
+.header-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+h1.title {
+    margin: 0;
+    font-size: 2rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+#theme-toggle {
+    margin: 0;
+    padding: 5px;
+    background: var(--box-bg);
+    border-radius: 50%;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#theme-icon-text {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.theme-icon {
+    display: none;
+    /* Hide image for now, use text/emoji */
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.helper-text {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    margin-bottom: 5px;
+}
+
+.highlight-text {
+    color: rgb(233, 233, 173);
+}
+
+a {
+    color: var(--text-muted);
+    text-decoration: none;
+    border-bottom: 1px dotted var(--text-muted);
+}
+
+hr {
+    border: 0;
+    border-top: 1px solid var(--text-muted);
+    width: 100%;
+    margin: 5px 0;
+    opacity: 0.5;
+}
+
+/* Layout Boxes */
+.box {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.input-group {
+    background: var(--box-bg);
+    padding: 10px;
+    border-radius: 12px;
+    gap: 10px;
+    transition: background-color 0.3s;
+    border: 1px solid #333;
+    /* Default dark border */
+}
+
+[data-theme="light"] .input-group {
+    border: 1px solid #eee;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+/* Split Details Table */
+#split-detail {
+    display: flex;
+    background: var(--split-bg);
+    padding: 10px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+    justify-content: center;
+    /* Center items */
+    gap: 20px;
+    /* Space between columns */
+    flex-wrap: wrap;
+    /* FAST FIX: Allow columns to stack */
+}
+
+/* Icons & Labels */
+.row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    cursor: pointer;
+    width: 60px;
+    flex-shrink: 0;
+    color: var(--text-muted);
+}
+
+.row img {
+    width: 32px;
+    height: 32px;
+    object-fit: contain;
+    transition: transform 0.2s;
+    filter: grayscale(100%) opacity(0.7);
+}
+
+[data-theme="light"] .row img {
+    filter: grayscale(100%);
+}
+
+.row span {
+    font-size: 0.8rem;
+    margin-top: 2px;
+}
+
+/* Selected State */
+.hidden-radio {
+    display: none;
+}
+
+.row.selected img {
+    /* filter: drop-shadow(0 0 5px rgba(255,255,255,0.5)); */
+    transform: scale(1.1);
+    filter: none;
+}
+
+.row.selected span {
+    color: var(--text-light);
+    font-weight: bold;
+}
+
+/* Inputs */
+.column2 {
+    flex-grow: 1;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-wrap: wrap;
+    /* Allow wrapping for small screens */
+}
+
+.inputs-row {
+    justify-content: flex-start;
+}
+
+input[type="number"],
+input[type="text"] {
+    background: transparent;
+    border: none;
+    border-bottom: 2px solid var(--input-underline);
+    color: var(--text-light);
+    font-family: var(--font-mono);
+    font-size: 1.3rem;
+    /* Reduced from 1.5rem to prevent overflowing */
+    width: 3ch;
+    max-width: 100%;
+    /* Prevent overflow */
+    text-align: right;
+    padding: 0 5px;
+    transition: all 0.3s;
+}
+
+input::placeholder {
+    color: var(--input-placeholder);
+    opacity: 0.5;
+}
+
+input:focus {
+    outline: none;
+    border-bottom-color: var(--text-light);
+}
+
+/* Specific Input Widths */
+#pace_input,
+#pace_input2 {
+    width: 4.5ch;
+}
+
+#track_input {
+    width: 6ch;
+}
+
+#treadmill_input {
+    width: 6ch;
+}
+
+#finish_time_input {
+    width: 12ch;
+    font-size: 1.2rem;
+}
+
+/* Selects */
+select {
+    background-color: var(--option-bg);
+    color: var(--text-light);
+    border: none;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 1rem;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    width: auto;
+    /* Changed from 100% to auto to fit content or flex logic */
+    flex-grow: 1;
+    /* Allow growing */
+    min-width: 120px;
+    /* Minimum width for usability */
+    max-width: 100%;
+}
+
+[data-theme="light"] select {
+    color: #2c3e50;
+    border: 1px solid #bdc3c7;
+}
+
+.lane-selector {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    width: 100%;
+    min-width: 140px;
+    /* Ensure usage width */
+    flex: 1;
+}
+
+.lane-sub-row {
+    display: flex;
+    gap: 5px;
+    align-items: center;
+}
+
+div.inputs-grid {
+    display: flex;
+    gap: 15px;
+    align-items: center;
+    flex-wrap: wrap;
+    /* responsive wrap */
+}
+
+.track-input-container {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    white-space: nowrap;
+    /* Prevent text wrapping inside */
+}
+
+/* Buttons */
+button {
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    color: var(--text-muted);
+    display: flex;
+    align-items: center;
+    padding: 5px;
+}
+
+button img {
+    width: 16px;
+    height: 16px;
+}
+
+/* Unit Labels */
+span[id^="unit"] {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+}
+
+/* Spilts Container (Animation) */
+.container {
+    overflow: hidden;
+    height: auto;
+    max-height: 2000px;
+    /* Increased from 500px to prevent clipping */
+    transition: max-height 0.5s ease-in-out;
+}
+
+.container.SlideDown {
+    max-height: 0;
+}
+
+.container2 {
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    text-align: right;
+    overflow: hidden;
+    max-height: 100px;
+    transition: max-height 0.3s;
+}
+
+.container2.SlideDown {
+    max-height: 0;
+}
+
+/* Copy Button & Action Buttons */
+.action-btn {
+    background: var(--option-bg);
+    color: var(--text-light);
+    border: 1px solid var(--text-muted);
+    padding: 8px 16px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 5px;
+}
+
+.action-btn:hover {
+    background: var(--text-muted);
+    color: var(--primary-bg);
+}
+
+.action-btn:active {
+    transform: scale(0.95);
+}
+
+.mono-text {
+    font-family: var(--font-mono);
+    color: var(--highlight);
+    text-align: right;
+}
+
+.splits-column {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.split-row {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.increment-label {
+    min-width: 50px;
+    color: var(--text-muted);
+}
+
+.increment-label span {
+    font-size: 0.7rem;
+    margin-left: 5px;
+}
+
+input.increment {
+    border: none;
+    font-size: 0.9rem;
+    width: 60px;
+    /* Increased from 50px */
+    color: var(--text-light) !important;
+    padding: 0 2px;
+    /* Force override disabled opacity */
+    opacity: 1;
+}
+
+input.diff {
+    font-size: 0.7rem;
+    width: 40px;
+    color: var(--text-muted) !important;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 480px) {
+
+    /* Stack Splits columns earlier if needed */
+    #split-detail {
+        gap: 10px;
+    }
+
+    /* Make Advanced Tools Single Column on mobile */
+    #zones-table,
+    #predictions-grid {
+        grid-template-columns: 1fr 1fr !important;
+        /* Keep 2 cols (Labels - Value), NOT 4 cols implied by layout? Wait. 
+        HTML was: <div>Label</div><div>Value</div>... so it is already 2 columns.
+        If user says "not fully visible", maybe 2 columns is too confined?
+        Maybe change to: Label takes full row, Value takes full row? No, that's ugly.
+        Maybe: 1fr auto? 
+        The issue might be fixed with the main-wrapper padding fix, but let's be safe.
+        */
+    }
+
+    /* If screen very narrow, reduce font */
+    input[type="number"],
+    .mono-text,
+    .split-row {
+        font-size: 0.9rem;
+        /* Slightly smaller to fit */
+    }
+
+    .increment-label {
+        width: 40px;
+        /* Reduce label width */
+    }
+
+    input.increment {
+        width: 40px;
+    }
+
+    input.diff {
+        width: 30px;
+    }
+}
+
+@media (max-width: 360px) {
+
+    /* Very small screens */
+}
+
+.water-icon {
+    font-size: 0.8rem;
+    margin-right: 5px;
+}
+
+/* Responsive */
+@media (min-width: 480px) {
+    #road-detail {
+        grid-template-columns: 1fr 1fr 1fr;
+        /* 3 Columns on desktop */
+    }
+}
