@@ -1,5 +1,5 @@
 /**
- * PacePonPon Logic
+ * RunningPaceNote Logic
  * Refactored to modern ES6+ standards.
  */
 
@@ -54,7 +54,7 @@ const TRANSLATIONS = {
         venue_300: "台北暖身場 (300m)",
         copy_success: "✅ 已複製",
         copy_fail: "複製失敗",
-        copy_header: "🏃 PacePonPon 計算結果:",
+        copy_header: "🏃 RunningPaceNote 計算結果:",
         copy_pace: "⏱️ 配速:",
         copy_track: "🔄 田徑場:",
         copy_finish: "🏁 完賽時間:",
@@ -85,7 +85,7 @@ const TRANSLATIONS = {
         venue_300: "Warmup Field (300m)",
         copy_success: "✅ Copied",
         copy_fail: "Copy Failed",
-        copy_header: "🏃 PacePonPon Result:",
+        copy_header: "🏃 RunningPaceNote Result:",
         copy_pace: "⏱️ Pace:",
         copy_track: "🔄 Track:",
         copy_finish: "🏁 Finish:",
@@ -575,7 +575,7 @@ function updateLanguage(lang) {
     if (langBtn) langBtn.textContent = lang === 'zh' ? '中/EN' : 'EN/中';
 
     // Update Document Title?
-    document.title = lang === 'zh' ? 'PacePonPon 配速朋朋' : 'PacePonPon Calculator';
+    document.title = lang === 'zh' ? 'RunningPaceNote 配速計算機' : 'RunningPaceNote Calculator';
 }
 
 function initLanguage() {
@@ -606,11 +606,11 @@ function saveState() {
             finishTime: Elements.inputs.finishTime.value,
         }
     };
-    localStorage.setItem('pacePonPonState', JSON.stringify(dataToSave));
+    localStorage.setItem('runningPaceNoteState', JSON.stringify(dataToSave));
 }
 
 function loadState() {
-    const saved = localStorage.getItem('pacePonPonState');
+    const saved = localStorage.getItem('runningPaceNoteState');
     if (!saved) return false;
 
     try {
@@ -651,7 +651,7 @@ ${t.copy_pace} ${paceText}
 ${t.copy_track} ${trackText}
 ${t.copy_finish} ${finishText}
 --------------------
-Powered by PacePonPon`;
+Powered by RunningPaceNote`;
 
     navigator.clipboard.writeText(textToCopy).then(() => {
         const btn = document.getElementById('copy-btn');

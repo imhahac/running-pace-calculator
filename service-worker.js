@@ -1,4 +1,4 @@
-const CACHE_NAME = 'paceponpon-v1';
+const CACHE_NAME = 'runningpacenote-v1';
 const ASSETS = [
     './',
     './index.html',
