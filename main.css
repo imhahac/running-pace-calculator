@@ -510,27 +510,24 @@ input.diff {
     /* Stack Splits columns earlier if needed */
     #split-detail {
         gap: 10px;
+        flex-direction: column;
+        /* Force vertical stack */
+        align-items: stretch;
+        /* Full width */
     }
 
     /* Make Advanced Tools Single Column on mobile */
     #zones-table,
     #predictions-grid {
         grid-template-columns: 1fr 1fr !important;
-        /* Keep 2 cols (Labels - Value), NOT 4 cols implied by layout? Wait. 
-        HTML was: <div>Label</div><div>Value</div>... so it is already 2 columns.
-        If user says "not fully visible", maybe 2 columns is too confined?
-        Maybe change to: Label takes full row, Value takes full row? No, that's ugly.
-        Maybe: 1fr auto? 
-        The issue might be fixed with the main-wrapper padding fix, but let's be safe.
-        */
     }
 
     /* If screen very narrow, reduce font */
     input[type="number"],
     .mono-text,
     .split-row {
-        font-size: 0.9rem;
-        /* Slightly smaller to fit */
+        font-size: 0.85rem;
+        /* Reduced further */
     }
 
     .increment-label {
@@ -539,7 +536,10 @@ input.diff {
     }
 
     input.increment {
-        width: 40px;
+        width: 100%;
+        /* Take available space */
+        min-width: 60px;
+        text-align: right;
     }
 
     input.diff {
