@@ -958,6 +958,10 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     } else {
         setMode('pace');
+        // Initialize with default 4:30 pace to avoid 0:00 issues
+        Elements.inputs.paceMin.value = '4';
+        Elements.inputs.paceSec.value = '30';
+        calculate('pace_input');
     }
 
     updateSplitUI(); // Ensure toggle state is correct

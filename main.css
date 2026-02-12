@@ -173,6 +173,39 @@ hr {
     /* FAST FIX: Allow columns to stack */
 }
 
+/* Road Splits Table */
+#road-detail {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 10px;
+    background: var(--split-bg);
+    padding: 10px;
+    border-radius: 10px;
+    font-family: var(--font-mono);
+}
+
+.road-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 10px;
+    background: var(--box-bg);
+    border-radius: 5px;
+    font-size: 1rem;
+    border-left: 3px solid transparent;
+    /* Placeholder for highlight border */
+}
+
+.road-dist {
+    font-weight: bold;
+    color: var(--text-muted);
+}
+
+.road-time {
+    color: var(--highlight);
+    font-weight: bold;
+}
+
 /* Icons & Labels */
 .row {
     display: flex;
@@ -438,7 +471,7 @@ span[id^="unit"] {
 input.increment {
     border: none;
     font-size: 0.9rem;
-    width: 60px;
+    width: 65px;
     /* Increased from 50px */
     color: var(--text-light) !important;
     padding: 0 2px;
@@ -450,6 +483,25 @@ input.diff {
     font-size: 0.7rem;
     width: 40px;
     color: var(--text-muted) !important;
+}
+
+/* Mobile Tweaks for Inputs */
+@media (max-width: 380px) {
+    .race-input-container {
+        gap: 2px;
+    }
+
+    #track_input {
+        width: 5ch;
+        /* Reduce width slightly */
+        font-size: 1.1rem;
+    }
+
+    input.pace_input {
+        font-size: 1.2rem;
+        width: 3ch !important;
+        /* Force smaller width */
+    }
 }
 
 /* Responsive Adjustments */
