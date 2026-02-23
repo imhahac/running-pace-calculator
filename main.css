@@ -1,34 +1,35 @@
 :root {
-    /* Dark Theme (Pure Black/High Contrast) */
-    --primary-bg: #000000;
+    /* Dark Theme - Modern Glass */
+    --primary-bg: linear-gradient(135deg, #0f2027, #203a43, #2ca18c);
     --text-light: #ffffff;
     --text-muted: #b0b0b0;
-    --input-placeholder: #555555;
+    --input-placeholder: #888888;
     --highlight: #fffa65;
-    /* Yellow for high contrast on black */
-    --option-bg: #1a1a1a;
-    --input-underline: #555555;
-    --box-bg: #121212;
-    --split-bg: #191919;
+    --option-bg: rgba(30, 30, 30, 0.4);
+    --input-underline: rgba(255, 255, 255, 0.3);
+    --box-bg: rgba(20, 20, 20, 0.5);
+    --split-bg: rgba(15, 15, 15, 0.4);
+    --blur: blur(12px);
+    --border-color: rgba(255, 255, 255, 0.1);
+    --shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.3);
 
     --font-main: 'Noto Sans TC', sans-serif;
     --font-mono: 'Roboto Mono', monospace;
 }
 
 [data-theme="light"] {
-    /* Light Theme (Pure White) */
-    --primary-bg: #ffffff;
-    --text-light: #000000;
-    --text-muted: #666666;
-    --input-placeholder: #cccccc;
+    /* Light Theme - Modern Glass */
+    --primary-bg: linear-gradient(135deg, #e0eafc, #cfdef3);
+    --text-light: #2c3e50;
+    --text-muted: #555555;
+    --input-placeholder: #aaaaaa;
     --highlight: #d32f2f;
-    /* Darker red for contrast on white */
-    --option-bg: #f5f5f5;
-    /* Light grey for options */
-    --input-underline: #dddddd;
-    --box-bg: #ffffff;
-    /* Card style with shadow later */
-    --split-bg: #f9f9f9;
+    --option-bg: rgba(255, 255, 255, 0.5);
+    --input-underline: rgba(0, 0, 0, 0.2);
+    --box-bg: rgba(255, 255, 255, 0.5);
+    --split-bg: rgba(255, 255, 255, 0.3);
+    --border-color: rgba(255, 255, 255, 0.6);
+    --shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.05);
 }
 
 html {
@@ -38,13 +39,14 @@ html {
 body {
     margin: 0;
     padding: 0;
-    min-height: 100%;
+    min-height: 100vh;
     /* Allow body to grow */
     height: auto;
     /* Remove fixed height */
     width: 100%;
     font-family: var(--font-main);
-    background-color: var(--primary-bg);
+    background: var(--primary-bg);
+    background-attachment: fixed;
     color: var(--text-light);
     display: flex;
     justify-content: center;
@@ -52,7 +54,7 @@ body {
     /* Essential for scrolling long content */
     padding-top: 20px;
     box-sizing: border-box;
-    transition: background-color 0.3s, color 0.3s;
+    transition: background 0.5s ease-in-out, color 0.3s;
 }
 
 .main-wrapper {
@@ -145,25 +147,31 @@ hr {
 
 .input-group {
     background: var(--box-bg);
-    padding: 10px;
-    border-radius: 12px;
-    gap: 10px;
-    transition: background-color 0.3s;
-    border: 1px solid #333;
-    /* Default dark border */
+    padding: 15px;
+    border-radius: 16px;
+    gap: 15px;
+    transition: transform 0.3s ease, background-color 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid var(--border-color);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    box-shadow: var(--shadow);
 }
 
-[data-theme="light"] .input-group {
-    border: 1px solid #eee;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+.input-group:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="light"] .input-group:hover {
+    box-shadow: 0 12px 40px 0 rgba(31, 38, 135, 0.15);
 }
 
 /* Split Details Table */
 #split-detail {
     display: flex;
     background: var(--split-bg);
-    padding: 10px;
-    border-radius: 10px;
+    padding: 15px;
+    border-radius: 16px;
     font-family: var(--font-mono);
     justify-content: center;
     /* Center items */
@@ -171,6 +179,10 @@ hr {
     /* Space between columns */
     flex-wrap: wrap;
     /* FAST FIX: Allow columns to stack */
+    border: 1px solid var(--border-color);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    box-shadow: var(--shadow);
 }
 
 /* Road Splits Table */
@@ -179,9 +191,13 @@ hr {
     grid-template-columns: 1fr;
     gap: 10px;
     background: var(--split-bg);
-    padding: 10px;
-    border-radius: 10px;
+    padding: 15px;
+    border-radius: 16px;
     font-family: var(--font-mono);
+    border: 1px solid var(--border-color);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    box-shadow: var(--shadow);
 }
 
 .road-row {
@@ -419,12 +435,15 @@ span[id^="unit"] {
 .action-btn {
     background: var(--option-bg);
     color: var(--text-light);
-    border: 1px solid var(--text-muted);
-    padding: 8px 16px;
-    border-radius: 20px;
+    border: 1px solid var(--border-color);
+    backdrop-filter: var(--blur);
+    -webkit-backdrop-filter: var(--blur);
+    box-shadow: var(--shadow);
+    padding: 10px 20px;
+    border-radius: 24px;
     font-size: 0.9rem;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
     display: inline-flex;
     align-items: center;
     justify-content: center;

@@ -2,7 +2,7 @@
 
 **配速計算機** 是一個專為跑者設計的配速換算工具，無論是田徑場訓練、跑步機換算，還是比賽成績預測，都能輕鬆搞定！
 
-🌐 **線上使用**: [配速計算機]
+🌐 **線上使用**: [https://imhahac.github.io/running-pace-calculator/](https://imhahac.github.io/running-pace-calculator/)
 
 ## ✨ 主要功能
 
