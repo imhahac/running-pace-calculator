@@ -4,10 +4,10 @@
  * Initializes all modules and starts the application
  */
 
-import StateManager from './modules/StateManager';
-import TranslationManager from './modules/TranslationManager';
-import UIController from './modules/UIController';
-import { initializeDOMElements } from './constants/domElements';
+import StateManager from './modules/StateManager.js';
+import TranslationManager from './modules/TranslationManager.js';
+import UIController from './modules/UIController.js';
+import { initializeDOMElements } from './constants/domElements.js';
 
 /**
  * Initialize and start the application

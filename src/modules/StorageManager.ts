@@ -3,7 +3,7 @@
  * Handles persisting and retrieving data from localStorage
  */
 
-import { STORAGE_KEY, THEME_STORAGE_KEY, LANG_STORAGE_KEY } from '../constants/index';
+import { STORAGE_KEY, THEME_STORAGE_KEY, LANG_STORAGE_KEY } from '../constants/index.js';
 import type { IPaceState } from '../types/index';
 
 export class StorageManager {

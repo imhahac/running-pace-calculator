@@ -3,9 +3,9 @@
  * Core calculation engine for running pace, splits, and predictions
  */
 
-import { RIEGEL_EXPONENT, TRAINING_ZONES, ROAD_SPLIT_DISTANCES } from '../constants/index';
-import TimeFormatter from './TimeFormatter';
-import Converter from './Converter';
+import { RIEGEL_EXPONENT, TRAINING_ZONES, ROAD_SPLIT_DISTANCES } from '../constants/index.js';
+import TimeFormatter from './TimeFormatter.js';
+import Converter from './Converter.js';
 import type { IPaceState } from '../types/index';
 
 export class Calculator {

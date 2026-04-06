@@ -3,8 +3,8 @@
  * Handles dynamic language switching and translation lookups
  */
 
-import { TRANSLATIONS } from '../constants/index';
-import StateManager from './StateManager';
+import { TRANSLATIONS } from '../constants/index.js';
+import StateManager from './StateManager.js';
 import type { TLanguage } from '../types/index';
 
 export class TranslationManager {

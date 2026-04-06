@@ -5,17 +5,17 @@
     "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "outDir": "./",
     "rootDir": "./src",
-    "declaration": true,
-    "declarationMap": false,
+    "declaration": false,
     "sourceMap": false,
     "strict": true,
     "esModuleInterop": true,
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "resolveJsonModule": true,
-    "moduleResolution": "node",
+    "moduleResolution": "bundler",
     "allowSyntheticDefaultImports": true,
-    "removeComments": true
+    "removeComments": true,
+    "inlineSourceMap": false
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules"]

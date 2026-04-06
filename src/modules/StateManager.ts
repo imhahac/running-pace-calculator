@@ -3,8 +3,8 @@
  * Manages global application state with centralized updates
  */
 
-import { DEFAULT_STATE } from '../constants/index';
-import StorageManager from './StorageManager';
+import { DEFAULT_STATE } from '../constants/index.js';
+import StorageManager from './StorageManager.js';
 import type { IPaceState, TMode, TUnit, TTheme, TLanguage, TSplitMode } from '../types/index';
 
 export class StateManager {

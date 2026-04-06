@@ -3,7 +3,7 @@
  * Handles unit conversions between metric and imperial systems
  */
 
-import { CONVERSION_FACTORS } from '../constants/index';
+import { CONVERSION_FACTORS } from '../constants/index.js';
 
 export class Converter {
   /**

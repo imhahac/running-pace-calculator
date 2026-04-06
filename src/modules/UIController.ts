@@ -3,13 +3,13 @@
  * Centralized DOM manipulation and event binding
  */
 
-import { getDOMCache, getInputElementByMode, getInputIdForMode } from '../constants/domElements';
-import { VENUES, MODE_PLACEHOLDERS, DEFAULT_STATE } from '../constants/index';
-import StateManager from './StateManager';
-import Calculator from './Calculator';
-import TimeFormatter from './TimeFormatter';
-import TranslationManager from './TranslationManager';
-import StorageManager from './StorageManager';
+import { getDOMCache, getInputElementByMode, getInputIdForMode } from '../constants/domElements.js';
+import { VENUES, MODE_PLACEHOLDERS, DEFAULT_STATE } from '../constants/index.js';
+import StateManager from './StateManager.js';
+import Calculator from './Calculator.js';
+import TimeFormatter from './TimeFormatter.js';
+import TranslationManager from './TranslationManager.js';
+import StorageManager from './StorageManager.js';
 import type { IPaceState } from '../types/index';
 
 export class UIController {
