@@ -1,0 +1,30 @@
+# Dependencies
+node_modules/
+package-lock.json
+
+# Build outputs
+*.js
+*.js.map
+*.d.ts
+
+# Keep important JS files
+!main.js
+!service-worker.js
+!strftime-min.js
+!js-big-decimal.min.js
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history

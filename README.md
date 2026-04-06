@@ -39,13 +39,87 @@
 2.  Android: 使用 Chrome 開啟網頁 -> 點擊選單 -> 選擇「安裝應用程式」。
 
 ## 🛠️ 技術細節
-*   **Frontend**: HTML5, CSS3 (Variables, Flexbox), Vanilla JavaScript (ES6+).
+*   **Frontend**: HTML5, CSS3 (Variables, Flexbox), **TypeScript** (v5.3+), Vanilla 無框架.
 *   **Storage**: LocalStorage (User Preferences).
+*   **Architecture**: Modular TypeScript with centralized state management.
 *   **Responsive**: Mobile-First Design.
+*   **PWA**: Service Worker 支援完全離線使用.
+
+## 📚 開發指南
+
+### 專案結構 (TypeScript 重構版本)
+```
+src/
+├── types/
+│   └── index.ts              # TypeScript 全域型別定義
+├── constants/
+│   ├── index.ts              # 常數、翻譯、配置
+│   └── domElements.ts        # DOM 元素快取
+├── modules/
+│   ├── TimeFormatter.ts      # 時間格式化與解析
+│   ├── Converter.ts          # 單位轉換 (km/mile)
+│   ├── Calculator.ts         # 核心計算引擎
+│   ├── StateManager.ts       # 全域狀態管理
+│   ├── StorageManager.ts     # LocalStorage 操作
+│   ├── TranslationManager.ts # 多語言管理
+│   └── UIController.ts       # DOM 操作與事件綁定
+└── main.ts                   # 應用進入點
+```
+
+### 構建與開發
+
+**安裝相依性：**
+```bash
+npm install
+```
+
+**編譯 TypeScript：**
+```bash
+npm run build        # 編譯一次
+npm run watch       # 監看模式（開發用）
+```
+
+編譯後產生 `main.js`，由 `index.html` 自動載入。
+
+### 模組說明
+
+- **TimeFormatter**: 時間格式化 (mm:ss ↔ 秒) + 驗證
+- **Converter**: 公里↔英哩轉換，配速↔時速轉換
+- **Calculator**: 統一計算介面，計算分段、訓練區間、Riegel 成績預測
+- **StateManager**: 中央狀態管理 (Singleton)，與 localStorage 同步
+- **TranslationManager**: 動態語言切換，支援 zh/en
+- **UIController**: 所有 DOM 操作與事件綁定的中樞
+- **StorageManager**: LocalStorage 包裝，錯誤處理
+
+### 核心特性
+
+✅ **完全類型安全** - 所有函式簽名explicit  
+✅ **零外部依賴** - 純 Vanilla TypeScript (編譯後 <100KB)  
+✅ **PWA 相容** - Service Worker 完全支援  
+✅ **模組清晰** - 職責分離，易於擴展  
+✅ **離線優先** - localStorage 持久化 + 狀態復原  
+
+### 新增功能方法
+
+1. **新增計算類型**：在 `Calculator.ts` 中添加方法
+2. **新增 UI 元素**：在 `UIController.ts` bindEvents() 中添加監聽
+3. **新增狀態字段**：在 `types/index.ts` 中擴展 `IPaceState`
+4. **新增翻譯**：在 `constants/index.ts` TRANSLATIONS 中添加
+
+### 調試
+
+全域調試物件 (瀏覽器 console)：
+```javascript
+window.__APP__.StateManager.getState()      // 查看狀態
+window.__APP__.TranslationManager.get('key') // 查看翻譯
+window.__APP__.UIController.bindEvents()     // 重新綁定事件
+```
 
 ## 📝 更新日誌
-- [x] **v2.1 (Latest)**: 新增中英多語言支援、純黑白高對比主題。
-- [x] **v2.0**: 全面重構 UI，新增 PWA、歷史紀錄、進階訓練工具。
+- [x] **v2.2 (Latest)**: 完全 TypeScript 重構，模組化架構，類型安全，零外部依賴.
+- [x] **v2.1**: 新增中英多語言支援、純黑白高對比主題.
+- [x] **v2.0**: 全面重構 UI，新增 PWA、歷史紀錄、進階訓練工具.
 
 ---
-Created with ❤️ for Runners.
+Created with ❤️ for Runners by @imhahac.
+
