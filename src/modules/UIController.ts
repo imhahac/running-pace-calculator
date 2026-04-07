@@ -769,8 +769,7 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
   private static toggleAdvancedTools(): void {
     const advancedTools = document.getElementById('advanced-tools');
     if (advancedTools) {
-      const isHidden = advancedTools.style.display === 'none';
-      advancedTools.style.display = isHidden ? 'block' : 'none';
+      advancedTools.classList.toggle('SlideDown');
     }
   }
 
