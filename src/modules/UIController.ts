@@ -85,22 +85,36 @@ export class UIController {
     }
 
     // Copy button
-    const copyBtn = document.getElementById('copy-button');
+    const copyBtn = document.getElementById('copy-btn');
     if (copyBtn) {
       copyBtn.addEventListener('click', () => this.copyResults());
     }
 
     // Tab switching (track vs road splits)
-    const tabButtons = document.querySelectorAll('.tab-button');
-    tabButtons.forEach((btn) => {
-      btn.addEventListener('click', (e: Event) => {
-        const target = e.target as HTMLElement;
-        const tabName = target.getAttribute('data-tab');
-        if (tabName) {
-          this.switchSplitMode(tabName as 'track' | 'road');
-        }
-      });
-    });
+    const toggleTrack = document.getElementById('toggle-track');
+    const toggleRoad = document.getElementById('toggle-road');
+    if (toggleTrack) {
+      toggleTrack.addEventListener('click', () => this.switchSplitMode('track'));
+    }
+    if (toggleRoad) {
+      toggleRoad.addEventListener('click', () => this.switchSplitMode('road'));
+    }
+
+    // Advanced tools toggle
+    const toggleTools = document.getElementById('toggle-tools');
+    if (toggleTools) {
+      toggleTools.addEventListener('click', () => this.toggleAdvancedTools());
+    }
+
+    // Prediction inputs
+    const predDistSelect = document.getElementById('pred-dist-select');
+    const predTimeInput = document.getElementById('pred-time-input');
+    if (predDistSelect) {
+      predDistSelect.addEventListener('change', () => this.calculatePrediction());
+    }
+    if (predTimeInput) {
+      predTimeInput.addEventListener('input', () => this.calculatePrediction());
+    }
 
     // Auto-save on before unload
     window.addEventListener('beforeunload', () => {
@@ -279,9 +293,42 @@ export class UIController {
    * @param paceSecondsPerKm - Pace in seconds per km
    */
   private static updateZones(paceSecondsPerKm: number): void {
+    if (!paceSecondsPerKm || paceSecondsPerKm <= 0) return;
+
     const zones = Calculator.calculateTrainingZones(paceSecondsPerKm);
-    // Implementation would update zone display elements
-    // This is a placeholder as zone display elements aren't fully defined in DOM
+    
+    // Reference pace is the input pace
+    const ref = paceSecondsPerKm;
+    
+    // E: +60s to +90s
+    const zoneE = document.getElementById('zone-e');
+    if (zoneE) {
+      zoneE.textContent = `${TimeFormatter.format(ref + 60)} - ${TimeFormatter.format(ref + 90)}`;
+    }
+    
+    // M: +25s to +45s
+    const zoneM = document.getElementById('zone-m');
+    if (zoneM) {
+      zoneM.textContent = `${TimeFormatter.format(ref + 25)} - ${TimeFormatter.format(ref + 45)}`;
+    }
+    
+    // T: +10s to +20s
+    const zoneT = document.getElementById('zone-t');
+    if (zoneT) {
+      zoneT.textContent = `${TimeFormatter.format(ref + 10)} - ${TimeFormatter.format(ref + 20)}`;
+    }
+    
+    // I: -10s to +0s
+    const zoneI = document.getElementById('zone-i');
+    if (zoneI) {
+      zoneI.textContent = `${TimeFormatter.format(ref - 10)} - ${TimeFormatter.format(ref)}`;
+    }
+    
+    // R: -20s to -10s
+    const zoneR = document.getElementById('zone-r');
+    if (zoneR) {
+      zoneR.textContent = `${TimeFormatter.format(ref - 20)} - ${TimeFormatter.format(ref - 10)}`;
+    }
   }
 
   /**
@@ -665,6 +712,51 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
     }
 
     this.saveInputValues();
+  }
+
+  /**
+   * Toggle advanced tools visibility
+   */
+  private static toggleAdvancedTools(): void {
+    const advancedTools = document.getElementById('advanced-tools');
+    if (advancedTools) {
+      const isHidden = advancedTools.style.display === 'none';
+      advancedTools.style.display = isHidden ? 'block' : 'none';
+    }
+  }
+
+  /**
+   * Calculate race prediction using Riegel's formula
+   */
+  private static calculatePrediction(): void {
+    const predDistSelect = document.getElementById('pred-dist-select') as HTMLSelectElement;
+    const predTimeInput = document.getElementById('pred-time-input') as HTMLInputElement;
+
+    if (!predDistSelect || !predTimeInput) return;
+
+    const dist = parseFloat(predDistSelect.value);
+    const timeStr = predTimeInput.value;
+    const timeSec = TimeFormatter.parse(timeStr);
+
+    if (!dist || !timeSec) {
+      // Clear predictions if inputs are invalid
+      document.getElementById('pred-5k')!.textContent = '--';
+      document.getElementById('pred-10k')!.textContent = '--';
+      document.getElementById('pred-half')!.textContent = '--';
+      document.getElementById('pred-full')!.textContent = '--';
+      return;
+    }
+
+    // T2 = T1 * (D2 / D1)^1.06 (Riegel's formula)
+    const predict = (d2: number): string => {
+      const t2 = timeSec * Math.pow(d2 / dist, 1.06);
+      return TimeFormatter.format(t2);
+    };
+
+    document.getElementById('pred-5k')!.textContent = predict(5000);
+    document.getElementById('pred-10k')!.textContent = predict(10000);
+    document.getElementById('pred-half')!.textContent = predict(21097.5);
+    document.getElementById('pred-full')!.textContent = predict(42195);
   }
 }
 

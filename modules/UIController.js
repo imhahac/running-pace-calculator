@@ -55,20 +55,30 @@ export class UIController {
         if (langToggle) {
             langToggle.addEventListener('click', () => this.toggleLanguage());
         }
-        const copyBtn = document.getElementById('copy-button');
+        const copyBtn = document.getElementById('copy-btn');
         if (copyBtn) {
             copyBtn.addEventListener('click', () => this.copyResults());
         }
-        const tabButtons = document.querySelectorAll('.tab-button');
-        tabButtons.forEach((btn) => {
-            btn.addEventListener('click', (e) => {
-                const target = e.target;
-                const tabName = target.getAttribute('data-tab');
-                if (tabName) {
-                    this.switchSplitMode(tabName);
-                }
-            });
-        });
+        const toggleTrack = document.getElementById('toggle-track');
+        const toggleRoad = document.getElementById('toggle-road');
+        if (toggleTrack) {
+            toggleTrack.addEventListener('click', () => this.switchSplitMode('track'));
+        }
+        if (toggleRoad) {
+            toggleRoad.addEventListener('click', () => this.switchSplitMode('road'));
+        }
+        const toggleTools = document.getElementById('toggle-tools');
+        if (toggleTools) {
+            toggleTools.addEventListener('click', () => this.toggleAdvancedTools());
+        }
+        const predDistSelect = document.getElementById('pred-dist-select');
+        const predTimeInput = document.getElementById('pred-time-input');
+        if (predDistSelect) {
+            predDistSelect.addEventListener('change', () => this.calculatePrediction());
+        }
+        if (predTimeInput) {
+            predTimeInput.addEventListener('input', () => this.calculatePrediction());
+        }
         window.addEventListener('beforeunload', () => {
             this.saveInputValues();
             StateManager.saveToStorage(this.inputValues);
@@ -190,7 +200,30 @@ export class UIController {
         }
     }
     static updateZones(paceSecondsPerKm) {
+        if (!paceSecondsPerKm || paceSecondsPerKm <= 0)
+            return;
         const zones = Calculator.calculateTrainingZones(paceSecondsPerKm);
+        const ref = paceSecondsPerKm;
+        const zoneE = document.getElementById('zone-e');
+        if (zoneE) {
+            zoneE.textContent = `${TimeFormatter.format(ref + 60)} - ${TimeFormatter.format(ref + 90)}`;
+        }
+        const zoneM = document.getElementById('zone-m');
+        if (zoneM) {
+            zoneM.textContent = `${TimeFormatter.format(ref + 25)} - ${TimeFormatter.format(ref + 45)}`;
+        }
+        const zoneT = document.getElementById('zone-t');
+        if (zoneT) {
+            zoneT.textContent = `${TimeFormatter.format(ref + 10)} - ${TimeFormatter.format(ref + 20)}`;
+        }
+        const zoneI = document.getElementById('zone-i');
+        if (zoneI) {
+            zoneI.textContent = `${TimeFormatter.format(ref - 10)} - ${TimeFormatter.format(ref)}`;
+        }
+        const zoneR = document.getElementById('zone-r');
+        if (zoneR) {
+            zoneR.textContent = `${TimeFormatter.format(ref - 20)} - ${TimeFormatter.format(ref - 10)}`;
+        }
     }
     static updateRoadSplits(secondsPerLap) {
         const state = StateManager.getState();
@@ -464,6 +497,37 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
             this.dom.inputs.finishTime.value = inputs['finish_time_input'];
         }
         this.saveInputValues();
+    }
+    static toggleAdvancedTools() {
+        const advancedTools = document.getElementById('advanced-tools');
+        if (advancedTools) {
+            const isHidden = advancedTools.style.display === 'none';
+            advancedTools.style.display = isHidden ? 'block' : 'none';
+        }
+    }
+    static calculatePrediction() {
+        const predDistSelect = document.getElementById('pred-dist-select');
+        const predTimeInput = document.getElementById('pred-time-input');
+        if (!predDistSelect || !predTimeInput)
+            return;
+        const dist = parseFloat(predDistSelect.value);
+        const timeStr = predTimeInput.value;
+        const timeSec = TimeFormatter.parse(timeStr);
+        if (!dist || !timeSec) {
+            document.getElementById('pred-5k').textContent = '--';
+            document.getElementById('pred-10k').textContent = '--';
+            document.getElementById('pred-half').textContent = '--';
+            document.getElementById('pred-full').textContent = '--';
+            return;
+        }
+        const predict = (d2) => {
+            const t2 = timeSec * Math.pow(d2 / dist, 1.06);
+            return TimeFormatter.format(t2);
+        };
+        document.getElementById('pred-5k').textContent = predict(5000);
+        document.getElementById('pred-10k').textContent = predict(10000);
+        document.getElementById('pred-half').textContent = predict(21097.5);
+        document.getElementById('pred-full').textContent = predict(42195);
     }
 }
 UIController.dom = getDOMCache();
