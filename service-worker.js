@@ -1,9 +1,9 @@
-const CACHE_NAME = 'runningpacenote-v1';
+const CACHE_NAME = 'runningpacenote-v3';
 const ASSETS = [
     './',
     './index.html',
     './main.css',
-    './script.js',
+    './main.js',
     './icons8-exercise-96.png',
     './speedometer.png',
     './track.png',
@@ -14,13 +14,61 @@ const ASSETS = [
 ];
 
 self.addEventListener('install', (e) => {
+    self.skipWaiting();
     e.waitUntil(
         caches.open(CACHE_NAME).then((cache) => cache.addAll(ASSETS))
     );
 });
 
+self.addEventListener('activate', (e) => {
+    e.waitUntil((async () => {
+        const keys = await caches.keys();
+        await Promise.all(
+            keys
+                .filter((key) => key !== CACHE_NAME)
+                .map((key) => caches.delete(key))
+        );
+        await self.clients.claim();
+    })());
+});
+
 self.addEventListener('fetch', (e) => {
-    e.respondWith(
-        caches.match(e.request).then((response) => response || fetch(e.request))
-    );
+    if (e.request.method !== 'GET') {
+        return;
+    }
+
+    const requestURL = new URL(e.request.url);
+    const isSameOrigin = requestURL.origin === self.location.origin;
+    const isNavigation = e.request.mode === 'navigate';
+
+    if (!isSameOrigin) {
+        return;
+    }
+
+    if (isNavigation) {
+        e.respondWith((async () => {
+            try {
+                const networkResponse = await fetch(e.request);
+                const cache = await caches.open(CACHE_NAME);
+                cache.put(e.request, networkResponse.clone());
+                return networkResponse;
+            } catch (error) {
+                const cachedResponse = await caches.match(e.request);
+                return cachedResponse || caches.match('./index.html');
+            }
+        })());
+        return;
+    }
+
+    e.respondWith((async () => {
+        try {
+            const networkResponse = await fetch(e.request);
+            const cache = await caches.open(CACHE_NAME);
+            cache.put(e.request, networkResponse.clone());
+            return networkResponse;
+        } catch (error) {
+            const cachedResponse = await caches.match(e.request);
+            return cachedResponse || Response.error();
+        }
+    })());
 });
