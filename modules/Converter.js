@@ -1,10 +1,10 @@
 import { CONVERSION_FACTORS } from '../constants/index.js';
 export class Converter {
     static paceKmToMile(paceSeconds) {
-        return paceSeconds * CONVERSION_FACTORS.km_to_mile;
+        return paceSeconds * CONVERSION_FACTORS.mile_to_km;
     }
     static paceMileToKm(paceSeconds) {
-        return paceSeconds * CONVERSION_FACTORS.mile_to_km;
+        return paceSeconds * CONVERSION_FACTORS.km_to_mile;
     }
     static kphToMph(kph) {
         return kph * CONVERSION_FACTORS.km_to_mile;

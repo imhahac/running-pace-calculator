@@ -12,7 +12,7 @@ export class Converter {
    * @returns Pace in seconds (e.g., seconds per mile)
    */
   static paceKmToMile(paceSeconds: number): number {
-    return paceSeconds * CONVERSION_FACTORS.km_to_mile;
+    return paceSeconds * CONVERSION_FACTORS.mile_to_km;
   }
 
   /**
@@ -21,7 +21,7 @@ export class Converter {
    * @returns Pace in seconds (e.g., seconds per km)
    */
   static paceMileToKm(paceSeconds: number): number {
-    return paceSeconds * CONVERSION_FACTORS.mile_to_km;
+    return paceSeconds * CONVERSION_FACTORS.km_to_mile;
   }
 
   /**

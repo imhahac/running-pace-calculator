@@ -10,6 +10,7 @@ import Calculator from './Calculator.js';
 import TimeFormatter from './TimeFormatter.js';
 import TranslationManager from './TranslationManager.js';
 import StorageManager from './StorageManager.js';
+import Converter from './Converter.js';
 import type { IPaceState } from '../types/index';
 
 export class UIController {
@@ -183,7 +184,7 @@ export class UIController {
       let finalPaceSeconds = paceSecondsPerKm;
 
       if (state.paceUnit === 'mile') {
-        finalPaceSeconds = paceSecondsPerKm * 0.621371192; // km to mile
+        finalPaceSeconds = Converter.paceKmToMile(paceSecondsPerKm);
       }
 
       const formatted = TimeFormatter.format(finalPaceSeconds);
