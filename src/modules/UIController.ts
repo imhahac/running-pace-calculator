@@ -58,6 +58,28 @@ export class UIController {
       this.dom.inputs.finishTime.addEventListener('input', () => this.onInput('finish_time_input'));
     }
 
+    // Switch mode when user focuses/clicks an input field
+    if (this.dom.inputs.paceMin) {
+      this.dom.inputs.paceMin.addEventListener('focus', () => this.setMode('pace'));
+      this.dom.inputs.paceMin.addEventListener('click', () => this.setMode('pace'));
+    }
+    if (this.dom.inputs.paceSec) {
+      this.dom.inputs.paceSec.addEventListener('focus', () => this.setMode('pace'));
+      this.dom.inputs.paceSec.addEventListener('click', () => this.setMode('pace'));
+    }
+    if (this.dom.inputs.track) {
+      this.dom.inputs.track.addEventListener('focus', () => this.setMode('track'));
+      this.dom.inputs.track.addEventListener('click', () => this.setMode('track'));
+    }
+    if (this.dom.inputs.treadmill) {
+      this.dom.inputs.treadmill.addEventListener('focus', () => this.setMode('treadmill'));
+      this.dom.inputs.treadmill.addEventListener('click', () => this.setMode('treadmill'));
+    }
+    if (this.dom.inputs.finishTime) {
+      this.dom.inputs.finishTime.addEventListener('focus', () => this.setMode('finish_time'));
+      this.dom.inputs.finishTime.addEventListener('click', () => this.setMode('finish_time'));
+    }
+
     // Unit toggles
     if (this.dom.buttons.mile) {
       this.dom.buttons.mile.addEventListener('click', () => this.togglePaceUnit());
@@ -129,8 +151,34 @@ export class UIController {
    * @param inputId - ID of the input that changed
    */
   private static onInput(inputId: string): void {
+    const inputMode = this.getModeByInputId(inputId);
+    if (inputMode && inputMode !== StateManager.getMode()) {
+      this.setMode(inputMode);
+    }
+
     this.inputValues[inputId] = this.getInputValue(inputId);
     this.calculate(inputId);
+  }
+
+  /**
+   * Get mode name by input element ID
+   * @param inputId - Input element ID
+   * @returns Mode string
+   */
+  private static getModeByInputId(inputId: string): string {
+    if (inputId === 'pace_input' || inputId === 'pace_input2') {
+      return 'pace';
+    }
+    if (inputId === 'track_input') {
+      return 'track';
+    }
+    if (inputId === 'treadmill_input') {
+      return 'treadmill';
+    }
+    if (inputId === 'finish_time_input') {
+      return 'finish_time';
+    }
+    return StateManager.getMode();
   }
 
   /**

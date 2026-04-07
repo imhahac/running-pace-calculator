@@ -37,6 +37,26 @@ export class UIController {
         if (this.dom.inputs.finishTime) {
             this.dom.inputs.finishTime.addEventListener('input', () => this.onInput('finish_time_input'));
         }
+        if (this.dom.inputs.paceMin) {
+            this.dom.inputs.paceMin.addEventListener('focus', () => this.setMode('pace'));
+            this.dom.inputs.paceMin.addEventListener('click', () => this.setMode('pace'));
+        }
+        if (this.dom.inputs.paceSec) {
+            this.dom.inputs.paceSec.addEventListener('focus', () => this.setMode('pace'));
+            this.dom.inputs.paceSec.addEventListener('click', () => this.setMode('pace'));
+        }
+        if (this.dom.inputs.track) {
+            this.dom.inputs.track.addEventListener('focus', () => this.setMode('track'));
+            this.dom.inputs.track.addEventListener('click', () => this.setMode('track'));
+        }
+        if (this.dom.inputs.treadmill) {
+            this.dom.inputs.treadmill.addEventListener('focus', () => this.setMode('treadmill'));
+            this.dom.inputs.treadmill.addEventListener('click', () => this.setMode('treadmill'));
+        }
+        if (this.dom.inputs.finishTime) {
+            this.dom.inputs.finishTime.addEventListener('focus', () => this.setMode('finish_time'));
+            this.dom.inputs.finishTime.addEventListener('click', () => this.setMode('finish_time'));
+        }
         if (this.dom.buttons.mile) {
             this.dom.buttons.mile.addEventListener('click', () => this.togglePaceUnit());
         }
@@ -86,8 +106,27 @@ export class UIController {
         });
     }
     static onInput(inputId) {
+        const inputMode = this.getModeByInputId(inputId);
+        if (inputMode && inputMode !== StateManager.getMode()) {
+            this.setMode(inputMode);
+        }
         this.inputValues[inputId] = this.getInputValue(inputId);
         this.calculate(inputId);
+    }
+    static getModeByInputId(inputId) {
+        if (inputId === 'pace_input' || inputId === 'pace_input2') {
+            return 'pace';
+        }
+        if (inputId === 'track_input') {
+            return 'track';
+        }
+        if (inputId === 'treadmill_input') {
+            return 'treadmill';
+        }
+        if (inputId === 'finish_time_input') {
+            return 'finish_time';
+        }
+        return StateManager.getMode();
     }
     static calculate(sourceId) {
         const state = StateManager.getState();
