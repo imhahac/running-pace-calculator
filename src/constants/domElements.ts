@@ -54,6 +54,19 @@ export function initializeDOMElements(): IDOMElements {
           five: document.getElementById('fivelaps') as HTMLElement | null,
         }
       },
+      zones: {
+        e: document.getElementById('zone-e') as HTMLElement | null,
+        m: document.getElementById('zone-m') as HTMLElement | null,
+        t: document.getElementById('zone-t') as HTMLElement | null,
+        i: document.getElementById('zone-i') as HTMLElement | null,
+        r: document.getElementById('zone-r') as HTMLElement | null,
+      },
+      prediction: {
+        k5: document.getElementById('pred-5k') as HTMLElement | null,
+        k10: document.getElementById('pred-10k') as HTMLElement | null,
+        half: document.getElementById('pred-half') as HTMLElement | null,
+        full: document.getElementById('pred-full') as HTMLElement | null,
+      },
       container: document.getElementById('container') as HTMLElement | null,
       infoContainer: document.getElementById('container2') as HTMLElement | null,
     }

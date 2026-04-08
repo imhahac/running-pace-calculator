@@ -1,4 +1,4 @@
-import { RIEGEL_EXPONENT, TRAINING_ZONES, ROAD_SPLIT_DISTANCES } from '../constants/index.js';
+import { RIEGEL_EXPONENT, TRAINING_ZONES, ROAD_SPLIT_DISTANCES, HALF_MARATHON_METERS, FULL_MARATHON_METERS } from '../constants/index.js';
 import TimeFormatter from './TimeFormatter.js';
 import Converter from './Converter.js';
 export class Calculator {
@@ -78,10 +78,10 @@ export class Calculator {
         ROAD_SPLIT_DISTANCES.forEach((distance) => {
             const time = distance * perMeter;
             let label = `${(distance / 1000).toFixed(1)}k`;
-            if (Math.abs(distance - 21097.5) < 1) {
+            if (Math.abs(distance - HALF_MARATHON_METERS) < 1) {
                 label = 'Half';
             }
-            else if (Math.abs(distance - 42195) < 1) {
+            else if (Math.abs(distance - FULL_MARATHON_METERS) < 1) {
                 label = 'Full';
             }
             splits.push({

@@ -7,13 +7,11 @@ export class StateManager {
             this.state = { ...this.state, ...saved.state };
         }
         const savedTheme = StorageManager.loadTheme();
-        if (savedTheme) {
+        if (savedTheme)
             this.state.theme = savedTheme;
-        }
         const savedLang = StorageManager.loadLanguage();
-        if (savedLang) {
+        if (savedLang)
             this.state.lang = savedLang;
-        }
     }
     static getState() {
         return { ...this.state };
@@ -27,57 +25,21 @@ export class StateManager {
     static set(key, value) {
         this.state[key] = value;
     }
-    static getMode() {
-        return this.state.mode;
-    }
-    static setMode(mode) {
-        this.setState({ mode });
-    }
-    static getPaceUnit() {
-        return this.state.paceUnit;
-    }
-    static setPaceUnit(unit) {
-        this.setState({ paceUnit: unit });
-    }
-    static getTreadmillUnit() {
-        return this.state.treadmillUnit;
-    }
-    static setTreadmillUnit(unit) {
-        this.setState({ treadmillUnit: unit });
-    }
-    static getVenue() {
-        return this.state.venue;
-    }
-    static setVenue(venue) {
-        this.setState({ venue });
-    }
-    static getLane() {
-        return this.state.lane;
-    }
-    static setLane(lane) {
-        this.setState({ lane });
-    }
-    static getDistance() {
-        return this.state.distance;
-    }
-    static setDistance(distance) {
-        this.setState({ distance });
-    }
-    static getTheme() {
-        return this.state.theme;
-    }
-    static setTheme(theme) {
-        this.setState({ theme });
-        StorageManager.saveTheme(theme);
-    }
-    static toggleTheme() {
-        const newTheme = this.state.theme === 'dark' ? 'light' : 'dark';
-        this.setTheme(newTheme);
-        return newTheme;
-    }
-    static getLanguage() {
-        return this.state.lang;
-    }
+    static getMode() { return this.state.mode; }
+    static setMode(mode) { this.setState({ mode }); }
+    static getPaceUnit() { return this.state.paceUnit; }
+    static setPaceUnit(unit) { this.setState({ paceUnit: unit }); }
+    static getTreadmillUnit() { return this.state.treadmillUnit; }
+    static setTreadmillUnit(unit) { this.setState({ treadmillUnit: unit }); }
+    static getVenue() { return this.state.venue; }
+    static setVenue(venue) { this.setState({ venue }); }
+    static getLane() { return this.state.lane; }
+    static setLane(lane) { this.setState({ lane }); }
+    static getDistance() { return this.state.distance; }
+    static setDistance(distance) { this.setState({ distance }); }
+    static getSplitMode() { return this.state.splitMode; }
+    static setSplitMode(mode) { this.setState({ splitMode: mode }); }
+    static getLanguage() { return this.state.lang; }
     static setLanguage(lang) {
         this.setState({ lang });
         StorageManager.saveLanguage(lang);
@@ -87,11 +49,15 @@ export class StateManager {
         this.setLanguage(newLang);
         return newLang;
     }
-    static getSplitMode() {
-        return this.state.splitMode;
+    static getTheme() { return this.state.theme; }
+    static setTheme(theme) {
+        this.setState({ theme });
+        StorageManager.saveTheme(theme);
     }
-    static setSplitMode(mode) {
-        this.setState({ splitMode: mode });
+    static toggleTheme() {
+        const newTheme = this.state.theme === 'dark' ? 'light' : 'dark';
+        this.setTheme(newTheme);
+        return newTheme;
     }
     static saveToStorage(inputs = {}) {
         StorageManager.saveState(this.state, inputs);

@@ -7,7 +7,6 @@
 import StateManager from './modules/StateManager.js';
 import TranslationManager from './modules/TranslationManager.js';
 import UIController from './modules/UIController.js';
-import { initializeDOMElements } from './constants/domElements.js';
 
 /**
  * Initialize and start the application
@@ -20,10 +19,7 @@ function initializeApp(): void {
     // Initialize translation system
     TranslationManager.initialize();
 
-    // Initialize DOM elements
-    initializeDOMElements();
-
-    // Initialize UI controller
+    // Initialize UI controller (internally initializes & caches DOM elements)
     UIController.initialize();
 
     // Bind all event listeners

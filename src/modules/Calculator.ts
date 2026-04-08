@@ -3,7 +3,7 @@
  * Core calculation engine for running pace, splits, and predictions
  */
 
-import { RIEGEL_EXPONENT, TRAINING_ZONES, ROAD_SPLIT_DISTANCES } from '../constants/index.js';
+import { RIEGEL_EXPONENT, TRAINING_ZONES, ROAD_SPLIT_DISTANCES, HALF_MARATHON_METERS, FULL_MARATHON_METERS } from '../constants/index.js';
 import TimeFormatter from './TimeFormatter.js';
 import Converter from './Converter.js';
 import type { IPaceState } from '../types/index';
@@ -159,9 +159,9 @@ export class Calculator {
       let label = `${(distance / 1000).toFixed(1)}k`;
 
       // Custom labels
-      if (Math.abs(distance - 21097.5) < 1) {
+      if (Math.abs(distance - HALF_MARATHON_METERS) < 1) {
         label = 'Half';
-      } else if (Math.abs(distance - 42195) < 1) {
+      } else if (Math.abs(distance - FULL_MARATHON_METERS) < 1) {
         label = 'Full';
       }
 

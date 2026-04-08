@@ -141,6 +141,19 @@ export interface IDOMElements {
         five: HTMLElement | null;
       };
     };
+    zones: {
+      e: HTMLElement | null;
+      m: HTMLElement | null;
+      t: HTMLElement | null;
+      i: HTMLElement | null;
+      r: HTMLElement | null;
+    };
+    prediction: {
+      k5: HTMLElement | null;
+      k10: HTMLElement | null;
+      half: HTMLElement | null;
+      full: HTMLElement | null;
+    };
     container: HTMLElement | null;
     infoContainer: HTMLElement | null;
   };

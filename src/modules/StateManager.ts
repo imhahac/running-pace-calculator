@@ -14,27 +14,20 @@ export class StateManager {
    * Initialize state from defaults and localStorage
    */
   static initialize(): void {
-    // Load from localStorage if available
     const saved = StorageManager.loadState();
     if (saved && saved.state) {
       this.state = { ...this.state, ...saved.state };
     }
 
-    // Load theme and language separately
     const savedTheme = StorageManager.loadTheme();
-    if (savedTheme) {
-      this.state.theme = savedTheme;
-    }
+    if (savedTheme) this.state.theme = savedTheme;
 
     const savedLang = StorageManager.loadLanguage();
-    if (savedLang) {
-      this.state.lang = savedLang;
-    }
+    if (savedLang) this.state.lang = savedLang;
   }
 
   /**
-   * Get current state
-   * @returns Current application state (shallow copy)
+   * Get current state (shallow copy)
    */
   static getState(): IPaceState {
     return { ...this.state };
@@ -42,8 +35,6 @@ export class StateManager {
 
   /**
    * Get specific state property
-   * @param key - State property key
-   * @returns Property value or undefined
    */
   static get<K extends keyof IPaceState>(key: K): IPaceState[K] {
     return this.state[key];
@@ -51,7 +42,6 @@ export class StateManager {
 
   /**
    * Update state with partial updates
-   * @param updates - Partial state updates
    */
   static setState(updates: Partial<IPaceState>): void {
     this.state = { ...this.state, ...updates };
@@ -59,108 +49,57 @@ export class StateManager {
 
   /**
    * Update single state property
-   * @param key - Property key
-   * @param value - New value
    */
   static set<K extends keyof IPaceState>(key: K, value: IPaceState[K]): void {
     this.state[key] = value;
   }
 
-  // Convenience methods for common state updates
+  // ── Methods retained because they carry logic or trigger side effects ──
+
+  static getMode(): TMode { return this.state.mode; }
+  static setMode(mode: TMode): void { this.setState({ mode }); }
+
+  static getPaceUnit(): TUnit { return this.state.paceUnit; }
+  static setPaceUnit(unit: TUnit): void { this.setState({ paceUnit: unit }); }
+
+  static getTreadmillUnit(): TUnit { return this.state.treadmillUnit; }
+  static setTreadmillUnit(unit: TUnit): void { this.setState({ treadmillUnit: unit }); }
+
+  static getVenue(): string { return this.state.venue; }
+  static setVenue(venue: string): void { this.setState({ venue }); }
+
+  static getLane(): number { return this.state.lane; }
+  static setLane(lane: number): void { this.setState({ lane }); }
+
+  static getDistance(): number { return this.state.distance; }
+  static setDistance(distance: number): void { this.setState({ distance }); }
+
+  static getSplitMode(): TSplitMode { return this.state.splitMode; }
+  static setSplitMode(mode: TSplitMode): void { this.setState({ splitMode: mode }); }
+
+  static getLanguage(): TLanguage { return this.state.lang; }
 
   /**
-   * Get current mode
+   * Set language and persist to storage
    */
-  static getMode(): TMode {
-    return this.state.mode;
+  static setLanguage(lang: TLanguage): void {
+    this.setState({ lang });
+    StorageManager.saveLanguage(lang);
   }
 
   /**
-   * Set mode
+   * Toggle language and persist
    */
-  static setMode(mode: TMode): void {
-    this.setState({ mode });
+  static toggleLanguage(): TLanguage {
+    const newLang = this.state.lang === 'zh' ? 'en' : 'zh';
+    this.setLanguage(newLang);
+    return newLang;
   }
 
-  /**
-   * Get pace unit
-   */
-  static getPaceUnit(): TUnit {
-    return this.state.paceUnit;
-  }
+  static getTheme(): TTheme { return this.state.theme; }
 
   /**
-   * Set pace unit
-   */
-  static setPaceUnit(unit: TUnit): void {
-    this.setState({ paceUnit: unit });
-  }
-
-  /**
-   * Get treadmill unit
-   */
-  static getTreadmillUnit(): TUnit {
-    return this.state.treadmillUnit;
-  }
-
-  /**
-   * Set treadmill unit
-   */
-  static setTreadmillUnit(unit: TUnit): void {
-    this.setState({ treadmillUnit: unit });
-  }
-
-  /**
-   * Get current venue
-   */
-  static getVenue(): string {
-    return this.state.venue;
-  }
-
-  /**
-   * Set venue
-   */
-  static setVenue(venue: string): void {
-    this.setState({ venue });
-  }
-
-  /**
-   * Get current lane distance
-   */
-  static getLane(): number {
-    return this.state.lane;
-  }
-
-  /**
-   * Set lane distance
-   */
-  static setLane(lane: number): void {
-    this.setState({ lane });
-  }
-
-  /**
-   * Get target distance
-   */
-  static getDistance(): number {
-    return this.state.distance;
-  }
-
-  /**
-   * Set target distance
-   */
-  static setDistance(distance: number): void {
-    this.setState({ distance });
-  }
-
-  /**
-   * Get theme
-   */
-  static getTheme(): TTheme {
-    return this.state.theme;
-  }
-
-  /**
-   * Set theme and persist
+   * Set theme and persist to storage
    */
   static setTheme(theme: TTheme): void {
     this.setState({ theme });
@@ -168,7 +107,7 @@ export class StateManager {
   }
 
   /**
-   * Toggle theme
+   * Toggle theme and persist
    */
   static toggleTheme(): TTheme {
     const newTheme = this.state.theme === 'dark' ? 'light' : 'dark';
@@ -177,53 +116,14 @@ export class StateManager {
   }
 
   /**
-   * Get language
-   */
-  static getLanguage(): TLanguage {
-    return this.state.lang;
-  }
-
-  /**
-   * Set language and persist
-   */
-  static setLanguage(lang: TLanguage): void {
-    this.setState({ lang });
-    StorageManager.saveLanguage(lang);
-  }
-
-  /**
-   * Toggle language
-   */
-  static toggleLanguage(): TLanguage {
-    const newLang = this.state.lang === 'zh' ? 'en' : 'zh';
-    this.setLanguage(newLang);
-    return newLang;
-  }
-
-  /**
-   * Get split mode
-   */
-  static getSplitMode(): TSplitMode {
-    return this.state.splitMode;
-  }
-
-  /**
-   * Set split mode
-   */
-  static setSplitMode(mode: TSplitMode): void {
-    this.setState({ splitMode: mode });
-  }
-
-  /**
    * Save current state to localStorage
-   * @param inputs - Input values to save alongside state
    */
   static saveToStorage(inputs: Record<string, string> = {}): void {
     StorageManager.saveState(this.state, inputs);
   }
 
   /**
-   * Load state from localStorage (already done in initialize)
+   * Load state from localStorage (already done in initialize, exposed for manual refresh)
    */
   static loadFromStorage(): void {
     const saved = StorageManager.loadState();
@@ -240,7 +140,7 @@ export class StateManager {
   }
 
   /**
-   * Clear all persisted data
+   * Clear all persisted data and reset state
    */
   static clearStorage(): void {
     StorageManager.clear();

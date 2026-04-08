@@ -1,5 +1,5 @@
 import { getDOMCache, getInputIdForMode } from '../constants/domElements.js';
-import { VENUES, MODE_PLACEHOLDERS } from '../constants/index.js';
+import { VENUES, MODE_PLACEHOLDERS, CONVERSION_FACTORS, HALF_MARATHON_METERS, FULL_MARATHON_METERS } from '../constants/index.js';
 import StateManager from './StateManager.js';
 import Calculator from './Calculator.js';
 import TimeFormatter from './TimeFormatter.js';
@@ -175,7 +175,7 @@ export class UIController {
             const kph = (state.lane * 3.6) / secondsPerLap;
             let val = kph;
             if (state.treadmillUnit === 'mile') {
-                val = kph * 0.621371192;
+                val = kph * CONVERSION_FACTORS.km_to_mile;
             }
             if (this.dom.inputs.treadmill) {
                 this.dom.inputs.treadmill.value = Calculator.round(val, 2).toString();
@@ -242,28 +242,18 @@ export class UIController {
     static updateZones(paceSecondsPerKm) {
         if (!paceSecondsPerKm || paceSecondsPerKm <= 0)
             return;
-        const zones = Calculator.calculateTrainingZones(paceSecondsPerKm);
         const ref = paceSecondsPerKm;
-        const zoneE = document.getElementById('zone-e');
-        if (zoneE) {
-            zoneE.textContent = `${TimeFormatter.format(ref + 60)} - ${TimeFormatter.format(ref + 90)}`;
-        }
-        const zoneM = document.getElementById('zone-m');
-        if (zoneM) {
-            zoneM.textContent = `${TimeFormatter.format(ref + 25)} - ${TimeFormatter.format(ref + 45)}`;
-        }
-        const zoneT = document.getElementById('zone-t');
-        if (zoneT) {
-            zoneT.textContent = `${TimeFormatter.format(ref + 10)} - ${TimeFormatter.format(ref + 20)}`;
-        }
-        const zoneI = document.getElementById('zone-i');
-        if (zoneI) {
-            zoneI.textContent = `${TimeFormatter.format(ref - 10)} - ${TimeFormatter.format(ref)}`;
-        }
-        const zoneR = document.getElementById('zone-r');
-        if (zoneR) {
-            zoneR.textContent = `${TimeFormatter.format(ref - 20)} - ${TimeFormatter.format(ref - 10)}`;
-        }
+        const z = this.dom.displays.zones;
+        if (z.e)
+            z.e.textContent = `${TimeFormatter.format(ref + 60)} - ${TimeFormatter.format(ref + 90)}`;
+        if (z.m)
+            z.m.textContent = `${TimeFormatter.format(ref + 25)} - ${TimeFormatter.format(ref + 45)}`;
+        if (z.t)
+            z.t.textContent = `${TimeFormatter.format(ref + 10)} - ${TimeFormatter.format(ref + 20)}`;
+        if (z.i)
+            z.i.textContent = `${TimeFormatter.format(ref - 10)} - ${TimeFormatter.format(ref)}`;
+        if (z.r)
+            z.r.textContent = `${TimeFormatter.format(ref - 20)} - ${TimeFormatter.format(ref - 10)}`;
     }
     static updateRoadSplits(secondsPerLap) {
         const state = StateManager.getState();
@@ -277,7 +267,7 @@ export class UIController {
             const row = document.createElement('div');
             row.className = 'road-row';
             let isWater = true;
-            if (Math.abs(split.distance - 21097.5) < 1 || Math.abs(split.distance - 42195) < 1) {
+            if (Math.abs(split.distance - HALF_MARATHON_METERS) < 1 || Math.abs(split.distance - FULL_MARATHON_METERS) < 1) {
                 isWater = false;
             }
             const waterHtml = isWater ? `<span class="water-icon">${t.label_water || '💧'}</span>` : '';
@@ -285,7 +275,7 @@ export class UIController {
         <div>${waterHtml}<span class="road-dist">${split.label}</span></div>
         <div class="road-time">${split.time}</div>
       `;
-            if (split.distance % 5000 === 0 || Math.abs(split.distance - 42195) < 1 || Math.abs(split.distance - 21097.5) < 1) {
+            if (split.distance % 5000 === 0 || Math.abs(split.distance - FULL_MARATHON_METERS) < 1 || Math.abs(split.distance - HALF_MARATHON_METERS) < 1) {
                 row.style.borderLeft = '3px solid var(--highlight)';
                 row.style.background = 'var(--option-bg)';
             }
@@ -293,6 +283,9 @@ export class UIController {
         });
     }
     static setMode(newMode) {
+        const validModes = ['pace', 'track', 'treadmill', 'finish_time'];
+        if (!validModes.includes(newMode))
+            return;
         StateManager.setMode(newMode);
         const radio = document.querySelector(`input[name="type"][value="${newMode}"]`);
         if (radio)
@@ -552,21 +545,24 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
         const dist = parseFloat(predDistSelect.value);
         const timeStr = predTimeInput.value;
         const timeSec = TimeFormatter.parse(timeStr);
+        const p = this.dom.displays.prediction;
+        const setEl = (el, val) => { if (el)
+            el.textContent = val; };
         if (!dist || !timeSec) {
-            document.getElementById('pred-5k').textContent = '--';
-            document.getElementById('pred-10k').textContent = '--';
-            document.getElementById('pred-half').textContent = '--';
-            document.getElementById('pred-full').textContent = '--';
+            setEl(p.k5, '--');
+            setEl(p.k10, '--');
+            setEl(p.half, '--');
+            setEl(p.full, '--');
             return;
         }
         const predict = (d2) => {
             const t2 = timeSec * Math.pow(d2 / dist, 1.06);
             return TimeFormatter.format(t2);
         };
-        document.getElementById('pred-5k').textContent = predict(5000);
-        document.getElementById('pred-10k').textContent = predict(10000);
-        document.getElementById('pred-half').textContent = predict(21097.5);
-        document.getElementById('pred-full').textContent = predict(42195);
+        setEl(p.k5, predict(5000));
+        setEl(p.k10, predict(10000));
+        setEl(p.half, predict(HALF_MARATHON_METERS));
+        setEl(p.full, predict(FULL_MARATHON_METERS));
     }
 }
 UIController.dom = getDOMCache();

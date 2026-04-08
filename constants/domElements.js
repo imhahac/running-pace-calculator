@@ -44,6 +44,19 @@ export function initializeDOMElements() {
                     five: document.getElementById('fivelaps'),
                 }
             },
+            zones: {
+                e: document.getElementById('zone-e'),
+                m: document.getElementById('zone-m'),
+                t: document.getElementById('zone-t'),
+                i: document.getElementById('zone-i'),
+                r: document.getElementById('zone-r'),
+            },
+            prediction: {
+                k5: document.getElementById('pred-5k'),
+                k10: document.getElementById('pred-10k'),
+                half: document.getElementById('pred-half'),
+                full: document.getElementById('pred-full'),
+            },
             container: document.getElementById('container'),
             infoContainer: document.getElementById('container2'),
         }

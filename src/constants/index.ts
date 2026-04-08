@@ -155,6 +155,12 @@ export const TRANSLATIONS: ITranslations = {
 };
 
 /**
+ * Standard race distances in meters
+ */
+export const HALF_MARATHON_METERS = 21097.5;
+export const FULL_MARATHON_METERS = 42195;
+
+/**
  * Road split distances (in meters) for marathon calculation
  */
 export const ROAD_SPLIT_DISTANCES: number[] = (() => {
@@ -162,8 +168,8 @@ export const ROAD_SPLIT_DISTANCES: number[] = (() => {
   for (let k = 2.5; k <= 40; k += 2.5) {
     distances.push(k * 1000);
   }
-  distances.push(21097.5); // Half marathon
-  distances.push(42195);   // Full marathon
+  distances.push(HALF_MARATHON_METERS);
+  distances.push(FULL_MARATHON_METERS);
   return distances.sort((a, b) => a - b);
 })();
 

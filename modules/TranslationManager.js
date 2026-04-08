@@ -3,28 +3,22 @@ import StateManager from './StateManager.js';
 export class TranslationManager {
     static initialize(lang) {
         if (lang) {
-            this.currentLang = lang;
-        }
-        else {
-            this.currentLang = StateManager.getLanguage();
+            StateManager.setLanguage(lang);
         }
     }
     static get(key, lang) {
-        const language = lang || this.currentLang;
+        const language = lang ?? StateManager.getLanguage();
         const dict = TRANSLATIONS[language];
         return dict[key] || key;
     }
     static getCurrentLanguage() {
-        return this.currentLang;
+        return StateManager.getLanguage();
     }
     static setLanguage(lang) {
-        this.currentLang = lang;
         StateManager.setLanguage(lang);
     }
     static toggleLanguage() {
-        const newLang = this.currentLang === 'zh' ? 'en' : 'zh';
-        this.setLanguage(newLang);
-        return newLang;
+        return StateManager.toggleLanguage();
     }
     static updateDOMTranslations() {
         document.querySelectorAll('[data-i18n]').forEach((el) => {
@@ -38,10 +32,10 @@ export class TranslationManager {
         });
     }
     static getAll() {
-        return { ...TRANSLATIONS[this.currentLang] };
+        return { ...TRANSLATIONS[StateManager.getLanguage()] };
     }
     static has(key, lang) {
-        const language = lang || this.currentLang;
+        const language = lang ?? StateManager.getLanguage();
         return key in TRANSLATIONS[language];
     }
     static getMultiple(keys) {
@@ -52,5 +46,4 @@ export class TranslationManager {
         return result;
     }
 }
-TranslationManager.currentLang = 'zh';
 export default TranslationManager;

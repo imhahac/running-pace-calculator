@@ -1,6 +1,7 @@
 /**
  * TranslationManager Module
- * Handles dynamic language switching and translation lookups
+ * Handles dynamic language switching and translation lookups.
+ * Uses StateManager as the single source of truth for language state.
  */
 
 import { TRANSLATIONS } from '../constants/index.js';
@@ -8,18 +9,15 @@ import StateManager from './StateManager.js';
 import type { TLanguage } from '../types/index';
 
 export class TranslationManager {
-  private static currentLang: TLanguage = 'zh';
-
   /**
    * Initialize translation system
    * @param lang - Language to initialize with (defaults to state language)
    */
   static initialize(lang?: TLanguage): void {
     if (lang) {
-      this.currentLang = lang;
-    } else {
-      this.currentLang = StateManager.getLanguage();
+      StateManager.setLanguage(lang);
     }
+    // Otherwise StateManager already loaded lang from localStorage in its own initialize()
   }
 
   /**
@@ -29,7 +27,7 @@ export class TranslationManager {
    * @returns Translated string or key if not found
    */
   static get(key: string, lang?: TLanguage): string {
-    const language = lang || this.currentLang;
+    const language = lang ?? StateManager.getLanguage();
     const dict = TRANSLATIONS[language];
     return dict[key] || key;
   }
@@ -38,7 +36,7 @@ export class TranslationManager {
    * Get current language
    */
   static getCurrentLanguage(): TLanguage {
-    return this.currentLang;
+    return StateManager.getLanguage();
   }
 
   /**
@@ -46,7 +44,6 @@ export class TranslationManager {
    * @param lang - Language to set
    */
   static setLanguage(lang: TLanguage): void {
-    this.currentLang = lang;
     StateManager.setLanguage(lang);
   }
 
@@ -55,9 +52,7 @@ export class TranslationManager {
    * @returns New language
    */
   static toggleLanguage(): TLanguage {
-    const newLang = this.currentLang === 'zh' ? 'en' : 'zh';
-    this.setLanguage(newLang);
-    return newLang;
+    return StateManager.toggleLanguage();
   }
 
   /**
@@ -80,7 +75,7 @@ export class TranslationManager {
    * @returns Translation dictionary
    */
   static getAll(): Record<string, string> {
-    return { ...TRANSLATIONS[this.currentLang] };
+    return { ...TRANSLATIONS[StateManager.getLanguage()] };
   }
 
   /**
@@ -90,7 +85,7 @@ export class TranslationManager {
    * @returns true if key exists
    */
   static has(key: string, lang?: TLanguage): boolean {
-    const language = lang || this.currentLang;
+    const language = lang ?? StateManager.getLanguage();
     return key in TRANSLATIONS[language];
   }
 

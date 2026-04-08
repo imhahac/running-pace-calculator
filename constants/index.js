@@ -117,13 +117,15 @@ export const TRANSLATIONS = {
         road_finish: "Finish"
     }
 };
+export const HALF_MARATHON_METERS = 21097.5;
+export const FULL_MARATHON_METERS = 42195;
 export const ROAD_SPLIT_DISTANCES = (() => {
     const distances = [];
     for (let k = 2.5; k <= 40; k += 2.5) {
         distances.push(k * 1000);
     }
-    distances.push(21097.5);
-    distances.push(42195);
+    distances.push(HALF_MARATHON_METERS);
+    distances.push(FULL_MARATHON_METERS);
     return distances.sort((a, b) => a - b);
 })();
 export const MODE_PLACEHOLDERS = {

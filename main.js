@@ -1,12 +1,10 @@
 import StateManager from './modules/StateManager.js';
 import TranslationManager from './modules/TranslationManager.js';
 import UIController from './modules/UIController.js';
-import { initializeDOMElements } from './constants/domElements.js';
 function initializeApp() {
     try {
         StateManager.initialize();
         TranslationManager.initialize();
-        initializeDOMElements();
         UIController.initialize();
         UIController.bindEvents();
         console.log('Running Pace Calculator initialized successfully');
