@@ -57,6 +57,12 @@ export class UIController {
             this.dom.inputs.finishTime.addEventListener('focus', () => this.setMode('finish_time'));
             this.dom.inputs.finishTime.addEventListener('click', () => this.setMode('finish_time'));
         }
+        if (this.dom.buttons.slide) {
+            this.dom.buttons.slide.addEventListener('click', () => this.toggleSplitsContainer());
+        }
+        if (this.dom.buttons.info) {
+            this.dom.buttons.info.addEventListener('click', () => this.toggleInfoContainer());
+        }
         if (this.dom.buttons.mile) {
             this.dom.buttons.mile.addEventListener('click', () => this.togglePaceUnit());
         }
@@ -535,6 +541,16 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
         const advancedTools = document.getElementById('advanced-tools');
         if (advancedTools) {
             advancedTools.classList.toggle('SlideDown');
+        }
+    }
+    static toggleSplitsContainer() {
+        if (this.dom.displays.container) {
+            this.dom.displays.container.classList.toggle('SlideDown');
+        }
+    }
+    static toggleInfoContainer() {
+        if (this.dom.displays.infoContainer) {
+            this.dom.displays.infoContainer.classList.toggle('SlideDown');
         }
     }
     static calculatePrediction() {

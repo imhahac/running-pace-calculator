@@ -80,6 +80,16 @@ export class UIController {
       this.dom.inputs.finishTime.addEventListener('click', () => this.setMode('finish_time'));
     }
 
+    // Splits container expand (+) button
+    if (this.dom.buttons.slide) {
+      this.dom.buttons.slide.addEventListener('click', () => this.toggleSplitsContainer());
+    }
+
+    // Info container toggle
+    if (this.dom.buttons.info) {
+      this.dom.buttons.info.addEventListener('click', () => this.toggleInfoContainer());
+    }
+
     // Unit toggles
     if (this.dom.buttons.mile) {
       this.dom.buttons.mile.addEventListener('click', () => this.togglePaceUnit());
@@ -751,6 +761,26 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
     const advancedTools = document.getElementById('advanced-tools');
     if (advancedTools) {
       advancedTools.classList.toggle('SlideDown');
+    }
+  }
+
+  /**
+   * Toggle splits container (#container) visibility
+   * Triggered by the "+" button next to the track input
+   */
+  private static toggleSplitsContainer(): void {
+    if (this.dom.displays.container) {
+      this.dom.displays.container.classList.toggle('SlideDown');
+    }
+  }
+
+  /**
+   * Toggle info container (#container2) visibility
+   * Triggered by the info button in the header
+   */
+  private static toggleInfoContainer(): void {
+    if (this.dom.displays.infoContainer) {
+      this.dom.displays.infoContainer.classList.toggle('SlideDown');
     }
   }
 
