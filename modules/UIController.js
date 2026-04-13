@@ -75,6 +75,9 @@ export class UIController {
         if (this.dom.laneSelect) {
             this.dom.laneSelect.addEventListener('change', () => this.onLaneChange());
         }
+        if (this.dom.distanceSelect) {
+            this.dom.distanceSelect.addEventListener('change', () => this.onDistanceChange());
+        }
         if (this.dom.buttons.theme) {
             this.dom.buttons.theme.addEventListener('click', () => this.toggleTheme());
         }
@@ -324,6 +327,19 @@ export class UIController {
         }
         const inputId = getInputIdForMode(StateManager.getMode());
         this.calculate(inputId);
+    }
+    static onDistanceChange() {
+        const val = this.dom.distanceSelect?.value;
+        if (!val) return;
+        const distance = parseFloat(val);
+        if (distance > 0) {
+            StateManager.setDistance(distance);
+            const currentInput = getInputIdForMode(StateManager.getMode());
+            const value = this.getInputValue(currentInput);
+            if (value) {
+                this.calculate(currentInput);
+            }
+        }
     }
     static onVenueChange() {
         const venue = this.dom.venueSelect?.value;
