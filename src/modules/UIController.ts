@@ -25,6 +25,12 @@ export class UIController {
     this.loadSavedInputs();
     this.applyTheme();
     this.applyLanguage();
+
+    // Sync distanceSelect to current state.distance
+    if (this.dom.distanceSelect) {
+      const dist = StateManager.getDistance();
+      this.dom.distanceSelect.value = dist.toString();
+    }
   }
 
   /**
@@ -104,6 +110,11 @@ export class UIController {
     }
     if (this.dom.laneSelect) {
       this.dom.laneSelect.addEventListener('change', () => this.onLaneChange());
+    }
+
+    // Distance selector
+    if (this.dom.distanceSelect) {
+      this.dom.distanceSelect.addEventListener('change', () => this.onDistanceChange());
     }
 
     // Theme toggle
@@ -463,6 +474,23 @@ export class UIController {
     // Recalculate with new unit
     const inputId = getInputIdForMode(StateManager.getMode());
     this.calculate(inputId);
+  }
+
+  /**
+   * Handle distance selector change
+   */
+  private static onDistanceChange(): void {
+    const val = this.dom.distanceSelect?.value;
+    if (!val) return;
+    const distance = parseFloat(val);
+    if (distance > 0) {
+      StateManager.setDistance(distance);
+      const currentInput = getInputIdForMode(StateManager.getMode());
+      const value = this.getInputValue(currentInput);
+      if (value) {
+        this.calculate(currentInput);
+      }
+    }
   }
 
   /**
