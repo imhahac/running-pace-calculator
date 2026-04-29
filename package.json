@@ -6,12 +6,14 @@
   "scripts": {
     "build": "tsc",
     "watch": "tsc --watch",
-    "dev": "tsc && open index.html"
+    "dev": "tsc && open index.html",
+    "test": "node --import tsx --test tests/**/*.test.ts"
   },
   "keywords": ["running", "pace", "calculator", "pwa"],
   "author": "@imhahac",
   "license": "MIT",
   "devDependencies": {
+    "tsx": "^4.20.6",
     "typescript": "^5.3.0"
   }
 }

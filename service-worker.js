@@ -1,4 +1,4 @@
-const CACHE_NAME = 'runningpacenote-v4';
+const CACHE_NAME = 'runningpacenote-v5';
 const ASSETS = [
     './',
     './index.html',
@@ -30,6 +30,12 @@ self.addEventListener('activate', (e) => {
         );
         await self.clients.claim();
     })());
+});
+
+self.addEventListener('message', (e) => {
+    if (e.data && e.data.type === 'SKIP_WAITING') {
+        self.skipWaiting();
+    }
 });
 
 self.addEventListener('fetch', (e) => {

@@ -18,7 +18,45 @@
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
                 navigator.serviceWorker.register('./service-worker.js')
-                    .then(reg => console.log('SW register success', reg))
+                    .then(reg => {
+                        console.log('SW register success', reg);
+
+                        const updateBar = document.getElementById('sw-update-bar');
+                        const refreshBtn = document.getElementById('sw-refresh-btn');
+
+                        const showUpdateBar = () => {
+                            if (updateBar) {
+                                updateBar.classList.remove('hidden-update');
+                            }
+                        };
+
+                        const wireWaitingWorker = () => {
+                            if (!reg.waiting) return;
+                            showUpdateBar();
+                            if (refreshBtn) {
+                                refreshBtn.onclick = () => {
+                                    reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
+                                };
+                            }
+                        };
+
+                        wireWaitingWorker();
+
+                        reg.addEventListener('updatefound', () => {
+                            const installingWorker = reg.installing;
+                            if (!installingWorker) return;
+
+                            installingWorker.addEventListener('statechange', () => {
+                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    wireWaitingWorker();
+                                }
+                            });
+                        });
+
+                        navigator.serviceWorker.addEventListener('controllerchange', () => {
+                            window.location.reload();
+                        });
+                    })
                     .catch(err => console.log('SW register fail', err));
             });
         }
@@ -26,6 +64,11 @@
 </head>
 
 <body>
+    <div id="sw-update-bar" class="sw-update-bar hidden-update" role="status" aria-live="polite">
+        <span id="sw-update-text">有新版可用</span>
+        <button id="sw-refresh-btn" class="action-btn">立即更新</button>
+    </div>
+
     <div class="main-wrapper">
         <header>
             <div class="header-top">
@@ -205,6 +248,7 @@
                     <option value="400">400m</option>
                 </select>
             </div>
+            <div id="finish-time-feedback" class="field-feedback" aria-live="polite"></div>
         </div>
 
         <!-- Advanced Tools Toggle -->

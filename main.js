@@ -1,6 +1,7 @@
 import StateManager from './modules/StateManager.js';
 import TranslationManager from './modules/TranslationManager.js';
 import UIController from './modules/UIController.js';
+import AnalyticsManager from './modules/AnalyticsManager.js';
 function initializeApp() {
     try {
         StateManager.initialize();
@@ -23,6 +24,7 @@ if (typeof window !== 'undefined') {
     window.__APP__ = {
         StateManager,
         TranslationManager,
-        UIController
+        UIController,
+        AnalyticsManager
     };
 }

@@ -11,11 +11,14 @@ import TimeFormatter from './TimeFormatter.js';
 import TranslationManager from './TranslationManager.js';
 import StorageManager from './StorageManager.js';
 import Converter from './Converter.js';
+import AnalyticsManager from './AnalyticsManager.js';
 import type { IPaceState, TMode } from '../types/index';
 
 export class UIController {
   private static dom = getDOMCache();
   private static inputValues: Record<string, string> = {};
+  private static readonly SHORT_TIME_REGEX = /^\d{1,2}:\d{1,2}$/;
+  private static readonly LONG_TIME_REGEX = /^\d{1,2}:\d{1,2}:\d{1,2}$/;
 
   /**
    * Initialize UI controller and restore saved state
@@ -31,6 +34,8 @@ export class UIController {
       const dist = StateManager.getDistance();
       this.dom.distanceSelect.value = dist.toString();
     }
+
+    this.updateFinishTimeFeedback();
   }
 
   /**
@@ -64,7 +69,7 @@ export class UIController {
       // 'input': recalculate while typing when format is already valid
       this.dom.inputs.finishTime.addEventListener('input', () => this.onFinishTimeInput());
       // 'change': always recalculate when user commits (Tab / Enter / blur)
-      this.dom.inputs.finishTime.addEventListener('change', () => this.onInput('finish_time_input'));
+      this.dom.inputs.finishTime.addEventListener('change', () => this.onFinishTimeChange());
     }
 
     // Switch mode when user focuses/clicks an input field
@@ -190,10 +195,46 @@ export class UIController {
    */
   private static onFinishTimeInput(): void {
     const value = this.dom.inputs.finishTime?.value ?? '';
-    // Require at least one ':' so single-digit or bare-number entries are ignored
+    const validation = this.validateFinishTime(value);
+
+    if (!value.trim()) {
+      this.updateFinishTimeFeedback();
+      return;
+    }
+
+    if (!validation.isValid) {
+      this.updateFinishTimeFeedback(validation.messageKey, true);
+      AnalyticsManager.trackFinishTimeValidation(false, validation.expectedLongFormat ? 'h:mm:ss' : 'm:ss');
+      return;
+    }
+
+    this.updateFinishTimeFeedback();
     if (value.includes(':') && TimeFormatter.parse(value) > 0) {
       this.onInput('finish_time_input');
     }
+  }
+
+  /**
+   * Handle finish time input commit (blur / Enter / Tab)
+   */
+  private static onFinishTimeChange(): void {
+    const value = this.dom.inputs.finishTime?.value ?? '';
+    const validation = this.validateFinishTime(value);
+
+    if (!value.trim()) {
+      this.updateFinishTimeFeedback();
+      return;
+    }
+
+    if (!validation.isValid) {
+      this.updateFinishTimeFeedback(validation.messageKey, true);
+      AnalyticsManager.trackFinishTimeValidation(false, validation.expectedLongFormat ? 'h:mm:ss' : 'm:ss');
+      return;
+    }
+
+    this.updateFinishTimeFeedback();
+    AnalyticsManager.trackFinishTimeValidation(true, validation.expectedLongFormat ? 'h:mm:ss' : 'm:ss');
+    this.onInput('finish_time_input');
   }
 
   /**
@@ -242,10 +283,14 @@ export class UIController {
       finishTimeVal
     );
 
-    if (secondsPerLap <= 0) return;
+    if (secondsPerLap <= 0) {
+      AnalyticsManager.trackCalculationRejected(sourceId, state.mode, 'non-positive-seconds-per-lap');
+      return;
+    }
 
     // Update all displays
     this.updateDisplay(secondsPerLap, sourceId);
+    AnalyticsManager.trackCalculationSuccess(sourceId, state.mode);
   }
 
   /**
@@ -448,6 +493,10 @@ export class UIController {
     this.clearPlaceholders();
     this.setPlaceholders(newMode);
 
+    if (newMode === 'finish_time') {
+      this.updateFinishTimeFeedback();
+    }
+
     const inputId = getInputIdForMode(newMode);
     this.highlightInput(inputId);
   }
@@ -495,6 +544,7 @@ export class UIController {
     const distance = parseFloat(val);
     if (distance > 0) {
       StateManager.setDistance(distance);
+      this.updateFinishTimeFeedback();
       const currentInput = getInputIdForMode(StateManager.getMode());
       const value = this.getInputValue(currentInput);
       if (value) {
@@ -646,6 +696,7 @@ export class UIController {
     }
 
     document.title = lang === 'zh' ? 'RunningPaceNote 配速計算機' : 'RunningPaceNote Calculator';
+    this.updateFinishTimeFeedback();
   }
 
   /**
@@ -786,6 +837,8 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
       this.dom.inputs.finishTime.value = inputs['finish_time_input'];
     }
 
+    this.updateFinishTimeFeedback();
+
     // Trigger initial calculation to populate all derived fields
     const mode = StateManager.getMode();
     const sourceInput = getInputIdForMode(mode);
@@ -793,6 +846,69 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
       this.calculate(sourceInput);
     }
     this.saveInputValues();
+  }
+
+  /**
+   * Validate finish time string according to selected race distance.
+   */
+  private static validateFinishTime(value: string): {
+    isValid: boolean;
+    expectedLongFormat: boolean;
+    messageKey: string;
+  } {
+    const trimmed = value.trim();
+    const expectedLongFormat = StateManager.getDistance() >= HALF_MARATHON_METERS;
+
+    if (!trimmed.includes(':') || TimeFormatter.parse(trimmed) <= 0) {
+      return {
+        isValid: false,
+        expectedLongFormat,
+        messageKey: 'finish_error_invalid'
+      };
+    }
+
+    if (expectedLongFormat && !this.LONG_TIME_REGEX.test(trimmed)) {
+      return {
+        isValid: false,
+        expectedLongFormat,
+        messageKey: 'finish_error_expected_long'
+      };
+    }
+
+    if (!expectedLongFormat && !this.SHORT_TIME_REGEX.test(trimmed)) {
+      return {
+        isValid: false,
+        expectedLongFormat,
+        messageKey: 'finish_error_expected_short'
+      };
+    }
+
+    return {
+      isValid: true,
+      expectedLongFormat,
+      messageKey: ''
+    };
+  }
+
+  /**
+   * Show finish-time hint or validation message in a unified feedback area.
+   */
+  private static updateFinishTimeFeedback(messageKey: string = '', isError: boolean = false): void {
+    const feedback = document.getElementById('finish-time-feedback');
+    if (!feedback) return;
+
+    const t = TranslationManager.getAll();
+    const expectedLongFormat = StateManager.getDistance() >= HALF_MARATHON_METERS;
+    const hint = expectedLongFormat
+      ? (t.finish_hint_long || '半馬/全馬建議格式 h:mm:ss，例如 3:30:00')
+      : (t.finish_hint_short || '短距離建議格式 m:ss，例如 20:00');
+
+    const text = messageKey
+      ? (t[messageKey] || t.finish_error_invalid || '時間格式不正確，請使用 m:ss 或 h:mm:ss')
+      : hint;
+
+    feedback.textContent = text;
+    feedback.classList.toggle('error', isError);
   }
 
   /**

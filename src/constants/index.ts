@@ -116,7 +116,12 @@ export const TRANSLATIONS: ITranslations = {
     tab_road: "🛣️ 路跑分段 (每2.5k)",
     label_water: "💧",
     road_km_suffix: "k",
-    road_finish: "完賽"
+    road_finish: "完賽",
+    finish_hint_short: "短距離建議格式 m:ss，例如 20:00",
+    finish_hint_long: "半馬/全馬建議格式 h:mm:ss，例如 3:30:00",
+    finish_error_invalid: "時間格式不正確，請使用 m:ss 或 h:mm:ss",
+    finish_error_expected_long: "此距離建議使用 h:mm:ss，例如 3:30:00",
+    finish_error_expected_short: "此距離建議使用 m:ss，例如 20:00"
   },
   en: {
     helper: "Input anything, calculate instantly.",
@@ -150,7 +155,12 @@ export const TRANSLATIONS: ITranslations = {
     tab_road: "🛣️ Road Splits (2.5k)",
     label_water: "💧",
     road_km_suffix: "k",
-    road_finish: "Finish"
+    road_finish: "Finish",
+    finish_hint_short: "Short races: use m:ss, e.g. 20:00",
+    finish_hint_long: "Half/Full races: use h:mm:ss, e.g. 3:30:00",
+    finish_error_invalid: "Invalid time format. Use m:ss or h:mm:ss",
+    finish_error_expected_long: "For this distance, use h:mm:ss, e.g. 3:30:00",
+    finish_error_expected_short: "For this distance, use m:ss, e.g. 20:00"
   }
 };
 
@@ -180,7 +190,7 @@ export const MODE_PLACEHOLDERS: Record<string, string | string[]> = {
   pace: ['4', '30'],
   track: '96',
   treadmill: '12',
-  finish_time: 'm:s / h:m:s'
+  finish_time: '5K: m:ss / Half-Full: h:mm:ss'
 };
 
 /**

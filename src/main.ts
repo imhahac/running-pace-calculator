@@ -7,6 +7,7 @@
 import StateManager from './modules/StateManager.js';
 import TranslationManager from './modules/TranslationManager.js';
 import UIController from './modules/UIController.js';
+import AnalyticsManager from './modules/AnalyticsManager.js';
 
 /**
  * Initialize and start the application
@@ -44,6 +45,7 @@ if (typeof window !== 'undefined') {
   (window as any).__APP__ = {
     StateManager,
     TranslationManager,
-    UIController
+    UIController,
+    AnalyticsManager
   };
 }

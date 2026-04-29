@@ -6,6 +6,7 @@ import TimeFormatter from './TimeFormatter.js';
 import TranslationManager from './TranslationManager.js';
 import StorageManager from './StorageManager.js';
 import Converter from './Converter.js';
+import AnalyticsManager from './AnalyticsManager.js';
 export class UIController {
     static initialize() {
         this.dom = getDOMCache();
@@ -16,6 +17,7 @@ export class UIController {
             const dist = StateManager.getDistance();
             this.dom.distanceSelect.value = dist.toString();
         }
+        this.updateFinishTimeFeedback();
     }
     static bindEvents() {
         if (!this.dom)
@@ -40,7 +42,7 @@ export class UIController {
         }
         if (this.dom.inputs.finishTime) {
             this.dom.inputs.finishTime.addEventListener('input', () => this.onFinishTimeInput());
-            this.dom.inputs.finishTime.addEventListener('change', () => this.onInput('finish_time_input'));
+            this.dom.inputs.finishTime.addEventListener('change', () => this.onFinishTimeChange());
         }
         if (this.dom.inputs.paceMin) {
             this.dom.inputs.paceMin.addEventListener('focus', () => this.setMode('pace'));
@@ -129,9 +131,36 @@ export class UIController {
     }
     static onFinishTimeInput() {
         const value = this.dom.inputs.finishTime?.value ?? '';
+        const validation = this.validateFinishTime(value);
+        if (!value.trim()) {
+            this.updateFinishTimeFeedback();
+            return;
+        }
+        if (!validation.isValid) {
+            this.updateFinishTimeFeedback(validation.messageKey, true);
+            AnalyticsManager.trackFinishTimeValidation(false, validation.expectedLongFormat ? 'h:mm:ss' : 'm:ss');
+            return;
+        }
+        this.updateFinishTimeFeedback();
         if (value.includes(':') && TimeFormatter.parse(value) > 0) {
             this.onInput('finish_time_input');
         }
+    }
+    static onFinishTimeChange() {
+        const value = this.dom.inputs.finishTime?.value ?? '';
+        const validation = this.validateFinishTime(value);
+        if (!value.trim()) {
+            this.updateFinishTimeFeedback();
+            return;
+        }
+        if (!validation.isValid) {
+            this.updateFinishTimeFeedback(validation.messageKey, true);
+            AnalyticsManager.trackFinishTimeValidation(false, validation.expectedLongFormat ? 'h:mm:ss' : 'm:ss');
+            return;
+        }
+        this.updateFinishTimeFeedback();
+        AnalyticsManager.trackFinishTimeValidation(true, validation.expectedLongFormat ? 'h:mm:ss' : 'm:ss');
+        this.onInput('finish_time_input');
     }
     static getModeByInputId(inputId) {
         if (inputId === 'pace_input' || inputId === 'pace_input2') {
@@ -156,9 +185,12 @@ export class UIController {
         const treadmillVal = parseFloat(this.dom.inputs.treadmill?.value || '0') || 0;
         const finishTimeVal = this.dom.inputs.finishTime?.value || '';
         const secondsPerLap = Calculator.calculateSecondsPerLap(state.mode, state, paceMin, paceSec, trackSec, treadmillVal, finishTimeVal);
-        if (secondsPerLap <= 0)
+        if (secondsPerLap <= 0) {
+            AnalyticsManager.trackCalculationRejected(sourceId, state.mode, 'non-positive-seconds-per-lap');
             return;
+        }
         this.updateDisplay(secondsPerLap, sourceId);
+        AnalyticsManager.trackCalculationSuccess(sourceId, state.mode);
     }
     static updateDisplay(secondsPerLap, sourceId) {
         const state = StateManager.getState();
@@ -312,6 +344,9 @@ export class UIController {
             modeIcon.classList.add('selected');
         this.clearPlaceholders();
         this.setPlaceholders(newMode);
+        if (newMode === 'finish_time') {
+            this.updateFinishTimeFeedback();
+        }
         const inputId = getInputIdForMode(newMode);
         this.highlightInput(inputId);
     }
@@ -342,6 +377,7 @@ export class UIController {
         const distance = parseFloat(val);
         if (distance > 0) {
             StateManager.setDistance(distance);
+            this.updateFinishTimeFeedback();
             const currentInput = getInputIdForMode(StateManager.getMode());
             const value = this.getInputValue(currentInput);
             if (value) {
@@ -445,6 +481,7 @@ export class UIController {
             langBtn.textContent = lang === 'zh' ? '中/EN' : 'EN/中';
         }
         document.title = lang === 'zh' ? 'RunningPaceNote 配速計算機' : 'RunningPaceNote Calculator';
+        this.updateFinishTimeFeedback();
     }
     static copyResults() {
         const t = TranslationManager.getAll();
@@ -554,12 +591,58 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
         if (this.dom.inputs.finishTime && inputs['finish_time_input']) {
             this.dom.inputs.finishTime.value = inputs['finish_time_input'];
         }
+        this.updateFinishTimeFeedback();
         const mode = StateManager.getMode();
         const sourceInput = getInputIdForMode(mode);
         if (this.getInputValue(sourceInput)) {
             this.calculate(sourceInput);
         }
         this.saveInputValues();
+    }
+    static validateFinishTime(value) {
+        const trimmed = value.trim();
+        const expectedLongFormat = StateManager.getDistance() >= HALF_MARATHON_METERS;
+        if (!trimmed.includes(':') || TimeFormatter.parse(trimmed) <= 0) {
+            return {
+                isValid: false,
+                expectedLongFormat,
+                messageKey: 'finish_error_invalid'
+            };
+        }
+        if (expectedLongFormat && !this.LONG_TIME_REGEX.test(trimmed)) {
+            return {
+                isValid: false,
+                expectedLongFormat,
+                messageKey: 'finish_error_expected_long'
+            };
+        }
+        if (!expectedLongFormat && !this.SHORT_TIME_REGEX.test(trimmed)) {
+            return {
+                isValid: false,
+                expectedLongFormat,
+                messageKey: 'finish_error_expected_short'
+            };
+        }
+        return {
+            isValid: true,
+            expectedLongFormat,
+            messageKey: ''
+        };
+    }
+    static updateFinishTimeFeedback(messageKey = '', isError = false) {
+        const feedback = document.getElementById('finish-time-feedback');
+        if (!feedback)
+            return;
+        const t = TranslationManager.getAll();
+        const expectedLongFormat = StateManager.getDistance() >= HALF_MARATHON_METERS;
+        const hint = expectedLongFormat
+            ? (t.finish_hint_long || '半馬/全馬建議格式 h:mm:ss，例如 3:30:00')
+            : (t.finish_hint_short || '短距離建議格式 m:ss，例如 20:00');
+        const text = messageKey
+            ? (t[messageKey] || t.finish_error_invalid || '時間格式不正確，請使用 m:ss 或 h:mm:ss')
+            : hint;
+        feedback.textContent = text;
+        feedback.classList.toggle('error', isError);
     }
     static toggleAdvancedTools() {
         const advancedTools = document.getElementById('advanced-tools');
@@ -607,4 +690,6 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
 }
 UIController.dom = getDOMCache();
 UIController.inputValues = {};
+UIController.SHORT_TIME_REGEX = /^\d{1,2}:\d{1,2}$/;
+UIController.LONG_TIME_REGEX = /^\d{1,2}:\d{1,2}:\d{1,2}$/;
 export default UIController;
