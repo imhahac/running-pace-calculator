@@ -12,6 +12,10 @@ export class UIController {
         this.loadSavedInputs();
         this.applyTheme();
         this.applyLanguage();
+        if (this.dom.distanceSelect) {
+            const dist = StateManager.getDistance();
+            this.dom.distanceSelect.value = dist.toString();
+        }
     }
     static bindEvents() {
         if (!this.dom)
@@ -35,7 +39,8 @@ export class UIController {
             this.dom.inputs.treadmill.addEventListener('input', () => this.onInput('treadmill_input'));
         }
         if (this.dom.inputs.finishTime) {
-            this.dom.inputs.finishTime.addEventListener('input', () => this.onInput('finish_time_input'));
+            this.dom.inputs.finishTime.addEventListener('input', () => this.onFinishTimeInput());
+            this.dom.inputs.finishTime.addEventListener('change', () => this.onInput('finish_time_input'));
         }
         if (this.dom.inputs.paceMin) {
             this.dom.inputs.paceMin.addEventListener('focus', () => this.setMode('pace'));
@@ -121,6 +126,12 @@ export class UIController {
         }
         this.inputValues[inputId] = this.getInputValue(inputId);
         this.calculate(inputId);
+    }
+    static onFinishTimeInput() {
+        const value = this.dom.inputs.finishTime?.value ?? '';
+        if (value.includes(':') && TimeFormatter.parse(value) > 0) {
+            this.onInput('finish_time_input');
+        }
     }
     static getModeByInputId(inputId) {
         if (inputId === 'pace_input' || inputId === 'pace_input2') {
@@ -228,10 +239,6 @@ export class UIController {
             this.dom.displays.splits.inc300.value = splits.inc300;
         if (this.dom.displays.splits.inc400)
             this.dom.displays.splits.inc400.value = splits.inc400;
-        const m100 = (secondsPerLap / state.lane) * 100;
-        const m200 = (secondsPerLap / state.lane) * 200;
-        const m300 = (secondsPerLap / state.lane) * 300;
-        const m400 = (secondsPerLap / state.lane) * 400;
         if (this.dom.displays.splits.lapsText.two) {
             this.dom.displays.splits.lapsText.two.innerHTML = `&emsp;${state.lane * 2}`;
         }
@@ -330,7 +337,8 @@ export class UIController {
     }
     static onDistanceChange() {
         const val = this.dom.distanceSelect?.value;
-        if (!val) return;
+        if (!val)
+            return;
         const distance = parseFloat(val);
         if (distance > 0) {
             StateManager.setDistance(distance);
@@ -346,7 +354,6 @@ export class UIController {
         if (venue) {
             StateManager.setVenue(venue);
             this.populateVenues();
-            this.onLaneChange();
         }
     }
     static onLaneChange() {
@@ -462,12 +469,8 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
     static switchSplitMode(mode) {
         StateManager.setSplitMode(mode);
         const currentInput = getInputIdForMode(StateManager.getMode());
-        const value = this.getInputValue(currentInput);
-        if (value) {
-            const trackSec = parseFloat(this.dom.inputs.track?.value || '0') || 0;
-            if (trackSec > 0) {
-                this.updateSplits(trackSec);
-            }
+        if (this.getInputValue(currentInput)) {
+            this.calculate(currentInput);
         }
     }
     static highlightInput(inputId) {
@@ -550,6 +553,11 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
         }
         if (this.dom.inputs.finishTime && inputs['finish_time_input']) {
             this.dom.inputs.finishTime.value = inputs['finish_time_input'];
+        }
+        const mode = StateManager.getMode();
+        const sourceInput = getInputIdForMode(mode);
+        if (this.getInputValue(sourceInput)) {
+            this.calculate(sourceInput);
         }
         this.saveInputValues();
     }

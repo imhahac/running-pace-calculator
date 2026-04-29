@@ -3,7 +3,7 @@
  * Centralized DOM manipulation and event binding
  */
 
-import { getDOMCache, getInputElementByMode, getInputIdForMode } from '../constants/domElements.js';
+import { getDOMCache, getInputIdForMode } from '../constants/domElements.js';
 import { VENUES, MODE_PLACEHOLDERS, DEFAULT_STATE, CONVERSION_FACTORS, HALF_MARATHON_METERS, FULL_MARATHON_METERS } from '../constants/index.js';
 import StateManager from './StateManager.js';
 import Calculator from './Calculator.js';
@@ -61,7 +61,10 @@ export class UIController {
       this.dom.inputs.treadmill.addEventListener('input', () => this.onInput('treadmill_input'));
     }
     if (this.dom.inputs.finishTime) {
-      this.dom.inputs.finishTime.addEventListener('input', () => this.onInput('finish_time_input'));
+      // 'input': recalculate while typing when format is already valid
+      this.dom.inputs.finishTime.addEventListener('input', () => this.onFinishTimeInput());
+      // 'change': always recalculate when user commits (Tab / Enter / blur)
+      this.dom.inputs.finishTime.addEventListener('change', () => this.onInput('finish_time_input'));
     }
 
     // Switch mode when user focuses/clicks an input field
@@ -179,6 +182,18 @@ export class UIController {
 
     this.inputValues[inputId] = this.getInputValue(inputId);
     this.calculate(inputId);
+  }
+
+  /**
+   * Handle finish time input – only triggers calculation when the entered
+   * value is a complete, parseable time (avoids garbage from partial input).
+   */
+  private static onFinishTimeInput(): void {
+    const value = this.dom.inputs.finishTime?.value ?? '';
+    // Require at least one ':' so single-digit or bare-number entries are ignored
+    if (value.includes(':') && TimeFormatter.parse(value) > 0) {
+      this.onInput('finish_time_input');
+    }
   }
 
   /**
@@ -333,12 +348,7 @@ export class UIController {
     if (this.dom.displays.splits.inc300) this.dom.displays.splits.inc300.value = splits.inc300;
     if (this.dom.displays.splits.inc400) this.dom.displays.splits.inc400.value = splits.inc400;
 
-    // Update lap text labels
-    const m100 = (secondsPerLap / state.lane) * 100;
-    const m200 = (secondsPerLap / state.lane) * 200;
-    const m300 = (secondsPerLap / state.lane) * 300;
-    const m400 = (secondsPerLap / state.lane) * 400;
-
+    // Update lap distance labels
     if (this.dom.displays.splits.lapsText.two) {
       this.dom.displays.splits.lapsText.two.innerHTML = `&emsp;${state.lane * 2}`;
     }
@@ -494,14 +504,15 @@ export class UIController {
   }
 
   /**
-   * Handle venue change
+   * Handle venue change.
+   * populateVenues → populateLanes → updateLaneState handles everything;
+   * no need to call onLaneChange() separately.
    */
   private static onVenueChange(): void {
     const venue = this.dom.venueSelect?.value;
     if (venue) {
       StateManager.setVenue(venue);
       this.populateVenues();
-      this.onLaneChange();
     }
   }
 
@@ -665,18 +676,14 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
   }
 
   /**
-   * Switch split mode (track vs road)
+   * Switch split mode (track vs road) and refresh splits from the current input.
    * @param mode - Split mode to switch to
    */
   private static switchSplitMode(mode: 'track' | 'road'): void {
     StateManager.setSplitMode(mode);
     const currentInput = getInputIdForMode(StateManager.getMode());
-    const value = this.getInputValue(currentInput);
-    if (value) {
-      const trackSec = parseFloat(this.dom.inputs.track?.value || '0') || 0;
-      if (trackSec > 0) {
-        this.updateSplits(trackSec);
-      }
+    if (this.getInputValue(currentInput)) {
+      this.calculate(currentInput);
     }
   }
 
@@ -779,6 +786,12 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
       this.dom.inputs.finishTime.value = inputs['finish_time_input'];
     }
 
+    // Trigger initial calculation to populate all derived fields
+    const mode = StateManager.getMode();
+    const sourceInput = getInputIdForMode(mode);
+    if (this.getInputValue(sourceInput)) {
+      this.calculate(sourceInput);
+    }
     this.saveInputValues();
   }
 
