@@ -1,4 +1,4 @@
-import { TRANSLATIONS } from '../constants/index.js';
+import { TRANSLATIONS, I18N_RULES } from '../constants/index.js';
 import StateManager from './StateManager.js';
 export class TranslationManager {
     static initialize(lang) {
@@ -44,6 +44,22 @@ export class TranslationManager {
             result[key] = this.get(key);
         });
         return result;
+    }
+    static getUnitLabel(domain, unit) {
+        const lang = StateManager.getLanguage();
+        return I18N_RULES[lang].units[domain][unit];
+    }
+    static getOptionLabel(category, key) {
+        const lang = StateManager.getLanguage();
+        return I18N_RULES[lang].options[category][key] || key;
+    }
+    static getTrainingFocusLabel(focus) {
+        const lang = StateManager.getLanguage();
+        return I18N_RULES[lang].trainingFocus[focus];
+    }
+    static getWorkoutLabel(kind) {
+        const lang = StateManager.getLanguage();
+        return I18N_RULES[lang].workouts[kind];
     }
 }
 export default TranslationManager;

@@ -2,6 +2,8 @@ const CACHE_NAME = 'runningpacenote-v5';
 const ASSETS = [
     './',
     './index.html',
+    './diagnostics.html',
+    './training-report.html',
     './main.css',
     './main.js',
     './icons8-exercise-96.png',

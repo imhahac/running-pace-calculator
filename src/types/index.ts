@@ -175,3 +175,28 @@ export interface ITrainingZone {
   label: string;
   pace: string;
 }
+
+/**
+ * Weekly training recommendation row
+ */
+export interface ITrainingWeekPlan {
+  week: number;
+  weekLabel: string;
+  focus: string;
+  easyPace: string;
+  tempoPace: string;
+  intervalPace: string;
+  longRunPace: string;
+  totalMileageKm: number;
+  keyWorkout: string;
+  isRecoveryWeek: boolean;
+}
+
+/**
+ * Share payload schema stored in URL query
+ */
+export interface ISharePayload {
+  state: Partial<IPaceState>;
+  inputs: Record<string, string>;
+  trainingTargetDate?: string;
+}

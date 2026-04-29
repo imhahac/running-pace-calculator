@@ -4,7 +4,7 @@
  * Uses StateManager as the single source of truth for language state.
  */
 
-import { TRANSLATIONS } from '../constants/index.js';
+import { TRANSLATIONS, I18N_RULES } from '../constants/index.js';
 import StateManager from './StateManager.js';
 import type { TLanguage } from '../types/index';
 
@@ -100,6 +100,38 @@ export class TranslationManager {
       result[key] = this.get(key);
     });
     return result;
+  }
+
+  /**
+   * Get unit label by domain and unit key from language rules.
+   */
+  static getUnitLabel(domain: 'pace' | 'treadmill', unit: 'km' | 'mile'): string {
+    const lang = StateManager.getLanguage();
+    return I18N_RULES[lang].units[domain][unit];
+  }
+
+  /**
+   * Get localized option label for settings panel.
+   */
+  static getOptionLabel(category: 'paceUnit' | 'treadmillUnit' | 'language', key: 'km' | 'mile' | 'zh' | 'en'): string {
+    const lang = StateManager.getLanguage();
+    return (I18N_RULES[lang].options[category] as Record<string, string>)[key] || key;
+  }
+
+  /**
+   * Get localized training focus text.
+   */
+  static getTrainingFocusLabel(focus: 'base' | 'build' | 'peak' | 'taper' | 'race'): string {
+    const lang = StateManager.getLanguage();
+    return I18N_RULES[lang].trainingFocus[focus];
+  }
+
+  /**
+   * Get localized workout recommendation text.
+   */
+  static getWorkoutLabel(kind: 'easy' | 'tempo' | 'interval' | 'race'): string {
+    const lang = StateManager.getLanguage();
+    return I18N_RULES[lang].workouts[kind];
   }
 }
 

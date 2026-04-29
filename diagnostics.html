@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>離線診斷</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+  <div class="main-wrapper">
+    <header>
+      <h1 class="box title" style="font-size:1.4rem;">離線診斷</h1>
+      <div class="helper-text">檢查目前 PWA 與快取狀態</div>
+      <hr>
+    </header>
+
+    <div class="box input-group" style="flex-direction:column; align-items:flex-start;">
+      <div class="settings-grid" style="grid-template-columns: 1fr 2fr;">
+        <div>APP 版本</div>
+        <div id="diag-version" class="mono-text">--</div>
+
+        <div>Service Worker</div>
+        <div id="diag-sw" class="mono-text">--</div>
+
+        <div>快取名稱</div>
+        <div id="diag-cache" class="mono-text">--</div>
+
+        <div>已快取項目數</div>
+        <div id="diag-cache-count" class="mono-text">--</div>
+
+        <div>最後更新</div>
+        <div id="diag-updated" class="mono-text">--</div>
+      </div>
+      <div class="settings-actions">
+        <button id="diag-refresh" class="action-btn">重新整理狀態</button>
+        <a href="index.html" class="diag-link">回到主頁</a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const APP_VERSION = 'v2.3-mid';
+
+    async function loadDiagnostics() {
+      const versionEl = document.getElementById('diag-version');
+      const swEl = document.getElementById('diag-sw');
+      const cacheEl = document.getElementById('diag-cache');
+      const cacheCountEl = document.getElementById('diag-cache-count');
+      const updatedEl = document.getElementById('diag-updated');
+
+      versionEl.textContent = APP_VERSION;
+
+      if ('serviceWorker' in navigator) {
+        const reg = await navigator.serviceWorker.getRegistration('./');
+        swEl.textContent = reg ? '已註冊' : '未註冊';
+      } else {
+        swEl.textContent = '不支援';
+      }
+
+      if ('caches' in window) {
+        const keys = await caches.keys();
+        const runningPaceCaches = keys.filter((key) => key.startsWith('runningpacenote-'));
+        cacheEl.textContent = runningPaceCaches.join(', ') || '無';
+
+        if (runningPaceCaches.length > 0) {
+          const cache = await caches.open(runningPaceCaches[runningPaceCaches.length - 1]);
+          const requests = await cache.keys();
+          cacheCountEl.textContent = requests.length.toString();
+        } else {
+          cacheCountEl.textContent = '0';
+        }
+      } else {
+        cacheEl.textContent = '不支援';
+        cacheCountEl.textContent = '不支援';
+      }
+
+      const rawAnalytics = localStorage.getItem('runningPaceNoteAnalytics');
+      if (rawAnalytics) {
+        try {
+          const analytics = JSON.parse(rawAnalytics);
+          updatedEl.textContent = analytics.updatedAt || '無資料';
+        } catch {
+          updatedEl.textContent = '資料格式錯誤';
+        }
+      } else {
+        updatedEl.textContent = '尚未有紀錄';
+      }
+    }
+
+    document.getElementById('diag-refresh').addEventListener('click', loadDiagnostics);
+    loadDiagnostics();
+  </script>
+</body>
+
+</html>

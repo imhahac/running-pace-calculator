@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>訓練週期報表</title>
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body>
+  <div class="main-wrapper" id="report-root">
+    <header>
+      <h1 class="box title" style="font-size:1.4rem;">訓練週期報表</h1>
+      <div class="helper-text" id="report-meta">--</div>
+      <hr>
+    </header>
+
+    <div class="box input-group" style="flex-direction:column; align-items:flex-start;">
+      <table id="training-plan-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+        <thead>
+          <tr>
+            <th>週</th>
+            <th>訓練重點</th>
+            <th>Easy</th>
+            <th>Tempo</th>
+            <th>Interval</th>
+            <th>Long</th>
+            <th>里程(km)</th>
+            <th>主課表</th>
+            <th>恢復週</th>
+          </tr>
+        </thead>
+        <tbody id="training-plan-body"></tbody>
+      </table>
+    </div>
+
+    <div class="action-row" style="margin-top: 10px;">
+      <button class="action-btn" onclick="window.print()">📄 列印 / 匯出 PDF</button>
+      <a href="index.html" class="diag-link">回到主頁</a>
+    </div>
+  </div>
+
+  <script type="module">
+    import Calculator from './modules/Calculator.js';
+    import TranslationManager from './modules/TranslationManager.js';
+    import TimeFormatter from './modules/TimeFormatter.js';
+
+    function parsePayload() {
+      const url = new URL(window.location.href);
+      const encoded = url.searchParams.get('rp');
+      if (!encoded) return null;
+      try {
+        const json = decodeURIComponent(escape(atob(encoded)));
+        return JSON.parse(json);
+      } catch {
+        return null;
+      }
+    }
+
+    function getPaceSecondsPerKm(payload) {
+      const state = payload?.state || {};
+      const inputs = payload?.inputs || {};
+      const mode = state.mode || 'pace';
+
+      if (mode === 'pace') {
+        const min = parseFloat(inputs.pace_input || '0') || 0;
+        const sec = parseFloat(inputs.pace_input2 || '0') || 0;
+        return min * 60 + sec;
+      }
+
+      if (mode === 'track') {
+        const lane = Number(state.lane || 400);
+        const lapSec = parseFloat(inputs.track_input || '0') || 0;
+        if (lapSec <= 0) return 0;
+        return (lapSec * 1000) / lane;
+      }
+
+      if (mode === 'treadmill') {
+        const speed = parseFloat(inputs.treadmill_input || '0') || 0;
+        if (speed <= 0) return 0;
+        const kmh = state.treadmillUnit === 'mile' ? speed * 1.609344 : speed;
+        return 3600 / kmh;
+      }
+
+      if (mode === 'finish_time') {
+        const finish = TimeFormatter.parse(inputs.finish_time_input || '');
+        const dist = Number(state.distance || 0);
+        if (!finish || !dist) return 0;
+        return (finish / dist) * 1000;
+      }
+
+      return 0;
+    }
+
+    const payload = parsePayload();
+    const body = document.getElementById('training-plan-body');
+    const meta = document.getElementById('report-meta');
+
+    if (!payload) {
+      meta.textContent = '缺少報表資料';
+    } else {
+      if (payload?.state?.lang === 'en') {
+        TranslationManager.setLanguage('en');
+      }
+
+      const focusMap = {
+        base: TranslationManager.getTrainingFocusLabel('base'),
+        build: TranslationManager.getTrainingFocusLabel('build'),
+        peak: TranslationManager.getTrainingFocusLabel('peak'),
+        taper: TranslationManager.getTrainingFocusLabel('taper'),
+        race: TranslationManager.getTrainingFocusLabel('race')
+      };
+      const workoutMap = {
+        easy: TranslationManager.getWorkoutLabel('easy'),
+        tempo: TranslationManager.getWorkoutLabel('tempo'),
+        interval: TranslationManager.getWorkoutLabel('interval'),
+        race: TranslationManager.getWorkoutLabel('race')
+      };
+
+      const paceSecondsPerKm = getPaceSecondsPerKm(payload);
+      const targetDate = payload.trainingTargetDate || '';
+      const plans = Calculator.generateTrainingCycle(paceSecondsPerKm, targetDate, focusMap, workoutMap);
+
+      meta.textContent = `目標日期: ${targetDate || '--'} / 週期: ${plans.length} 週`;
+
+      body.innerHTML = '';
+      plans.forEach((row) => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td>${row.weekLabel}</td>
+          <td>${row.focus}</td>
+          <td>${row.easyPace}</td>
+          <td>${row.tempoPace}</td>
+          <td>${row.intervalPace}</td>
+          <td>${row.longRunPace}</td>
+          <td>${row.totalMileageKm}</td>
+          <td>${row.keyWorkout}</td>
+          <td>${row.isRecoveryWeek ? '✓' : '-'}</td>
+        `;
+        body.appendChild(tr);
+      });
+    }
+  </script>
+</body>
+
+</html>

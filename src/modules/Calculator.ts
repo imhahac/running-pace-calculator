@@ -6,7 +6,7 @@
 import { RIEGEL_EXPONENT, TRAINING_ZONES, ROAD_SPLIT_DISTANCES, HALF_MARATHON_METERS, FULL_MARATHON_METERS } from '../constants/index.js';
 import TimeFormatter from './TimeFormatter.js';
 import Converter from './Converter.js';
-import type { IPaceState } from '../types/index';
+import type { IPaceState, ITrainingWeekPlan } from '../types/index';
 
 export class Calculator {
   /**
@@ -184,6 +184,99 @@ export class Calculator {
   static round(num: number, precision: number = 0): number {
     const factor = Math.pow(10, precision);
     return Math.round(num * factor) / factor;
+  }
+
+  /**
+   * Generate weekly training cycle recommendations until race day.
+   */
+  static generateTrainingCycle(
+    paceSecondsPerKm: number,
+    targetDateISO: string,
+    focusTextMap: Record<'base' | 'build' | 'peak' | 'taper' | 'race', string>,
+    workoutTextMap: Record<'easy' | 'tempo' | 'interval' | 'race', string>
+  ): ITrainingWeekPlan[] {
+    if (!isFinite(paceSecondsPerKm) || paceSecondsPerKm <= 0 || !targetDateISO) {
+      return [];
+    }
+
+    const today = new Date();
+    const target = new Date(targetDateISO);
+    if (isNaN(target.getTime()) || target.getTime() <= today.getTime()) {
+      return [];
+    }
+
+    const diffDays = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    const weekCount = Math.min(24, Math.max(1, Math.ceil(diffDays / 7)));
+    const plans: ITrainingWeekPlan[] = [];
+
+    const phaseForWeek = (w: number): 'base' | 'build' | 'peak' | 'taper' | 'race' => {
+      if (weekCount === 1) return 'race';
+      if (w === weekCount) return 'race';
+      if (w >= weekCount - 1) return 'taper';
+      if (w >= weekCount - 4) return 'peak';
+      if (w >= weekCount - 8) return 'build';
+      return 'base';
+    };
+
+    const buildMileage = (w: number, phase: 'base' | 'build' | 'peak' | 'taper' | 'race'): { mileage: number; isRecovery: boolean } => {
+      const baseline = Math.max(24, Math.min(80, Math.round(3600 / paceSecondsPerKm * 6 + 16)));
+      const progressStep = Math.floor((w - 1) / 3) * 4;
+      const raw = baseline + progressStep;
+      const isRecovery = w % 4 === 0 && phase !== 'race' && phase !== 'taper';
+
+      if (phase === 'race') return { mileage: Math.max(16, Math.round(raw * 0.45)), isRecovery: false };
+      if (phase === 'taper') return { mileage: Math.max(20, Math.round(raw * 0.65)), isRecovery: false };
+      if (isRecovery) return { mileage: Math.max(22, Math.round(raw * 0.7)), isRecovery: true };
+      return { mileage: raw, isRecovery: false };
+    };
+
+    const workoutForPhase = (phase: 'base' | 'build' | 'peak' | 'taper' | 'race', isRecovery: boolean): string => {
+      if (phase === 'race') return workoutTextMap.race;
+      if (isRecovery) return workoutTextMap.easy;
+      if (phase === 'base') return workoutTextMap.easy;
+      if (phase === 'build') return workoutTextMap.tempo;
+      return workoutTextMap.interval;
+    };
+
+    const paceByPhase = (phase: 'base' | 'build' | 'peak' | 'taper' | 'race'): {
+      easy: number;
+      tempo: number;
+      interval: number;
+      long: number;
+    } => {
+      switch (phase) {
+        case 'base':
+          return { easy: paceSecondsPerKm + 80, tempo: paceSecondsPerKm + 20, interval: paceSecondsPerKm - 5, long: paceSecondsPerKm + 55 };
+        case 'build':
+          return { easy: paceSecondsPerKm + 70, tempo: paceSecondsPerKm + 15, interval: paceSecondsPerKm - 10, long: paceSecondsPerKm + 45 };
+        case 'peak':
+          return { easy: paceSecondsPerKm + 60, tempo: paceSecondsPerKm + 10, interval: paceSecondsPerKm - 15, long: paceSecondsPerKm + 35 };
+        case 'taper':
+          return { easy: paceSecondsPerKm + 55, tempo: paceSecondsPerKm + 12, interval: paceSecondsPerKm - 8, long: paceSecondsPerKm + 30 };
+        default:
+          return { easy: paceSecondsPerKm + 50, tempo: paceSecondsPerKm + 5, interval: paceSecondsPerKm - 5, long: paceSecondsPerKm + 20 };
+      }
+    };
+
+    for (let week = 1; week <= weekCount; week += 1) {
+      const phase = phaseForWeek(week);
+      const p = paceByPhase(phase);
+      const mileage = buildMileage(week, phase);
+      plans.push({
+        week,
+        weekLabel: `W${week}`,
+        focus: focusTextMap[phase],
+        easyPace: TimeFormatter.format(p.easy),
+        tempoPace: TimeFormatter.format(p.tempo),
+        intervalPace: TimeFormatter.format(Math.max(120, p.interval)),
+        longRunPace: TimeFormatter.format(p.long),
+        totalMileageKm: mileage.mileage,
+        keyWorkout: workoutForPhase(phase, mileage.isRecovery),
+        isRecoveryWeek: mileage.isRecovery
+      });
+    }
+
+    return plans;
   }
 }
 

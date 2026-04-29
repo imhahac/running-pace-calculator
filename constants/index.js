@@ -85,7 +85,40 @@ export const TRANSLATIONS = {
         finish_hint_long: "半馬/全馬建議格式 h:mm:ss，例如 3:30:00",
         finish_error_invalid: "時間格式不正確，請使用 m:ss 或 h:mm:ss",
         finish_error_expected_long: "此距離建議使用 h:mm:ss，例如 3:30:00",
-        finish_error_expected_short: "此距離建議使用 m:ss，例如 20:00"
+        finish_error_expected_short: "此距離建議使用 m:ss，例如 20:00",
+        btn_settings: "⚙️ 設定",
+        title_settings: "偏好設定",
+        settings_lang: "語言",
+        settings_pace_unit: "配速單位",
+        settings_treadmill_unit: "跑步機單位",
+        settings_split_mode: "分段顯示偏好",
+        settings_venue: "預設場地",
+        settings_lane: "預設跑道道次",
+        btn_apply_settings: "套用設定",
+        btn_open_diagnostics: "開啟離線診斷",
+        btn_share_link: "🔗 分享連結",
+        btn_export_pdf: "📄 匯出 PDF",
+        btn_export_image: "🖼️ 匯出圖片",
+        share_link_copied: "已複製分享連結",
+        share_link_failed: "分享連結建立失敗",
+        title_training_cycle: "📅 訓練週期建議",
+        label_target_race_date: "目標賽事日期",
+        label_week: "週",
+        label_focus: "訓練重點",
+        label_easy: "Easy",
+        label_tempo: "Tempo",
+        label_interval: "Interval",
+        label_long: "Long",
+        no_training_cycle: "請先設定目標日期並輸入配速",
+        label_mileage: "里程(km)",
+        label_workout: "主課表",
+        label_recovery: "恢復週",
+        workout_easy: "E配速慢跑 + 核心",
+        workout_tempo: "節奏跑 20-40 分",
+        workout_interval: "間歇 5-8 組",
+        workout_race: "比賽配速短課表",
+        btn_open_report: "📑 開啟訓練報表",
+        short_link_failed: "短連結服務失敗，已改用完整連結"
     },
     en: {
         helper: "Input anything, calculate instantly.",
@@ -124,7 +157,90 @@ export const TRANSLATIONS = {
         finish_hint_long: "Half/Full races: use h:mm:ss, e.g. 3:30:00",
         finish_error_invalid: "Invalid time format. Use m:ss or h:mm:ss",
         finish_error_expected_long: "For this distance, use h:mm:ss, e.g. 3:30:00",
-        finish_error_expected_short: "For this distance, use m:ss, e.g. 20:00"
+        finish_error_expected_short: "For this distance, use m:ss, e.g. 20:00",
+        btn_settings: "⚙️ Settings",
+        title_settings: "Preferences",
+        settings_lang: "Language",
+        settings_pace_unit: "Pace Unit",
+        settings_treadmill_unit: "Treadmill Unit",
+        settings_split_mode: "Split Preference",
+        settings_venue: "Default Venue",
+        settings_lane: "Default Lane",
+        btn_apply_settings: "Apply Settings",
+        btn_open_diagnostics: "Open Offline Diagnostics",
+        btn_share_link: "🔗 Share Link",
+        btn_export_pdf: "📄 Export PDF",
+        btn_export_image: "🖼️ Export Image",
+        share_link_copied: "Share link copied",
+        share_link_failed: "Failed to build share link",
+        title_training_cycle: "📅 Training Cycle",
+        label_target_race_date: "Target race date",
+        label_week: "Week",
+        label_focus: "Focus",
+        label_easy: "Easy",
+        label_tempo: "Tempo",
+        label_interval: "Interval",
+        label_long: "Long",
+        no_training_cycle: "Set target date and provide a valid pace",
+        label_mileage: "Mileage(km)",
+        label_workout: "Key Workout",
+        label_recovery: "Recovery",
+        workout_easy: "Easy run + core",
+        workout_tempo: "Tempo run 20-40 min",
+        workout_interval: "Intervals 5-8 reps",
+        workout_race: "Race-pace sharpening",
+        btn_open_report: "📑 Open Training Report",
+        short_link_failed: "Short-link service failed, copied long link"
+    }
+};
+export const I18N_RULES = {
+    zh: {
+        units: {
+            pace: { km: '/km', mile: '/mile' },
+            treadmill: { km: 'km/h', mile: 'mile/h' }
+        },
+        options: {
+            paceUnit: { km: '/km', mile: '/mile' },
+            treadmillUnit: { km: 'km/h', mile: 'mile/h' },
+            language: { zh: '繁體中文', en: 'English' }
+        },
+        trainingFocus: {
+            base: '有氧基礎',
+            build: '節奏與耐力',
+            peak: '比賽配速',
+            taper: '減量調整',
+            race: '比賽週'
+        },
+        workouts: {
+            easy: 'E配速慢跑 + 核心',
+            tempo: '節奏跑 20-40 分',
+            interval: '間歇 5-8 組',
+            race: '比賽配速短課表'
+        }
+    },
+    en: {
+        units: {
+            pace: { km: '/km', mile: '/mile' },
+            treadmill: { km: 'km/h', mile: 'mile/h' }
+        },
+        options: {
+            paceUnit: { km: '/km', mile: '/mile' },
+            treadmillUnit: { km: 'km/h', mile: 'mile/h' },
+            language: { zh: 'Traditional Chinese', en: 'English' }
+        },
+        trainingFocus: {
+            base: 'Aerobic base',
+            build: 'Tempo and endurance',
+            peak: 'Race pace sharpening',
+            taper: 'Taper and freshness',
+            race: 'Race week'
+        },
+        workouts: {
+            easy: 'Easy run + core',
+            tempo: 'Tempo run 20-40 min',
+            interval: 'Intervals 5-8 reps',
+            race: 'Race-pace sharpening'
+        }
     }
 };
 export const HALF_MARATHON_METERS = 21097.5;

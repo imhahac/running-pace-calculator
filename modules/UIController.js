@@ -7,6 +7,7 @@ import TranslationManager from './TranslationManager.js';
 import StorageManager from './StorageManager.js';
 import Converter from './Converter.js';
 import AnalyticsManager from './AnalyticsManager.js';
+import ShareManager from './ShareManager.js';
 export class UIController {
     static initialize() {
         this.dom = getDOMCache();
@@ -18,6 +19,10 @@ export class UIController {
             this.dom.distanceSelect.value = dist.toString();
         }
         this.updateFinishTimeFeedback();
+        this.syncSplitModeUI(StateManager.getSplitMode());
+        this.updateModeCardAccessibility();
+        this.populateSettingsPanel();
+        this.applySharedPayloadFromURL();
     }
     static bindEvents() {
         if (!this.dom)
@@ -64,6 +69,20 @@ export class UIController {
             this.dom.inputs.finishTime.addEventListener('focus', () => this.setMode('finish_time'));
             this.dom.inputs.finishTime.addEventListener('click', () => this.setMode('finish_time'));
         }
+        document.querySelectorAll('.row').forEach((el) => {
+            const mode = (el.id || '').replace('_icon', '');
+            if (!mode)
+                return;
+            el.setAttribute('tabindex', '0');
+            el.setAttribute('role', 'button');
+            el.addEventListener('keydown', (e) => {
+                const keyEvent = e;
+                if (keyEvent.key === 'Enter' || keyEvent.key === ' ') {
+                    keyEvent.preventDefault();
+                    this.setMode(mode);
+                }
+            });
+        });
         if (this.dom.buttons.slide) {
             this.dom.buttons.slide.addEventListener('click', () => this.toggleSplitsContainer());
         }
@@ -96,6 +115,22 @@ export class UIController {
         if (copyBtn) {
             copyBtn.addEventListener('click', () => this.copyResults());
         }
+        const shareBtn = document.getElementById('share-link-btn');
+        if (shareBtn) {
+            shareBtn.addEventListener('click', () => this.copyShareLink());
+        }
+        const exportPdfBtn = document.getElementById('export-pdf-btn');
+        if (exportPdfBtn) {
+            exportPdfBtn.addEventListener('click', () => this.exportPDF());
+        }
+        const exportImageBtn = document.getElementById('export-image-btn');
+        if (exportImageBtn) {
+            exportImageBtn.addEventListener('click', () => this.exportImage());
+        }
+        const openReportBtn = document.getElementById('open-report-btn');
+        if (openReportBtn) {
+            openReportBtn.addEventListener('click', () => this.openTrainingReportPage());
+        }
         const toggleTrack = document.getElementById('toggle-track');
         const toggleRoad = document.getElementById('toggle-road');
         if (toggleTrack) {
@@ -107,6 +142,22 @@ export class UIController {
         const toggleTools = document.getElementById('toggle-tools');
         if (toggleTools) {
             toggleTools.addEventListener('click', () => this.toggleAdvancedTools());
+        }
+        const toggleSettings = document.getElementById('toggle-settings');
+        if (toggleSettings) {
+            toggleSettings.addEventListener('click', () => this.toggleSettingsPanel());
+        }
+        const settingsApply = document.getElementById('settings-apply');
+        if (settingsApply) {
+            settingsApply.addEventListener('click', () => this.applySettingsFromPanel());
+        }
+        const settingsVenue = document.getElementById('settings-venue');
+        if (settingsVenue) {
+            settingsVenue.addEventListener('change', () => this.populateSettingsLaneOptions(settingsVenue.value));
+        }
+        const trainingDate = document.getElementById('training-target-date');
+        if (trainingDate) {
+            trainingDate.addEventListener('change', () => this.updateTrainingCycleUI(this.lastPaceSecondsPerKm));
         }
         const predDistSelect = document.getElementById('pred-dist-select');
         const predTimeInput = document.getElementById('pred-time-input');
@@ -243,7 +294,9 @@ export class UIController {
         }
         this.updateSplits(secondsPerLap);
         const paceSecondsPerKm = (secondsPerLap * 1000) / state.lane;
+        this.lastPaceSecondsPerKm = paceSecondsPerKm;
         this.updateZones(paceSecondsPerKm);
+        this.updateTrainingCycleUI(paceSecondsPerKm);
         this.saveInputValues();
     }
     static updateSplits(secondsPerLap) {
@@ -344,6 +397,7 @@ export class UIController {
             modeIcon.classList.add('selected');
         this.clearPlaceholders();
         this.setPlaceholders(newMode);
+        this.updateModeCardAccessibility();
         if (newMode === 'finish_time') {
             this.updateFinishTimeFeedback();
         }
@@ -357,6 +411,9 @@ export class UIController {
         if (this.dom.buttons.mileSwitchText) {
             this.dom.buttons.mileSwitchText.textContent = newUnit === 'km' ? '(Km)' : '(Mile)';
         }
+        if (this.dom.displays.unit) {
+            this.dom.displays.unit.textContent = TranslationManager.getUnitLabel('pace', newUnit);
+        }
         const inputId = getInputIdForMode(StateManager.getMode());
         this.calculate(inputId);
     }
@@ -366,6 +423,9 @@ export class UIController {
         StateManager.setTreadmillUnit(newUnit);
         if (this.dom.buttons.perHourSwitchText) {
             this.dom.buttons.perHourSwitchText.textContent = newUnit === 'km' ? '(Km/h)' : '(Mile/h)';
+        }
+        if (this.dom.displays.unit2) {
+            this.dom.displays.unit2.textContent = TranslationManager.getUnitLabel('treadmill', newUnit);
         }
         const inputId = getInputIdForMode(StateManager.getMode());
         this.calculate(inputId);
@@ -482,6 +542,7 @@ export class UIController {
         }
         document.title = lang === 'zh' ? 'RunningPaceNote 配速計算機' : 'RunningPaceNote Calculator';
         this.updateFinishTimeFeedback();
+        this.populateSettingsPanel();
     }
     static copyResults() {
         const t = TranslationManager.getAll();
@@ -505,6 +566,154 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
     }
     static switchSplitMode(mode) {
         StateManager.setSplitMode(mode);
+        this.syncSplitModeUI(mode);
+        const currentInput = getInputIdForMode(StateManager.getMode());
+        if (this.getInputValue(currentInput)) {
+            this.calculate(currentInput);
+        }
+        this.saveInputValues();
+        StateManager.saveToStorage(this.inputValues);
+    }
+    static syncSplitModeUI(mode) {
+        const trackDetail = document.getElementById('split-detail');
+        const roadDetail = document.getElementById('road-detail');
+        const toggleTrack = document.getElementById('toggle-track');
+        const toggleRoad = document.getElementById('toggle-road');
+        if (trackDetail) {
+            trackDetail.style.display = mode === 'track' ? 'flex' : 'none';
+        }
+        if (roadDetail) {
+            roadDetail.style.display = mode === 'road' ? 'grid' : 'none';
+        }
+        if (toggleTrack) {
+            toggleTrack.classList.toggle('active', mode === 'track');
+            toggleTrack.setAttribute('aria-pressed', mode === 'track' ? 'true' : 'false');
+        }
+        if (toggleRoad) {
+            toggleRoad.classList.toggle('active', mode === 'road');
+            toggleRoad.setAttribute('aria-pressed', mode === 'road' ? 'true' : 'false');
+        }
+    }
+    static updateModeCardAccessibility() {
+        const currentMode = StateManager.getMode();
+        document.querySelectorAll('.row').forEach((el) => {
+            const mode = (el.id || '').replace('_icon', '');
+            el.setAttribute('aria-pressed', mode === currentMode ? 'true' : 'false');
+        });
+    }
+    static toggleSettingsPanel() {
+        const panel = document.getElementById('settings-panel');
+        const btn = document.getElementById('toggle-settings');
+        if (panel) {
+            panel.classList.toggle('SlideDown');
+            const isExpanded = !panel.classList.contains('SlideDown');
+            if (btn) {
+                btn.setAttribute('aria-expanded', isExpanded ? 'true' : 'false');
+            }
+        }
+    }
+    static populateSettingsPanel() {
+        const state = StateManager.getState();
+        const t = TranslationManager.getAll();
+        const langSelect = document.getElementById('settings-lang');
+        const paceUnitSelect = document.getElementById('settings-pace-unit');
+        const treadmillUnitSelect = document.getElementById('settings-treadmill-unit');
+        const splitModeSelect = document.getElementById('settings-split-mode');
+        const venueSelect = document.getElementById('settings-venue');
+        const laneSelect = document.getElementById('settings-lane');
+        if (langSelect) {
+            langSelect.innerHTML = '';
+            langSelect.appendChild(new Option(TranslationManager.getOptionLabel('language', 'zh'), 'zh'));
+            langSelect.appendChild(new Option(TranslationManager.getOptionLabel('language', 'en'), 'en'));
+            langSelect.value = state.lang;
+        }
+        if (paceUnitSelect) {
+            paceUnitSelect.innerHTML = '';
+            paceUnitSelect.appendChild(new Option(TranslationManager.getOptionLabel('paceUnit', 'km'), 'km'));
+            paceUnitSelect.appendChild(new Option(TranslationManager.getOptionLabel('paceUnit', 'mile'), 'mile'));
+            paceUnitSelect.value = state.paceUnit;
+        }
+        if (treadmillUnitSelect) {
+            treadmillUnitSelect.innerHTML = '';
+            treadmillUnitSelect.appendChild(new Option(TranslationManager.getOptionLabel('treadmillUnit', 'km'), 'km'));
+            treadmillUnitSelect.appendChild(new Option(TranslationManager.getOptionLabel('treadmillUnit', 'mile'), 'mile'));
+            treadmillUnitSelect.value = state.treadmillUnit;
+        }
+        if (splitModeSelect) {
+            splitModeSelect.innerHTML = '';
+            splitModeSelect.appendChild(new Option(t.tab_track || 'Track', 'track'));
+            splitModeSelect.appendChild(new Option(t.tab_road || 'Road', 'road'));
+            splitModeSelect.value = state.splitMode;
+        }
+        if (venueSelect) {
+            venueSelect.innerHTML = '';
+            Object.values(VENUES).forEach((venue) => {
+                venueSelect.appendChild(new Option(venue.name, venue.id));
+            });
+            venueSelect.value = state.venue;
+            this.populateSettingsLaneOptions(state.venue);
+        }
+        if (laneSelect && laneSelect.options.length > 0) {
+            laneSelect.value = state.lane.toString();
+        }
+    }
+    static populateSettingsLaneOptions(venueId) {
+        const laneSelect = document.getElementById('settings-lane');
+        if (!laneSelect)
+            return;
+        const venue = VENUES[venueId];
+        laneSelect.innerHTML = '';
+        if (!venue)
+            return;
+        venue.lanes.forEach((lane) => {
+            laneSelect.appendChild(new Option(`${lane.label} (${lane.dist}m)`, lane.dist.toString()));
+        });
+    }
+    static applySettingsFromPanel() {
+        const lang = document.getElementById('settings-lang')?.value;
+        const paceUnit = document.getElementById('settings-pace-unit')?.value;
+        const treadmillUnit = document.getElementById('settings-treadmill-unit')?.value;
+        const splitMode = document.getElementById('settings-split-mode')?.value;
+        const venue = document.getElementById('settings-venue')?.value;
+        const lane = document.getElementById('settings-lane')?.value;
+        if (lang === 'zh' || lang === 'en') {
+            StateManager.setLanguage(lang);
+            this.applyLanguage();
+        }
+        if (paceUnit === 'km' || paceUnit === 'mile') {
+            StateManager.setPaceUnit(paceUnit);
+            if (this.dom.buttons.mileSwitchText) {
+                this.dom.buttons.mileSwitchText.textContent = paceUnit === 'km' ? '(Km)' : '(Mile)';
+            }
+            if (this.dom.displays.unit) {
+                this.dom.displays.unit.textContent = TranslationManager.getUnitLabel('pace', paceUnit);
+            }
+        }
+        if (treadmillUnit === 'km' || treadmillUnit === 'mile') {
+            StateManager.setTreadmillUnit(treadmillUnit);
+            if (this.dom.buttons.perHourSwitchText) {
+                this.dom.buttons.perHourSwitchText.textContent = treadmillUnit === 'km' ? '(Km/h)' : '(Mile/h)';
+            }
+            if (this.dom.displays.unit2) {
+                this.dom.displays.unit2.textContent = TranslationManager.getUnitLabel('treadmill', treadmillUnit);
+            }
+        }
+        if (venue) {
+            StateManager.setVenue(venue);
+            this.populateVenues();
+        }
+        if (lane) {
+            StateManager.setLane(parseInt(lane, 10));
+            if (this.dom.laneSelect) {
+                this.dom.laneSelect.value = lane;
+            }
+            this.updateLaneState();
+        }
+        if (splitMode === 'track' || splitMode === 'road') {
+            this.switchSplitMode(splitMode);
+        }
+        this.saveInputValues();
+        StateManager.saveToStorage(this.inputValues);
         const currentInput = getInputIdForMode(StateManager.getMode());
         if (this.getInputValue(currentInput)) {
             this.calculate(currentInput);
@@ -646,13 +855,20 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
     }
     static toggleAdvancedTools() {
         const advancedTools = document.getElementById('advanced-tools');
+        const btn = document.getElementById('toggle-tools');
         if (advancedTools) {
             advancedTools.classList.toggle('SlideDown');
+            if (btn) {
+                btn.setAttribute('aria-expanded', advancedTools.classList.contains('SlideDown') ? 'false' : 'true');
+            }
         }
     }
     static toggleSplitsContainer() {
         if (this.dom.displays.container) {
             this.dom.displays.container.classList.toggle('SlideDown');
+            if (this.dom.buttons.slide) {
+                this.dom.buttons.slide.setAttribute('aria-expanded', this.dom.displays.container.classList.contains('SlideDown') ? 'false' : 'true');
+            }
         }
     }
     static toggleInfoContainer() {
@@ -687,9 +903,153 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
         setEl(p.half, predict(HALF_MARATHON_METERS));
         setEl(p.full, predict(FULL_MARATHON_METERS));
     }
+    static updateTrainingCycleUI(paceSecondsPerKm) {
+        const dateInput = document.getElementById('training-target-date');
+        const emptyState = document.getElementById('training-plan-empty');
+        const tableWrap = document.getElementById('training-plan-table-wrap');
+        const body = document.getElementById('training-plan-body');
+        if (!dateInput || !emptyState || !tableWrap || !body)
+            return;
+        const focusMap = {
+            base: TranslationManager.getTrainingFocusLabel('base'),
+            build: TranslationManager.getTrainingFocusLabel('build'),
+            peak: TranslationManager.getTrainingFocusLabel('peak'),
+            taper: TranslationManager.getTrainingFocusLabel('taper'),
+            race: TranslationManager.getTrainingFocusLabel('race')
+        };
+        const workoutMap = {
+            easy: TranslationManager.getWorkoutLabel('easy'),
+            tempo: TranslationManager.getWorkoutLabel('tempo'),
+            interval: TranslationManager.getWorkoutLabel('interval'),
+            race: TranslationManager.getWorkoutLabel('race')
+        };
+        const plan = Calculator.generateTrainingCycle(paceSecondsPerKm, dateInput.value, focusMap, workoutMap);
+        body.innerHTML = '';
+        if (plan.length === 0) {
+            emptyState.style.display = 'block';
+            tableWrap.style.display = 'none';
+            return;
+        }
+        plan.forEach((row) => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+        <td>${row.weekLabel}</td>
+        <td>${row.focus}</td>
+        <td>${row.easyPace}</td>
+        <td>${row.tempoPace}</td>
+        <td>${row.intervalPace}</td>
+        <td>${row.longRunPace}</td>
+        <td>${row.totalMileageKm}</td>
+        <td>${row.keyWorkout}</td>
+        <td>${row.isRecoveryWeek ? '✓' : '-'}</td>
+      `;
+            body.appendChild(tr);
+        });
+        emptyState.style.display = 'none';
+        tableWrap.style.display = 'block';
+    }
+    static applySharedPayloadFromURL() {
+        const payload = ShareManager.readPayloadFromURL();
+        if (!payload)
+            return;
+        StateManager.setState(payload.state);
+        const inputs = payload.inputs || {};
+        if (this.dom.inputs.paceMin && inputs['pace_input'])
+            this.dom.inputs.paceMin.value = inputs['pace_input'];
+        if (this.dom.inputs.paceSec && inputs['pace_input2'])
+            this.dom.inputs.paceSec.value = inputs['pace_input2'];
+        if (this.dom.inputs.track && inputs['track_input'])
+            this.dom.inputs.track.value = inputs['track_input'];
+        if (this.dom.inputs.treadmill && inputs['treadmill_input'])
+            this.dom.inputs.treadmill.value = inputs['treadmill_input'];
+        if (this.dom.inputs.finishTime && inputs['finish_time_input'])
+            this.dom.inputs.finishTime.value = inputs['finish_time_input'];
+        if (this.dom.distanceSelect) {
+            this.dom.distanceSelect.value = StateManager.getDistance().toString();
+        }
+        const trainingDate = document.getElementById('training-target-date');
+        if (trainingDate && payload.trainingTargetDate) {
+            trainingDate.value = payload.trainingTargetDate;
+        }
+        this.setMode(StateManager.getMode());
+        this.populateVenues();
+        this.syncSplitModeUI(StateManager.getSplitMode());
+        this.populateSettingsPanel();
+        this.saveInputValues();
+        const currentInput = getInputIdForMode(StateManager.getMode());
+        if (this.getInputValue(currentInput)) {
+            this.calculate(currentInput);
+        }
+    }
+    static async copyShareLink() {
+        const trainingDate = document.getElementById('training-target-date')?.value;
+        const payload = {
+            state: StateManager.getState(),
+            inputs: {
+                pace_input: this.dom.inputs.paceMin?.value || '',
+                pace_input2: this.dom.inputs.paceSec?.value || '',
+                track_input: this.dom.inputs.track?.value || '',
+                treadmill_input: this.dom.inputs.treadmill?.value || '',
+                finish_time_input: this.dom.inputs.finishTime?.value || ''
+            },
+            trainingTargetDate: trainingDate || ''
+        };
+        try {
+            const longURL = ShareManager.buildShareURL(payload);
+            const shortURL = await ShareManager.shortenURL(longURL);
+            const finalURL = shortURL || longURL;
+            navigator.clipboard.writeText(finalURL).then(() => {
+                if (!shortURL) {
+                    alert(`${TranslationManager.get('short_link_failed')}\n${TranslationManager.get('share_link_copied')}`);
+                    return;
+                }
+                alert(TranslationManager.get('share_link_copied'));
+            });
+        }
+        catch {
+            alert(TranslationManager.get('share_link_failed'));
+        }
+    }
+    static exportPDF() {
+        window.print();
+    }
+    static openTrainingReportPage() {
+        const trainingDate = document.getElementById('training-target-date')?.value;
+        const payload = {
+            state: StateManager.getState(),
+            inputs: {
+                pace_input: this.dom.inputs.paceMin?.value || '',
+                pace_input2: this.dom.inputs.paceSec?.value || '',
+                track_input: this.dom.inputs.track?.value || '',
+                treadmill_input: this.dom.inputs.treadmill?.value || '',
+                finish_time_input: this.dom.inputs.finishTime?.value || ''
+            },
+            trainingTargetDate: trainingDate || ''
+        };
+        const url = new URL(window.location.href);
+        url.pathname = `${url.pathname.replace(/\/[^/]*$/, '')}/training-report.html`;
+        url.search = '';
+        url.searchParams.set('rp', btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
+        window.open(url.toString(), '_blank');
+    }
+    static exportImage() {
+        const target = document.querySelector('.main-wrapper');
+        const html2canvasFn = window.html2canvas;
+        if (!target || !html2canvasFn) {
+            alert('Image export unavailable');
+            return;
+        }
+        html2canvasFn(target, { backgroundColor: null, scale: 2 }).then((canvas) => {
+            const link = document.createElement('a');
+            link.download = 'running-pace-note.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        });
+    }
 }
 UIController.dom = getDOMCache();
 UIController.inputValues = {};
+UIController.lastPaceSecondsPerKm = 0;
 UIController.SHORT_TIME_REGEX = /^\d{1,2}:\d{1,2}$/;
 UIController.LONG_TIME_REGEX = /^\d{1,2}:\d{1,2}:\d{1,2}$/;
 export default UIController;

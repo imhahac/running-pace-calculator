@@ -105,9 +105,9 @@
             </div>
 
             <div class="column2 inputs-row">
-                <input class="pace_input" type="number" id="pace_input" placeholder="4" autofocus>
+                <input class="pace_input" type="number" id="pace_input" placeholder="4" autofocus aria-label="配速分鐘">
                 <span>:</span>
-                <input class="pace_input" type="number" id="pace_input2" placeholder="30">
+                <input class="pace_input" type="number" id="pace_input2" placeholder="30" aria-label="配速秒數">
                 <span id="unit" data-unit="km">/km</span>
                 <button id='mile-button'>
                     <img src="switch.png" alt="switch"><span id="switch">/mile</span>
@@ -125,20 +125,20 @@
             </div>
             <div class="column2 inputs-grid">
                 <div class="lane-selector">
-                    <select id="venue-select">
+                    <select id="venue-select" aria-label="場地選擇">
                         <!-- Options populated by JS -->
                     </select>
                     <div class="lane-sub-row">
-                        <select id="laneNumber">
+                        <select id="laneNumber" aria-label="跑道道次選擇">
                             <!-- Options populated by JS default -->
                         </select>
                         <span id="lane-length2">400m</span>
                     </div>
                 </div>
                 <div class="track-input-container">
-                    <input type="number" id="track_input" placeholder="" size="4" maxlength="4">
+                    <input type="number" id="track_input" placeholder="" size="4" maxlength="4" aria-label="每圈秒數輸入">
                     <span data-i18n="label_sec_lap">秒/圈</span>
-                    <button id='slide-button' aria-label="Expand Splits">+</button>
+                    <button id='slide-button' aria-label="Expand Splits" aria-expanded="false" aria-controls="container">+</button>
                 </div>
             </div>
         </div>
@@ -147,12 +147,12 @@
         <div class='container animation SlideDown' id='container'>
             <!-- Split Mode Toggle -->
             <div class="split-toggle-container">
-                <button id="toggle-track" class="toggle-btn active" data-i18n="tab_track">🏟️ 田徑場</button>
-                <button id="toggle-road" class="toggle-btn" data-i18n="tab_road">🛣️ 路跑分段</button>
+                <button id="toggle-track" class="toggle-btn active" data-i18n="tab_track" aria-pressed="true">🏟️ 田徑場</button>
+                <button id="toggle-road" class="toggle-btn" data-i18n="tab_road" aria-pressed="false">🛣️ 路跑分段</button>
             </div>
 
             <!-- Track Splits (Default) -->
-            <div id="split-detail">
+            <div id="split-detail" role="region" aria-label="Track splits">
                 <div class="box indent-text splits-column">
                     <div class="split-row">
                         <div class="increment-label">100m</div><input class="increment input-right" type="text"
@@ -197,13 +197,25 @@
             </div>
 
             <!-- Road Splits (Hidden by default) -->
-            <div id="road-detail" style="display: none;">
+            <div id="road-detail" style="display: none;" role="region" aria-label="Road splits">
                 <!-- Content populated by JS -->
             </div>
 
             <div class="action-row" style="text-align: center; margin-top: 10px;">
                 <button id="copy-btn" class="action-btn">
                     <span data-i18n="btn_copy">📋 複製結果</span>
+                </button>
+                <button id="share-link-btn" class="action-btn">
+                    <span data-i18n="btn_share_link">🔗 分享連結</span>
+                </button>
+                <button id="export-pdf-btn" class="action-btn">
+                    <span data-i18n="btn_export_pdf">📄 匯出 PDF</span>
+                </button>
+                <button id="export-image-btn" class="action-btn">
+                    <span data-i18n="btn_export_image">🖼️ 匯出圖片</span>
+                </button>
+                <button id="open-report-btn" class="action-btn">
+                    <span data-i18n="btn_open_report">📑 開啟訓練報表</span>
                 </button>
             </div>
         </div>
@@ -217,7 +229,7 @@
                 <img src="treadmill.png" alt="Option 3"><span data-i18n="mode_treadmill">跑步機</span>
             </div>
             <div class="column2 inputs-row">
-                <input type="number" id="treadmill_input" placeholder="" step="0.1"><span id="unit2"
+                <input type="number" id="treadmill_input" placeholder="" step="0.1" aria-label="跑步機速度輸入"><span id="unit2"
                     data-unit="km">km/h</span>
                 <button id='perHour-button'>
                     <img src="switch.png" alt="switch2"><span id="switch2">mile/h</span>
@@ -235,8 +247,8 @@
             </div>
 
             <div class="column2 inputs-row">
-                <input type="text" id="finish_time_input" placeholder="m:s / h:m:s">
-                <select id="dropdown">
+                <input type="text" id="finish_time_input" placeholder="m:s / h:m:s" aria-label="完成時間輸入">
+                <select id="dropdown" aria-label="距離選擇">
                     <option value="42195" data-i18n="dist_marathon">全馬 Marathon</option>
                     <option value="21097.5" data-i18n="dist_half">半馬 Half-Marathon</option>
                     <option value="10000">10K</option>
@@ -249,6 +261,41 @@
                 </select>
             </div>
             <div id="finish-time-feedback" class="field-feedback" aria-live="polite"></div>
+        </div>
+
+        <div style="text-align: center; margin-top: 10px;">
+            <button id="toggle-settings" class="action-btn" style="font-size: 0.8rem; padding: 5px 10px;" aria-expanded="false" aria-controls="settings-panel">
+                <span data-i18n="btn_settings">⚙️ 設定</span>
+            </button>
+        </div>
+
+        <div id="settings-panel" class="container SlideDown" style="margin-top: 10px;" role="region" aria-label="Settings Panel">
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;" data-i18n="title_settings">偏好設定</h3>
+                <div class="settings-grid">
+                    <label for="settings-lang" data-i18n="settings_lang">語言</label>
+                    <select id="settings-lang" aria-label="設定語言"></select>
+
+                    <label for="settings-pace-unit" data-i18n="settings_pace_unit">配速單位</label>
+                    <select id="settings-pace-unit" aria-label="設定配速單位"></select>
+
+                    <label for="settings-treadmill-unit" data-i18n="settings_treadmill_unit">跑步機單位</label>
+                    <select id="settings-treadmill-unit" aria-label="設定跑步機單位"></select>
+
+                    <label for="settings-split-mode" data-i18n="settings_split_mode">分段顯示偏好</label>
+                    <select id="settings-split-mode" aria-label="設定分段顯示偏好"></select>
+
+                    <label for="settings-venue" data-i18n="settings_venue">預設場地</label>
+                    <select id="settings-venue" aria-label="設定預設場地"></select>
+
+                    <label for="settings-lane" data-i18n="settings_lane">預設跑道道次</label>
+                    <select id="settings-lane" aria-label="設定預設跑道道次"></select>
+                </div>
+                <div class="settings-actions">
+                    <button id="settings-apply" class="action-btn" data-i18n="btn_apply_settings">套用設定</button>
+                    <a href="diagnostics.html" class="diag-link" data-i18n="btn_open_diagnostics">開啟離線診斷</a>
+                </div>
+            </div>
         </div>
 
         <!-- Advanced Tools Toggle -->
@@ -304,10 +351,38 @@
                     <div id="pred-full" class="mono-text">--</div>
                 </div>
             </div>
+
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;"><span data-i18n="title_training_cycle">📅 訓練週期建議</span></h3>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
+                    <label for="training-target-date" data-i18n="label_target_race_date" style="font-size:0.9rem;">目標賽事日期</label>
+                    <input type="date" id="training-target-date" style="width:auto; text-align:left;">
+                </div>
+                <div id="training-plan-empty" class="helper-text" data-i18n="no_training_cycle">請先設定目標日期並輸入配速</div>
+                <div id="training-plan-table-wrap" style="width:100%; overflow:auto; display:none;">
+                    <table id="training-plan-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
+                        <thead>
+                            <tr>
+                                <th data-i18n="label_week">週</th>
+                                <th data-i18n="label_focus">訓練重點</th>
+                                <th data-i18n="label_easy">Easy</th>
+                                <th data-i18n="label_tempo">Tempo</th>
+                                <th data-i18n="label_interval">Interval</th>
+                                <th data-i18n="label_long">Long</th>
+                                <th data-i18n="label_mileage">里程(km)</th>
+                                <th data-i18n="label_workout">主課表</th>
+                                <th data-i18n="label_recovery">恢復週</th>
+                            </tr>
+                        </thead>
+                        <tbody id="training-plan-body"></tbody>
+                    </table>
+                </div>
+            </div>
         </div>
     </div>
 
     <!-- Logic -->
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script type="module" src="main.js"></script>
 </body>
 

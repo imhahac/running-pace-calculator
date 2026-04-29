@@ -435,6 +435,16 @@ button {
     padding: 5px;
 }
 
+button:focus-visible,
+select:focus-visible,
+input:focus-visible,
+.row:focus-visible,
+.diag-link:focus-visible {
+    outline: 2px solid var(--highlight);
+    outline-offset: 2px;
+    border-radius: 6px;
+}
+
 button img {
     width: 16px;
     height: 16px;
@@ -491,6 +501,26 @@ span[id^="unit"] {
     gap: 5px;
 }
 
+.action-row {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+
+#training-plan-table th,
+#training-plan-table td {
+    border-bottom: 1px solid var(--border-color);
+    padding: 6px 4px;
+    text-align: left;
+    white-space: nowrap;
+}
+
+#training-plan-table th {
+    color: var(--text-muted);
+    font-weight: 700;
+}
+
 .action-btn:hover {
     background: var(--text-muted);
     color: var(--primary-bg);
@@ -504,6 +534,33 @@ span[id^="unit"] {
     font-family: var(--font-mono);
     color: var(--highlight);
     text-align: right;
+}
+
+.settings-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px 12px;
+    align-items: center;
+}
+
+.settings-grid label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
+
+.settings-actions {
+    width: 100%;
+    margin-top: 12px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.diag-link {
+    font-size: 0.85rem;
 }
 
 .splits-column {
@@ -584,10 +641,44 @@ input.diff {
 
     /* If screen very narrow, reduce font */
     input[type="number"],
+    input[type="text"],
     .mono-text,
     .split-row {
         font-size: 0.85rem;
         /* Reduced further */
+    }
+
+    .main-wrapper {
+        padding: 8px 14px 28px 14px;
+        gap: 12px;
+    }
+
+    .input-group {
+        padding: 12px;
+        gap: 10px;
+    }
+
+    .action-btn {
+        padding: 8px 14px;
+        font-size: 0.82rem;
+    }
+
+    .action-row {
+        gap: 6px;
+    }
+
+    #finish_time_input {
+        width: 11ch;
+        font-size: 1.05rem;
+    }
+
+    .settings-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .settings-actions {
+        flex-direction: column;
+        align-items: stretch;
     }
 
     .increment-label {
@@ -604,6 +695,39 @@ input.diff {
 
     input.diff {
         width: 30px;
+    }
+}
+
+@media print {
+    .sw-update-bar,
+    #toggle-tools,
+    #toggle-settings,
+    #copy-btn,
+    #share-link-btn,
+    #export-pdf-btn,
+    #export-image-btn,
+    #slide-button,
+    #slide-button2,
+    #theme-toggle,
+    #lang-toggle,
+    #toggle-road,
+    #toggle-track,
+    #toggle-settings,
+    #settings-panel {
+        display: none !important;
+    }
+
+    body {
+        background: #fff !important;
+        color: #000 !important;
+    }
+
+    .input-group,
+    #split-detail,
+    #road-detail {
+        box-shadow: none !important;
+        border: 1px solid #ddd !important;
+        background: #fff !important;
     }
 }
 
