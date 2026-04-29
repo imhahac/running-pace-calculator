@@ -45,18 +45,7 @@
     import Calculator from './modules/Calculator.js';
     import TranslationManager from './modules/TranslationManager.js';
     import TimeFormatter from './modules/TimeFormatter.js';
-
-    function parsePayload() {
-      const url = new URL(window.location.href);
-      const encoded = url.searchParams.get('rp');
-      if (!encoded) return null;
-      try {
-        const json = decodeURIComponent(escape(atob(encoded)));
-        return JSON.parse(json);
-      } catch {
-        return null;
-      }
-    }
+    import ShareManager from './modules/ShareManager.js';
 
     function getPaceSecondsPerKm(payload) {
       const state = payload?.state || {};
@@ -93,7 +82,19 @@
       return 0;
     }
 
-    const payload = parsePayload();
+    function applyA4CompactMode(rowCount) {
+      const root = document.getElementById('report-root');
+      if (!root) return;
+
+      root.classList.remove('report-tight', 'report-ultra');
+      if (rowCount >= 16) {
+        root.classList.add('report-ultra');
+      } else if (rowCount >= 12) {
+        root.classList.add('report-tight');
+      }
+    }
+
+    const payload = ShareManager.readPayloadFromURL();
     const body = document.getElementById('training-plan-body');
     const meta = document.getElementById('report-meta');
 
@@ -140,7 +141,14 @@
         `;
         body.appendChild(tr);
       });
+
+      applyA4CompactMode(plans.length);
     }
+
+    window.addEventListener('beforeprint', () => {
+      const rowCount = document.querySelectorAll('#training-plan-body tr').length;
+      applyA4CompactMode(rowCount);
+    });
   </script>
 </body>
 

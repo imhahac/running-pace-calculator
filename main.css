@@ -516,6 +516,23 @@ span[id^="unit"] {
     white-space: nowrap;
 }
 
+#report-root #training-plan-table {
+    table-layout: fixed;
+    width: 100%;
+}
+
+#report-root #training-plan-table th,
+#report-root #training-plan-table td {
+    white-space: normal;
+    word-break: break-word;
+    overflow-wrap: anywhere;
+    font-size: 0.8rem;
+}
+
+#report-root .input-group {
+    overflow-x: auto;
+}
+
 #training-plan-table th {
     color: var(--text-muted);
     font-weight: 700;
@@ -681,6 +698,12 @@ input.diff {
         align-items: stretch;
     }
 
+    #report-root #training-plan-table th,
+    #report-root #training-plan-table td {
+        font-size: 0.72rem;
+        padding: 5px 3px;
+    }
+
     .increment-label {
         width: 40px;
         /* Reduce label width */
@@ -699,6 +722,11 @@ input.diff {
 }
 
 @media print {
+    @page {
+        size: A4 portrait;
+        margin: 6mm;
+    }
+
     .sw-update-bar,
     #toggle-tools,
     #toggle-settings,
@@ -713,7 +741,8 @@ input.diff {
     #toggle-road,
     #toggle-track,
     #toggle-settings,
-    #settings-panel {
+    #settings-panel,
+    #report-root .action-row {
         display: none !important;
     }
 
@@ -728,6 +757,63 @@ input.diff {
         box-shadow: none !important;
         border: 1px solid #ddd !important;
         background: #fff !important;
+    }
+
+    /* A4 report single-page optimization */
+    #report-root {
+        width: 100%;
+        max-width: 198mm !important;
+        margin: 0 auto !important;
+        padding: 0 !important;
+        gap: 4mm !important;
+        transform-origin: top center;
+    }
+
+    #report-root .title {
+        font-size: 14pt !important;
+    }
+
+    #report-root .helper-text {
+        font-size: 8.5pt !important;
+    }
+
+    #report-root .input-group {
+        padding: 2mm !important;
+        margin: 0 !important;
+    }
+
+    #report-root #training-plan-table {
+        table-layout: fixed;
+        width: 100%;
+        border-collapse: collapse;
+        page-break-inside: avoid;
+    }
+
+    #report-root #training-plan-table th,
+    #report-root #training-plan-table td {
+        font-size: 7.6pt !important;
+        line-height: 1.15 !important;
+        padding: 1.2mm 0.9mm !important;
+        white-space: normal !important;
+        overflow-wrap: anywhere !important;
+        word-break: break-word !important;
+    }
+
+    #report-root #training-plan-table tr {
+        page-break-inside: avoid;
+        break-inside: avoid;
+    }
+
+    #report-root.report-tight #training-plan-table th,
+    #report-root.report-tight #training-plan-table td {
+        font-size: 7.0pt !important;
+        padding: 1.0mm 0.7mm !important;
+    }
+
+    #report-root.report-ultra #training-plan-table th,
+    #report-root.report-ultra #training-plan-table td {
+        font-size: 6.4pt !important;
+        padding: 0.7mm 0.5mm !important;
     }
 }
 

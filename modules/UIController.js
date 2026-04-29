@@ -995,14 +995,8 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
             trainingTargetDate: trainingDate || ''
         };
         try {
-            const longURL = ShareManager.buildShareURL(payload);
-            const shortURL = await ShareManager.shortenURL(longURL);
-            const finalURL = shortURL || longURL;
+            const finalURL = ShareManager.buildShareURL(payload);
             navigator.clipboard.writeText(finalURL).then(() => {
-                if (!shortURL) {
-                    alert(`${TranslationManager.get('short_link_failed')}\n${TranslationManager.get('share_link_copied')}`);
-                    return;
-                }
                 alert(TranslationManager.get('share_link_copied'));
             });
         }
@@ -1026,11 +1020,8 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
             },
             trainingTargetDate: trainingDate || ''
         };
-        const url = new URL(window.location.href);
-        url.pathname = `${url.pathname.replace(/\/[^/]*$/, '')}/training-report.html`;
-        url.search = '';
-        url.searchParams.set('rp', btoa(unescape(encodeURIComponent(JSON.stringify(payload)))));
-        window.open(url.toString(), '_blank');
+        const reportURL = ShareManager.buildShareURL(payload, 'training-report.html');
+        window.open(reportURL, '_blank');
     }
     static exportImage() {
         const target = document.querySelector('.main-wrapper');
