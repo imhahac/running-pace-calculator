@@ -21,7 +21,8 @@ function encodePayload(payload) {
             payload.inputs?.treadmill_input || '',
             payload.inputs?.finish_time_input || ''
         ],
-        td: payload.trainingTargetDate || undefined
+        td: payload.trainingTargetDate || undefined,
+        pd: typeof payload.trainingPlanDistance === 'number' ? payload.trainingPlanDistance : undefined
     };
     const json = JSON.stringify(compact);
     return base64UrlEncode(json);
@@ -50,7 +51,8 @@ function decodePayload(encoded) {
                 treadmill_input: i[3] || '',
                 finish_time_input: i[4] || ''
             },
-            trainingTargetDate: parsed.td || ''
+            trainingTargetDate: parsed.td || '',
+            trainingPlanDistance: typeof parsed.pd === 'number' ? parsed.pd : undefined
         };
     }
     catch {

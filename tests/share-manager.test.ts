@@ -11,7 +11,8 @@ test('share manager can build and parse URL payload', () => {
   const url = ShareManager.buildShareURL({
     state: { mode: 'pace' },
     inputs: { pace_input: '4', pace_input2: '30' },
-    trainingTargetDate: '2026-12-31'
+    trainingTargetDate: '2026-12-31',
+    trainingPlanDistance: 10000
   });
 
   w.window.location = new URL(url);
@@ -20,6 +21,7 @@ test('share manager can build and parse URL payload', () => {
   assert.ok(parsed);
   assert.equal(parsed?.inputs.pace_input, '4');
   assert.equal(parsed?.trainingTargetDate, '2026-12-31');
+  assert.equal(parsed?.trainingPlanDistance, 10000);
 
   w.window = originalWindow;
 });

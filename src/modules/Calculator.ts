@@ -193,7 +193,8 @@ export class Calculator {
     paceSecondsPerKm: number,
     targetDateISO: string,
     focusTextMap: Record<'base' | 'build' | 'peak' | 'taper' | 'race', string>,
-    workoutTextMap: Record<'easy' | 'tempo' | 'interval' | 'race', string>
+    workoutTextMap: Record<'easy' | 'tempo' | 'interval' | 'race', string>,
+    planDistanceMeters: number = FULL_MARATHON_METERS
   ): ITrainingWeekPlan[] {
     if (!isFinite(paceSecondsPerKm) || paceSecondsPerKm <= 0 || !targetDateISO) {
       return [];
@@ -209,6 +210,12 @@ export class Calculator {
     const weekCount = Math.min(24, Math.max(1, Math.ceil(diffDays / 7)));
     const plans: ITrainingWeekPlan[] = [];
 
+    const raceScale = planDistanceMeters >= FULL_MARATHON_METERS
+      ? 1
+      : planDistanceMeters >= HALF_MARATHON_METERS
+        ? 0.8
+        : 0.62;
+
     const phaseForWeek = (w: number): 'base' | 'build' | 'peak' | 'taper' | 'race' => {
       if (weekCount === 1) return 'race';
       if (w === weekCount) return 'race';
@@ -219,7 +226,8 @@ export class Calculator {
     };
 
     const buildMileage = (w: number, phase: 'base' | 'build' | 'peak' | 'taper' | 'race'): { mileage: number; isRecovery: boolean } => {
-      const baseline = Math.max(24, Math.min(80, Math.round(3600 / paceSecondsPerKm * 6 + 16)));
+      const baselineRaw = Math.max(24, Math.min(80, Math.round(3600 / paceSecondsPerKm * 6 + 16)));
+      const baseline = Math.max(16, Math.round(baselineRaw * raceScale));
       const progressStep = Math.floor((w - 1) / 3) * 4;
       const raw = baseline + progressStep;
       const isRecovery = w % 4 === 0 && phase !== 'race' && phase !== 'taper';

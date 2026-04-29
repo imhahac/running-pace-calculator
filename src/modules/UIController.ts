@@ -214,6 +214,11 @@ export class UIController {
       trainingDate.addEventListener('change', () => this.updateTrainingCycleUI(this.lastPaceSecondsPerKm));
     }
 
+    const trainingPlanDistance = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
+    if (trainingPlanDistance) {
+      trainingPlanDistance.addEventListener('change', () => this.updateTrainingCycleUI(this.lastPaceSecondsPerKm));
+    }
+
     // Prediction inputs
     const predDistSelect = document.getElementById('pred-dist-select');
     const predTimeInput = document.getElementById('pred-time-input');
@@ -763,6 +768,7 @@ export class UIController {
     document.title = lang === 'zh' ? 'RunningPaceNote 配速計算機' : 'RunningPaceNote Calculator';
     this.updateFinishTimeFeedback();
     this.populateSettingsPanel();
+    this.updateTrainingCycleUI(this.lastPaceSecondsPerKm);
   }
 
   /**
@@ -1239,10 +1245,15 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
    */
   private static updateTrainingCycleUI(paceSecondsPerKm: number): void {
     const dateInput = document.getElementById('training-target-date') as HTMLInputElement | null;
+    const planDistanceInput = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
+    const contextEl = document.getElementById('training-plan-context');
     const emptyState = document.getElementById('training-plan-empty');
     const tableWrap = document.getElementById('training-plan-table-wrap');
     const body = document.getElementById('training-plan-body');
-    if (!dateInput || !emptyState || !tableWrap || !body) return;
+    if (!dateInput || !planDistanceInput || !contextEl || !emptyState || !tableWrap || !body) return;
+
+    const planDistanceMeters = parseFloat(planDistanceInput.value) || FULL_MARATHON_METERS;
+    contextEl.textContent = this.getTrainingPlanContextText(paceSecondsPerKm, planDistanceMeters);
 
     const focusMap = {
       base: TranslationManager.getTrainingFocusLabel('base'),
@@ -1258,7 +1269,7 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
       race: TranslationManager.getWorkoutLabel('race')
     };
 
-    const plan = Calculator.generateTrainingCycle(paceSecondsPerKm, dateInput.value, focusMap, workoutMap);
+    const plan = Calculator.generateTrainingCycle(paceSecondsPerKm, dateInput.value, focusMap, workoutMap, planDistanceMeters);
     body.innerHTML = '';
 
     if (plan.length === 0) {
@@ -1312,6 +1323,11 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
       trainingDate.value = payload.trainingTargetDate;
     }
 
+    const trainingPlanDistance = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
+    if (trainingPlanDistance && typeof payload.trainingPlanDistance === 'number') {
+      trainingPlanDistance.value = payload.trainingPlanDistance.toString();
+    }
+
     this.setMode(StateManager.getMode());
     this.populateVenues();
     this.syncSplitModeUI(StateManager.getSplitMode());
@@ -1329,6 +1345,7 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
    */
   private static async copyShareLink(): Promise<void> {
     const trainingDate = (document.getElementById('training-target-date') as HTMLInputElement | null)?.value;
+    const trainingPlanDistance = this.getTrainingPlanDistanceMeters();
     const payload = {
       state: StateManager.getState(),
       inputs: {
@@ -1338,7 +1355,8 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
         treadmill_input: this.dom.inputs.treadmill?.value || '',
         finish_time_input: this.dom.inputs.finishTime?.value || ''
       },
-      trainingTargetDate: trainingDate || ''
+      trainingTargetDate: trainingDate || '',
+      trainingPlanDistance
     };
 
     try {
@@ -1363,6 +1381,7 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
    */
   private static openTrainingReportPage(): void {
     const trainingDate = (document.getElementById('training-target-date') as HTMLInputElement | null)?.value;
+    const trainingPlanDistance = this.getTrainingPlanDistanceMeters();
     const payload = {
       state: StateManager.getState(),
       inputs: {
@@ -1372,7 +1391,8 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
         treadmill_input: this.dom.inputs.treadmill?.value || '',
         finish_time_input: this.dom.inputs.finishTime?.value || ''
       },
-      trainingTargetDate: trainingDate || ''
+      trainingTargetDate: trainingDate || '',
+      trainingPlanDistance
     };
 
     const reportURL = ShareManager.buildShareURL(payload, 'training-report.html');
@@ -1396,6 +1416,30 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
       link.href = canvas.toDataURL('image/png');
       link.click();
     });
+  }
+
+  private static getTrainingPlanDistanceMeters(): number {
+    const planDistanceInput = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
+    return parseFloat(planDistanceInput?.value || '') || FULL_MARATHON_METERS;
+  }
+
+  private static getTrainingPlanLabel(distanceMeters: number): string {
+    if (distanceMeters >= FULL_MARATHON_METERS) {
+      return TranslationManager.get('plan_full');
+    }
+    if (distanceMeters >= HALF_MARATHON_METERS) {
+      return TranslationManager.get('plan_half');
+    }
+    return TranslationManager.get('plan_10k');
+  }
+
+  private static getTrainingPlanContextText(paceSecondsPerKm: number, distanceMeters: number): string {
+    if (!isFinite(paceSecondsPerKm) || paceSecondsPerKm <= 0) {
+      return TranslationManager.get('training_context_empty');
+    }
+
+    const finishSeconds = paceSecondsPerKm * (distanceMeters / 1000);
+    return `${TranslationManager.get('training_context_prefix')}: ${this.getTrainingPlanLabel(distanceMeters)} ${TimeFormatter.format(finishSeconds)}`;
   }
 }
 

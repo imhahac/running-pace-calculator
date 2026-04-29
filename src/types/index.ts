@@ -199,4 +199,5 @@ export interface ISharePayload {
   state: Partial<IPaceState>;
   inputs: Record<string, string>;
   trainingTargetDate?: string;
+  trainingPlanDistance?: number;
 }

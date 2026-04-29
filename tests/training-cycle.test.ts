@@ -25,3 +25,30 @@ test('training cycle generates at least one week for future date', () => {
   assert.equal(plan[plan.length - 1].focus, 'race');
   assert.ok(typeof plan[0].totalMileageKm === 'number');
 });
+
+test('training cycle mileage scales by plan distance', () => {
+  const date = new Date();
+  date.setDate(date.getDate() + 35);
+  const iso = date.toISOString().slice(0, 10);
+
+  const focusMap = {
+    base: 'base',
+    build: 'build',
+    peak: 'peak',
+    taper: 'taper',
+    race: 'race'
+  };
+  const workoutMap = {
+    easy: 'easy',
+    tempo: 'tempo',
+    interval: 'interval',
+    race: 'race'
+  };
+
+  const fullPlan = Calculator.generateTrainingCycle(300, iso, focusMap, workoutMap, 42195);
+  const tenKPlan = Calculator.generateTrainingCycle(300, iso, focusMap, workoutMap, 10000);
+
+  assert.ok(fullPlan.length > 0);
+  assert.ok(tenKPlan.length > 0);
+  assert.ok(fullPlan[0].totalMileageKm > tenKPlan[0].totalMileageKm);
+});

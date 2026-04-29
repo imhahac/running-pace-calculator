@@ -22,6 +22,7 @@ type TCompactPayload = {
   };
   i?: [string, string, string, string, string];
   td?: string;
+  pd?: number;
 };
 
 function encodePayload(payload: ISharePayload): string {
@@ -45,7 +46,8 @@ function encodePayload(payload: ISharePayload): string {
       payload.inputs?.treadmill_input || '',
       payload.inputs?.finish_time_input || ''
     ],
-    td: payload.trainingTargetDate || undefined
+    td: payload.trainingTargetDate || undefined,
+    pd: typeof payload.trainingPlanDistance === 'number' ? payload.trainingPlanDistance : undefined
   };
 
   const json = JSON.stringify(compact);
@@ -78,7 +80,8 @@ function decodePayload(encoded: string): ISharePayload | null {
         treadmill_input: i[3] || '',
         finish_time_input: i[4] || ''
       },
-      trainingTargetDate: parsed.td || ''
+      trainingTargetDate: parsed.td || '',
+      trainingPlanDistance: typeof parsed.pd === 'number' ? parsed.pd : undefined
     };
   } catch {
     try {

@@ -357,7 +357,14 @@
                 <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
                     <label for="training-target-date" data-i18n="label_target_race_date" style="font-size:0.9rem;">目標賽事日期</label>
                     <input type="date" id="training-target-date" style="width:auto; text-align:left;">
+                    <label for="training-plan-distance" data-i18n="label_plan_race" style="font-size:0.9rem;">課表項目</label>
+                    <select id="training-plan-distance" style="min-width: 120px;">
+                        <option value="42195" data-i18n="plan_full">全馬課表</option>
+                        <option value="21097.5" data-i18n="plan_half">半馬課表</option>
+                        <option value="10000" data-i18n="plan_10k">10K課表</option>
+                    </select>
                 </div>
+                <div id="training-plan-context" class="helper-text" data-i18n="training_context_empty">目前尚未產生課表時間</div>
                 <div id="training-plan-empty" class="helper-text" data-i18n="no_training_cycle">請先設定目標日期並輸入配速</div>
                 <div id="training-plan-table-wrap" style="width:100%; overflow:auto; display:none;">
                     <table id="training-plan-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">

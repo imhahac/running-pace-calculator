@@ -47,6 +47,9 @@
     import TimeFormatter from './modules/TimeFormatter.js';
     import ShareManager from './modules/ShareManager.js';
 
+    const FULL_MARATHON_METERS = 42195;
+    const HALF_MARATHON_METERS = 21097.5;
+
     function getPaceSecondsPerKm(payload) {
       const state = payload?.state || {};
       const inputs = payload?.inputs || {};
@@ -94,6 +97,12 @@
       }
     }
 
+    function getPlanLabel(distanceMeters) {
+      if (distanceMeters >= FULL_MARATHON_METERS) return TranslationManager.get('plan_full');
+      if (distanceMeters >= HALF_MARATHON_METERS) return TranslationManager.get('plan_half');
+      return TranslationManager.get('plan_10k');
+    }
+
     const payload = ShareManager.readPayloadFromURL();
     const body = document.getElementById('training-plan-body');
     const meta = document.getElementById('report-meta');
@@ -121,9 +130,11 @@
 
       const paceSecondsPerKm = getPaceSecondsPerKm(payload);
       const targetDate = payload.trainingTargetDate || '';
-      const plans = Calculator.generateTrainingCycle(paceSecondsPerKm, targetDate, focusMap, workoutMap);
+      const planDistance = Number(payload.trainingPlanDistance || FULL_MARATHON_METERS);
+      const plans = Calculator.generateTrainingCycle(paceSecondsPerKm, targetDate, focusMap, workoutMap, planDistance);
+      const estimate = paceSecondsPerKm > 0 ? TimeFormatter.format(paceSecondsPerKm * (planDistance / 1000)) : '--';
 
-      meta.textContent = `目標日期: ${targetDate || '--'} / 週期: ${plans.length} 週`;
+      meta.textContent = `${TranslationManager.get('label_target_race_date')}: ${targetDate || '--'} / ${TranslationManager.get('training_context_prefix')}: ${getPlanLabel(planDistance)} ${estimate} / 週期: ${plans.length} 週`;
 
       body.innerHTML = '';
       plans.forEach((row) => {
