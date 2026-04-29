@@ -12,7 +12,9 @@ import TranslationManager from './TranslationManager.js';
 import StorageManager from './StorageManager.js';
 import Converter from './Converter.js';
 import AnalyticsManager from './AnalyticsManager.js';
+import TrainingCycleManager from './TrainingCycleManager.js';
 import ShareManager from './ShareManager.js';
+import ShareExportManager from './ShareExportManager.js';
 import type { IPaceState, TMode } from '../types/index';
 
 export class UIController {
@@ -211,12 +213,12 @@ export class UIController {
 
     const trainingDate = document.getElementById('training-target-date') as HTMLInputElement | null;
     if (trainingDate) {
-      trainingDate.addEventListener('change', () => this.updateTrainingCycleUI(this.lastPaceSecondsPerKm));
+      trainingDate.addEventListener('change', () => this.refreshTrainingCycleUI());
     }
 
     const trainingPlanDistance = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
     if (trainingPlanDistance) {
-      trainingPlanDistance.addEventListener('change', () => this.updateTrainingCycleUI(this.lastPaceSecondsPerKm));
+      trainingPlanDistance.addEventListener('change', () => this.refreshTrainingCycleUI());
     }
 
     // Prediction inputs
@@ -429,7 +431,7 @@ export class UIController {
     const paceSecondsPerKm = (secondsPerLap * 1000) / state.lane;
     this.lastPaceSecondsPerKm = paceSecondsPerKm;
     this.updateZones(paceSecondsPerKm);
-    this.updateTrainingCycleUI(paceSecondsPerKm);
+    this.refreshTrainingCycleUI();
 
     // Save current input values
     this.saveInputValues();
@@ -768,7 +770,11 @@ export class UIController {
     document.title = lang === 'zh' ? 'RunningPaceNote 配速計算機' : 'RunningPaceNote Calculator';
     this.updateFinishTimeFeedback();
     this.populateSettingsPanel();
-    this.updateTrainingCycleUI(this.lastPaceSecondsPerKm);
+    this.refreshTrainingCycleUI();
+  }
+
+  private static refreshTrainingCycleUI(): void {
+    TrainingCycleManager.update(this.lastPaceSecondsPerKm);
   }
 
   /**
@@ -1241,64 +1247,6 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
   }
 
   /**
-   * Render training cycle recommendations based on current pace and target date.
-   */
-  private static updateTrainingCycleUI(paceSecondsPerKm: number): void {
-    const dateInput = document.getElementById('training-target-date') as HTMLInputElement | null;
-    const planDistanceInput = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
-    const contextEl = document.getElementById('training-plan-context');
-    const emptyState = document.getElementById('training-plan-empty');
-    const tableWrap = document.getElementById('training-plan-table-wrap');
-    const body = document.getElementById('training-plan-body');
-    if (!dateInput || !planDistanceInput || !contextEl || !emptyState || !tableWrap || !body) return;
-
-    const planDistanceMeters = parseFloat(planDistanceInput.value) || FULL_MARATHON_METERS;
-    contextEl.textContent = this.getTrainingPlanContextText(paceSecondsPerKm, planDistanceMeters);
-
-    const focusMap = {
-      base: TranslationManager.getTrainingFocusLabel('base'),
-      build: TranslationManager.getTrainingFocusLabel('build'),
-      peak: TranslationManager.getTrainingFocusLabel('peak'),
-      taper: TranslationManager.getTrainingFocusLabel('taper'),
-      race: TranslationManager.getTrainingFocusLabel('race')
-    };
-    const workoutMap = {
-      easy: TranslationManager.getWorkoutLabel('easy'),
-      tempo: TranslationManager.getWorkoutLabel('tempo'),
-      interval: TranslationManager.getWorkoutLabel('interval'),
-      race: TranslationManager.getWorkoutLabel('race')
-    };
-
-    const plan = Calculator.generateTrainingCycle(paceSecondsPerKm, dateInput.value, focusMap, workoutMap, planDistanceMeters);
-    body.innerHTML = '';
-
-    if (plan.length === 0) {
-      emptyState.style.display = 'block';
-      tableWrap.style.display = 'none';
-      return;
-    }
-
-    plan.forEach((row) => {
-      const tr = document.createElement('tr');
-      tr.innerHTML = `
-        <td>${row.weekLabel}</td>
-        <td>${row.focus}</td>
-        <td>${row.easyPace}</td>
-        <td>${row.tempoPace}</td>
-        <td>${row.intervalPace}</td>
-        <td>${row.longRunPace}</td>
-        <td>${row.totalMileageKm}</td>
-        <td>${row.keyWorkout}</td>
-        <td>${row.isRecoveryWeek ? '✓' : '-'}</td>
-      `;
-      body.appendChild(tr);
-    });
-
-    emptyState.style.display = 'none';
-    tableWrap.style.display = 'block';
-  }
-
-  /**
    * Restore shared payload from URL if present.
    */
   private static applySharedPayloadFromURL(): void {
@@ -1323,9 +1271,8 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
       trainingDate.value = payload.trainingTargetDate;
     }
 
-    const trainingPlanDistance = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
-    if (trainingPlanDistance && typeof payload.trainingPlanDistance === 'number') {
-      trainingPlanDistance.value = payload.trainingPlanDistance.toString();
+    if (typeof payload.trainingPlanDistance === 'number') {
+      TrainingCycleManager.setPlanDistanceMeters(payload.trainingPlanDistance);
     }
 
     this.setMode(StateManager.getMode());
@@ -1344,103 +1291,47 @@ ${t.copy_finish || '🏁 完賽時間:'} ${finishText}`;
    * Build and copy share URL.
    */
   private static async copyShareLink(): Promise<void> {
-    const trainingDate = (document.getElementById('training-target-date') as HTMLInputElement | null)?.value;
-    const trainingPlanDistance = this.getTrainingPlanDistanceMeters();
-    const payload = {
-      state: StateManager.getState(),
-      inputs: {
-        pace_input: this.dom.inputs.paceMin?.value || '',
-        pace_input2: this.dom.inputs.paceSec?.value || '',
-        track_input: this.dom.inputs.track?.value || '',
-        treadmill_input: this.dom.inputs.treadmill?.value || '',
-        finish_time_input: this.dom.inputs.finishTime?.value || ''
-      },
-      trainingTargetDate: trainingDate || '',
-      trainingPlanDistance
-    };
-
-    try {
-      const finalURL = ShareManager.buildShareURL(payload);
-      navigator.clipboard.writeText(finalURL).then(() => {
-        alert(TranslationManager.get('share_link_copied'));
-      });
-    } catch {
-      alert(TranslationManager.get('share_link_failed'));
-    }
+    await ShareExportManager.copyShareLink(this.buildCurrentSharePayload());
   }
 
   /**
    * Export result as PDF using browser print pipeline.
    */
   private static exportPDF(): void {
-    window.print();
+    ShareExportManager.exportPDF();
   }
 
   /**
    * Open dedicated training report page for printing/exporting.
    */
   private static openTrainingReportPage(): void {
-    const trainingDate = (document.getElementById('training-target-date') as HTMLInputElement | null)?.value;
-    const trainingPlanDistance = this.getTrainingPlanDistanceMeters();
-    const payload = {
-      state: StateManager.getState(),
-      inputs: {
-        pace_input: this.dom.inputs.paceMin?.value || '',
-        pace_input2: this.dom.inputs.paceSec?.value || '',
-        track_input: this.dom.inputs.track?.value || '',
-        treadmill_input: this.dom.inputs.treadmill?.value || '',
-        finish_time_input: this.dom.inputs.finishTime?.value || ''
-      },
-      trainingTargetDate: trainingDate || '',
-      trainingPlanDistance
-    };
-
-    const reportURL = ShareManager.buildShareURL(payload, 'training-report.html');
-    window.open(reportURL, '_blank');
+    ShareExportManager.openTrainingReportPage(this.buildCurrentSharePayload());
   }
 
   /**
    * Export current panel as image.
    */
   private static exportImage(): void {
-    const target = document.querySelector('.main-wrapper') as HTMLElement | null;
-    const html2canvasFn = (window as any).html2canvas;
-    if (!target || !html2canvasFn) {
-      alert('Image export unavailable');
-      return;
-    }
-
-    html2canvasFn(target, { backgroundColor: null, scale: 2 }).then((canvas: HTMLCanvasElement) => {
-      const link = document.createElement('a');
-      link.download = 'running-pace-note.png';
-      link.href = canvas.toDataURL('image/png');
-      link.click();
-    });
+    ShareExportManager.exportImage();
   }
 
-  private static getTrainingPlanDistanceMeters(): number {
-    const planDistanceInput = document.getElementById('training-plan-distance') as HTMLSelectElement | null;
-    return parseFloat(planDistanceInput?.value || '') || FULL_MARATHON_METERS;
+  private static buildCurrentSharePayload() {
+    const trainingDate = (document.getElementById('training-target-date') as HTMLInputElement | null)?.value || '';
+    const trainingPlanDistance = TrainingCycleManager.getPlanDistanceMeters();
+    return ShareExportManager.buildPayload(
+      StateManager.getState(),
+      {
+        pace_input: this.dom.inputs.paceMin?.value || '',
+        pace_input2: this.dom.inputs.paceSec?.value || '',
+        track_input: this.dom.inputs.track?.value || '',
+        treadmill_input: this.dom.inputs.treadmill?.value || '',
+        finish_time_input: this.dom.inputs.finishTime?.value || ''
+      },
+      trainingDate,
+      trainingPlanDistance
+    );
   }
 
-  private static getTrainingPlanLabel(distanceMeters: number): string {
-    if (distanceMeters >= FULL_MARATHON_METERS) {
-      return TranslationManager.get('plan_full');
-    }
-    if (distanceMeters >= HALF_MARATHON_METERS) {
-      return TranslationManager.get('plan_half');
-    }
-    return TranslationManager.get('plan_10k');
-  }
-
-  private static getTrainingPlanContextText(paceSecondsPerKm: number, distanceMeters: number): string {
-    if (!isFinite(paceSecondsPerKm) || paceSecondsPerKm <= 0) {
-      return TranslationManager.get('training_context_empty');
-    }
-
-    const finishSeconds = paceSecondsPerKm * (distanceMeters / 1000);
-    return `${TranslationManager.get('training_context_prefix')}: ${this.getTrainingPlanLabel(distanceMeters)} ${TimeFormatter.format(finishSeconds)}`;
-  }
 }
 
 export default UIController;
