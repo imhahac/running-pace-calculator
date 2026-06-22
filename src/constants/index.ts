@@ -243,6 +243,34 @@ export const TRANSLATIONS: ITranslations = {
     plan_weeks: '週數',
     plan_start_vol: '起始里程',
     plan_peak_vol: '巔峰里程',
+    explain_pace:
+      '配速＝跑 1 公里所需時間。任一欄位輸入後，時速、各距離分段與完賽時間會即時連動換算。',
+    explain_track:
+      '固定使用最內圈（圈長＝場地距離）。輸入單圈秒數即可算出 100m–2000m 各分段；可切換 400m 標準場或 300m 暖身場。',
+    explain_treadmill: '把跑步機時速換算成室外路跑配速（以坡度 0% 約略對應；實際路跑通常略慢）。',
+    explain_finish: '選目標距離並輸入想完賽的時間，反推所需的平均配速與各分段。',
+    explain_splits:
+      '分段表是配速檢查點：田徑場顯示每段所需時間；路跑每 2.5k 顯示累積時間，方便對錶與補給。',
+    explain_zones:
+      'E 輕鬆跑（打底/恢復）、M 馬拉松配速、T 乳酸閾值（可維持 20–40 分）、I VO₂max 間歇（3–5 分）、R 重複跑（速度與跑姿）。單次質量課表別超過週里程約 8–10%。',
+    explain_predict:
+      '以一個近期成績用 Riegel 公式（時間 × 距離比^1.06）推估其他距離；參考距離與目標距離越接近越準。',
+    explain_triathlon:
+      '輸入目標總時間會依賽事類型自動反推游/騎/跑分段配速；也可直接填各段配速得到總時間。T1/T2 為轉換區時間。',
+    explain_training_cycle:
+      '計畫分期：基礎→進展→巔峰→減量→比賽週；每 4 週安排一次減量恢復週。里程與配速隨分期自動調整。',
+    explain_plan_config:
+      '難度（初/進/菁英）會自動帶入建議的週數與起始/巔峰週里程；想自訂可直接改數字，全部留白則依賽事日期與目前配速自動推算。',
+    explain_raceplan:
+      '策略：平均（穩定）；負分段（後半加速，通常成績較佳）；正分段（前快後掉，較不建議）。表格為每公里目標配速與累積時間。提醒：起步勿過快、約 30k 易撞牆、依表補給。',
+    explain_vdot:
+      'VDOT 是由近期成績推估的「有效 VO₂max」，數字越大代表體能越好。下方 E/M/T/I/R 是對應訓練配速，等效成績是相同體能下各距離的預估成績。',
+    explain_hr:
+      '先用 Tanaka 公式（208−0.7×年齡）或實測值估最大心率，再以 Karvonen（心率儲備）分成五區，各區對應不同訓練目的。VO₂max 為由最大/靜息心率比值推估（非實測）。',
+    explain_interval:
+      'I 練 VO₂max、T 練乳酸閾值、R 練速度與經濟性。系統依 VDOT 給配速，並把單次質量里程限制在 min(10km, 週量 8%) 以內；課表＝暖身＋主課表＋緩和。',
+    explain_methods:
+      'Yasso 800：以 800m 反覆預估全馬。挪威 4×4：4×4 分鐘高強度練 VO₂max。Hansons：累積疲勞、長跑不過量。挪威雙閾值：同日兩次閾值、控制強度。',
     mode_pace: '配速',
     mode_track: '田徑場',
     mode_treadmill: '跑步機',
@@ -447,6 +475,36 @@ export const TRANSLATIONS: ITranslations = {
     plan_weeks: 'Weeks',
     plan_start_vol: 'Start km',
     plan_peak_vol: 'Peak km',
+    explain_pace:
+      'Pace = time to run 1 km. Type in any field and speed, per-distance splits and finish time update instantly.',
+    explain_track:
+      'Always uses the innermost lane (lap = track distance). Enter one lap’s seconds to get 100m–2000m splits; switch between a 400m standard or 300m warm-up track.',
+    explain_treadmill:
+      'Converts treadmill speed into outdoor road pace (roughly matching 0% incline; real road running is usually a touch slower).',
+    explain_finish:
+      'Pick a target distance and the time you want to finish in; it back-calculates the required average pace and splits.',
+    explain_splits:
+      'Splits are pacing checkpoints: the track view shows each segment’s time; the road view shows cumulative time every 2.5k for watch checks and fueling.',
+    explain_zones:
+      'E easy (base/recovery), M marathon pace, T threshold (sustainable 20–40 min), I VO₂max intervals (3–5 min), R reps (speed & form). Keep each quality session under ~8–10% of weekly volume.',
+    explain_predict:
+      'Uses one recent result and Riegel’s formula (time × distance-ratio^1.06) to predict other distances; the closer the reference and target distances, the more accurate.',
+    explain_triathlon:
+      'Enter a target total time to back-calculate swim/bike/run paces by event type, or fill each leg’s pace to get the total. T1/T2 are transition times.',
+    explain_training_cycle:
+      'Phases: base → build → peak → taper → race week; a recovery (down) week every 4th week. Mileage and paces adjust automatically by phase.',
+    explain_plan_config:
+      'A level (beginner/intermediate/elite) fills in suggested weeks and start/peak weekly mileage; edit the numbers to customize, or leave all blank to auto-derive from race date and current pace.',
+    explain_raceplan:
+      'Strategies: even (steady); negative (faster second half, usually a better result); positive (fast start that fades, not recommended). The table is per-km target pace and cumulative time. Tips: don’t start too fast, the wall often hits ~30k, fuel on schedule.',
+    explain_vdot:
+      'VDOT is an “effective VO₂max” estimated from a recent result — higher is fitter. The E/M/T/I/R values are the matching training paces; equivalent times are predicted results at the same fitness across distances.',
+    explain_hr:
+      'Max HR is estimated with Tanaka (208−0.7×age) or your measured value, then Karvonen (heart-rate reserve) splits it into 5 zones, each for a different purpose. VO₂max here is estimated from the max/resting HR ratio (not measured).',
+    explain_interval:
+      'I trains VO₂max, T trains lactate threshold, R trains speed & economy. Paces come from your VDOT, and a single session’s quality volume is capped at min(10km, 8% of weekly mileage); structure = warm-up + main set + cool-down.',
+    explain_methods:
+      'Yasso 800: predict the marathon from 800m repeats. Norwegian 4×4: 4×4 min hard for VO₂max. Hansons: cumulative fatigue, no over-long runs. Norwegian double threshold: two threshold sessions a day at controlled intensity.',
     mode_pace: 'Pace',
     mode_track: 'Track',
     mode_treadmill: 'Treadmill',

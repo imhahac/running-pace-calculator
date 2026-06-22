@@ -217,6 +217,25 @@ h1.title {
     font-weight: 500;
 }
 
+/* Always-on explanatory note under a feature (what it is / how to read it) */
+.explain {
+    width: 100%;
+    box-sizing: border-box;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    line-height: 1.55;
+    margin-top: 10px;
+    padding: 8px 10px;
+    border-left: 3px solid var(--border-color);
+    background: var(--bg-secondary);
+    border-radius: 0 6px 6px 0;
+    white-space: pre-line;
+}
+
+.explain strong {
+    color: var(--text-light);
+}
+
 /* VDOT / heart-rate / zone result grids (science training tab) */
 .vdot-grid {
     width: 100%;
