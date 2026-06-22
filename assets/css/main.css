@@ -217,6 +217,86 @@ h1.title {
     font-weight: 500;
 }
 
+/* VDOT / heart-rate / zone result grids (science training tab) */
+.vdot-grid {
+    width: 100%;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    gap: 8px 12px;
+    align-items: center;
+    font-size: 0.9rem;
+}
+
+.zone-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: var(--accent-bg);
+    color: var(--btn-active-text);
+    font-weight: bold;
+    font-size: 0.8rem;
+}
+
+.vdot-pace {
+    justify-self: end;
+    color: var(--highlight);
+    font-weight: bold;
+}
+
+.vdot-equiv-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 8px;
+    text-align: center;
+    margin-top: 6px;
+}
+
+.vdot-equiv-grid > div {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.vdot-equiv-dist {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+}
+
+/* Race-pace planner per-km table */
+.raceplan-table {
+    width: 100%;
+    max-height: 280px;
+    overflow-y: auto;
+    margin-top: 8px;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+}
+
+.raceplan-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1.2fr 1fr;
+    gap: 4px;
+    padding: 6px 10px;
+    font-size: 0.85rem;
+    text-align: center;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.raceplan-row:last-child {
+    border-bottom: none;
+}
+
+.raceplan-head {
+    position: sticky;
+    top: 0;
+    background: var(--bg-secondary);
+    font-weight: bold;
+    color: var(--text-muted);
+}
+
 .highlight-text {
     color: var(--highlight);
     font-weight: bold;

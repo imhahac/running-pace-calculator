@@ -219,6 +219,80 @@ export interface ITrainingPaces {
 }
 
 /**
+ * Daniels VDOT zone keys
+ */
+export type TVdotZoneKey = 'easy' | 'marathon' | 'threshold' | 'interval' | 'repetition';
+
+/**
+ * Daniels VDOT training paces (seconds per km)
+ */
+export interface IVdotPaces {
+  easy: number;
+  marathon: number;
+  threshold: number;
+  interval: number;
+  repetition: number;
+}
+
+/**
+ * Race-pace split strategy
+ */
+export type TRaceStrategy = 'even' | 'negative' | 'positive';
+
+/**
+ * One row of a race-pace plan (per-km / final partial segment)
+ */
+export interface IRacePlanRow {
+  km: number;
+  paceSec: number;
+  cumulativeSec: number;
+  phase: 'start' | 'mid' | 'surge' | 'finish';
+}
+
+/**
+ * A full race-pace plan
+ */
+export interface IRacePlan {
+  rows: IRacePlanRow[];
+  avgPaceSec: number;
+  avgSpeedKmh: number;
+  vdot: number;
+}
+
+/**
+ * A structured interval workout session
+ */
+export interface IIntervalSession {
+  type: 'I' | 'T' | 'R';
+  repMeters: number;
+  reps: number;
+  repPaceSec: number;
+  restDesc: string;
+  warmupKm: number;
+  cooldownKm: number;
+  mainKm: number;
+  totalKm: number;
+  totalSec: number;
+  cappedByWeekly: boolean;
+}
+
+/**
+ * Max-HR estimation formula
+ */
+export type THrFormula = 'tanaka' | 'fox';
+
+/**
+ * Heart-rate training zone (Karvonen / %HRR)
+ */
+export interface IHrZone {
+  key: TVdotZoneKey;
+  loPct: number;
+  hiPct: number;
+  loBpm: number;
+  hiBpm: number;
+}
+
+/**
  * Training zone information
  */
 export interface ITrainingZone {
@@ -244,6 +318,16 @@ export interface ITrainingDay {
   durationOrDistance: string;
   paceOrIntensity: string;
   stages?: IWorkoutStage[];
+}
+
+/**
+ * Optional configuration for a customizable training plan. When omitted, the
+ * generator keeps its original date-derived, pace-based behavior.
+ */
+export interface ITrainingPlanConfig {
+  weeks?: number;
+  startVolumeKm?: number;
+  peakVolumeKm?: number;
 }
 
 /**

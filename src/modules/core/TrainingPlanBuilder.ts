@@ -16,6 +16,7 @@ import {
 import TimeFormatter from './TimeFormatter.js';
 import type {
   ITrainingPaces,
+  ITrainingPlanConfig,
   IWorkoutStage,
   TTrainingPhase,
   TWorkoutType
@@ -32,6 +33,7 @@ export interface ITrainingPlanContext {
   isTriathlon: boolean;
   translate: (key: string) => string;
   workoutTextMap: Record<'easy' | 'tempo' | 'interval' | 'race', string>;
+  config?: ITrainingPlanConfig;
 }
 
 export interface IWorkoutInfo {
@@ -76,21 +78,33 @@ export class TrainingPlanBuilder {
     ctx: ITrainingPlanContext
   ): { mileage: number; isRecovery: boolean } {
     const { paceSecondsPerKm, raceScale, isTriathlon } = ctx;
+    const cfg = ctx.config;
 
-    const baselineRaw = Math.max(
-      TRAINING_PLAN.baselineMinKm,
-      Math.min(
-        TRAINING_PLAN.baselineMaxKm,
-        Math.round(
-          (3600 / paceSecondsPerKm) * TRAINING_PLAN.baselinePaceCoeff +
-            TRAINING_PLAN.baselinePaceBase
+    let raw: number;
+    if (cfg && (cfg.startVolumeKm ?? 0) > 0 && (cfg.peakVolumeKm ?? 0) > 0) {
+      // Configurable volume ramp: start → peak, reaching peak ~85% through the
+      // plan, then the same per-phase reductions below apply.
+      const start = cfg.startVolumeKm as number;
+      const peak = cfg.peakVolumeKm as number;
+      const denom = Math.max(1, ctx.weekCount - 1);
+      const progress = Math.min(1, (w - 1) / denom / 0.85);
+      raw = Math.round(start + (peak - start) * progress);
+    } else {
+      const baselineRaw = Math.max(
+        TRAINING_PLAN.baselineMinKm,
+        Math.min(
+          TRAINING_PLAN.baselineMaxKm,
+          Math.round(
+            (3600 / paceSecondsPerKm) * TRAINING_PLAN.baselinePaceCoeff +
+              TRAINING_PLAN.baselinePaceBase
+          )
         )
-      )
-    );
-    const baseline = Math.max(TRAINING_PLAN.mileageFloorKm, Math.round(baselineRaw * raceScale));
-    const progressStep =
-      Math.floor((w - 1) / TRAINING_PLAN.progressStepWeeks) * TRAINING_PLAN.progressStepKm;
-    let raw = baseline + progressStep;
+      );
+      const baseline = Math.max(TRAINING_PLAN.mileageFloorKm, Math.round(baselineRaw * raceScale));
+      const progressStep =
+        Math.floor((w - 1) / TRAINING_PLAN.progressStepWeeks) * TRAINING_PLAN.progressStepKm;
+      raw = baseline + progressStep;
+    }
 
     // Triathlon plans carry less running volume; single source of truth is the
     // isTriathlon flag (derived from state.planType by the caller).

@@ -103,6 +103,7 @@
             <div class="tab-item active" id="tabbtn-pace" data-tab="tab-pace" tabindex="0" role="tab" aria-selected="true" aria-controls="tab-pace">🏃 <span data-i18n="tab_pace">配速與分析</span></div>
             <div class="tab-item" id="tabbtn-triathlon" data-tab="tab-triathlon" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-triathlon">🏊‍♂️ <span data-i18n="tab_triathlon">鐵人三項</span></div>
             <div class="tab-item" id="tabbtn-training" data-tab="tab-training" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-training">📅 <span data-i18n="tab_training">課表與賽事</span></div>
+            <div class="tab-item" id="tabbtn-science" data-tab="tab-science" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-science">🧪 <span data-i18n="tab_science">科學訓練</span></div>
             <div class="tab-item" id="tabbtn-settings" data-tab="tab-settings" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-settings">⚙️ <span data-i18n="tab_settings">系統設定</span></div>
         </nav>
 
@@ -411,6 +412,30 @@
                         </select>
                     </div>
                 </div>
+                <div class="helper-text" data-i18n="hint_plan_config" style="margin-bottom: 6px;">可選：設定難度或自訂週數與里程（留白則自動推算）</div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-difficulty" data-i18n="plan_difficulty" style="font-size:0.9rem;">難度</label>
+                        <select id="training-difficulty" style="min-width: 90px;">
+                            <option value="" data-i18n="plan_diff_custom">自訂</option>
+                            <option value="beginner" data-i18n="plan_diff_beginner">初階</option>
+                            <option value="intermediate" data-i18n="plan_diff_intermediate">進階</option>
+                            <option value="elite" data-i18n="plan_diff_elite">菁英</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-weeks" data-i18n="plan_weeks" style="font-size:0.9rem;">週數</label>
+                        <input type="number" id="training-weeks" placeholder="auto" min="1" max="24" style="width: 6ch;">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-start-vol" data-i18n="plan_start_vol" style="font-size:0.9rem;">起始里程</label>
+                        <input type="number" id="training-start-vol" placeholder="km" min="0" style="width: 6ch;">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-peak-vol" data-i18n="plan_peak_vol" style="font-size:0.9rem;">巔峰里程</label>
+                        <input type="number" id="training-peak-vol" placeholder="km" min="0" style="width: 6ch;">
+                    </div>
+                </div>
                 <div id="race-countdown" style="margin-bottom: 10px; font-weight: bold; font-size: 1rem; color: var(--highlight); display: none;">
                     <!-- Countdown populated by JS -->
                 </div>
@@ -432,7 +457,123 @@
                     <!-- Daily Cards populated by JS -->
                 </div>
             </div>
+
+            <!-- Race Pace Planner -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="raceplan_title">🎯 比賽配速規劃</span></h3>
+                <div class="helper-text" data-i18n="hint_raceplan_intro" style="margin-bottom: 8px;">設定目標完賽時間與策略，產生每公里配速表</div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+                    <select id="raceplan-dist-select" aria-label="比賽距離">
+                        <option value="5000">5K</option>
+                        <option value="10000">10K</option>
+                        <option value="21097.5" data-i18n="dist_half">半馬</option>
+                        <option value="42195" selected data-i18n="dist_marathon">全馬</option>
+                    </select>
+                    <input type="text" id="raceplan-time-input" placeholder="h:mm:ss" aria-label="目標完賽時間" style="width: 10ch; text-align: center;">
+                    <select id="raceplan-strategy-select" aria-label="配速策略">
+                        <option value="even" data-i18n="strategy_even">平均配速</option>
+                        <option value="negative" data-i18n="strategy_negative">負分段</option>
+                        <option value="positive" data-i18n="strategy_positive">正分段</option>
+                    </select>
+                </div>
+                <div id="raceplan-summary" class="helper-text"></div>
+                <div id="raceplan-table" class="raceplan-table"></div>
+            </div>
         </div> <!-- End of tab-training -->
+
+        <div class="tab-pane" id="tab-science" role="tabpanel" aria-labelledby="tabbtn-science">
+            <!-- VDOT Calculator -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="vdot_title">📊 VDOT 訓練配速</span></h3>
+                <div class="helper-text" data-i18n="hint_vdot_intro" style="margin-bottom: 8px;">輸入近期賽事成績，算出 VDOT 與 E/M/T/I/R 訓練配速</div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap; margin-bottom: 12px;">
+                    <select id="vdot-dist-select" aria-label="VDOT 賽事距離">
+                        <option value="3000">3K</option>
+                        <option value="5000" selected>5K</option>
+                        <option value="10000">10K</option>
+                        <option value="21097.5" data-i18n="dist_half">半馬</option>
+                        <option value="42195" data-i18n="dist_marathon">全馬</option>
+                    </select>
+                    <input type="text" id="vdot-time-input" placeholder="h:mm:ss" aria-label="VDOT 賽事時間" style="width: 10ch; text-align: center;">
+                    <span class="highlight-text mono-text" style="margin-left: auto; font-size: 1.05rem;">VDOT <span id="vdot-value">--</span></span>
+                </div>
+                <div id="vdot-paces" class="vdot-grid">
+                    <span class="zone-badge">E</span><span data-i18n="zone_easy_desc">有氧基礎</span><span id="vdot-pace-easy" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">M</span><span data-i18n="zone_marathon_desc">馬拉松配速</span><span id="vdot-pace-marathon" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">T</span><span data-i18n="zone_threshold_desc">乳酸閾值</span><span id="vdot-pace-threshold" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">I</span><span data-i18n="zone_interval_desc">VO₂max 間歇</span><span id="vdot-pace-interval" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">R</span><span data-i18n="zone_repetition_desc">速度與經濟性</span><span id="vdot-pace-repetition" class="mono-text vdot-pace">--</span>
+                </div>
+                <div style="width: 100%; margin-top: 12px;">
+                    <div class="helper-text" data-i18n="vdot_equiv">等效比賽成績</div>
+                    <div id="vdot-equiv" class="vdot-equiv-grid">
+                        <div><span class="vdot-equiv-dist">5K</span><span id="vdot-eq-5000" class="mono-text">--</span></div>
+                        <div><span class="vdot-equiv-dist">10K</span><span id="vdot-eq-10000" class="mono-text">--</span></div>
+                        <div><span class="vdot-equiv-dist" data-i18n="dist_half">半馬</span><span id="vdot-eq-21097" class="mono-text">--</span></div>
+                        <div><span class="vdot-equiv-dist" data-i18n="dist_marathon">全馬</span><span id="vdot-eq-42195" class="mono-text">--</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Heart Rate Zones -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="hr_title">❤️ 心率區間</span></h3>
+                <div class="helper-text" data-i18n="hint_hr_intro" style="margin-bottom: 8px;">輸入年齡與靜息心率，算出 Karvonen 五區心率</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="hr-age-input" data-i18n="hr_age">年齡</label>
+                    <input type="number" id="hr-age-input" placeholder="30" min="1" max="120" style="width: 8ch;">
+                    <label for="hr-rest-input" data-i18n="hr_rest">靜息心率 (bpm)</label>
+                    <input type="number" id="hr-rest-input" placeholder="50" min="20" max="120" style="width: 8ch;">
+                    <label for="hr-max-input" data-i18n="hr_max_optional">實測最大心率 (可選)</label>
+                    <input type="number" id="hr-max-input" placeholder="" min="100" max="240" style="width: 8ch;">
+                    <label for="hr-formula-select" data-i18n="hr_formula">最大心率公式</label>
+                    <select id="hr-formula-select">
+                        <option value="tanaka" data-i18n="hr_formula_tanaka">Tanaka (建議)</option>
+                        <option value="fox" data-i18n="hr_formula_fox">220 − 年齡</option>
+                    </select>
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.9rem;">
+                    <span data-i18n="hr_maxhr">最大心率</span>: <span id="hr-max-display" class="highlight-text mono-text">--</span>
+                    &emsp;<span data-i18n="hr_vo2max">估計 VO₂max</span>: <span id="hr-vo2-display" class="mono-text">--</span>
+                </div>
+                <div id="hr-zones" class="vdot-grid" style="margin-top: 10px;"></div>
+            </div>
+
+            <!-- Interval Workout Generator -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="interval_title">⚡ 間歇課表產生器</span></h3>
+                <div class="helper-text" data-i18n="hint_interval_intro" style="margin-bottom: 8px;">依上方 VDOT 與週里程，產生結構化間歇課表</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="interval-weekly-input" data-i18n="interval_weekly">週里程 (km)</label>
+                    <input type="number" id="interval-weekly-input" placeholder="40" min="0" style="width: 8ch;">
+                    <label for="interval-type-select" data-i18n="interval_type">課表類型</label>
+                    <select id="interval-type-select">
+                        <option value="I" data-i18n="interval_type_i">I 間歇 (VO₂max)</option>
+                        <option value="T" data-i18n="interval_type_t">T 節奏 (閾值)</option>
+                        <option value="R" data-i18n="interval_type_r">R 重複 (速度)</option>
+                    </select>
+                </div>
+                <div id="interval-result" class="vdot-grid" style="margin-top: 10px;"></div>
+                <div id="interval-note" class="helper-text" style="margin-top: 6px;"></div>
+            </div>
+
+            <!-- Named Training Methods -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="methods_title">🏆 名師訓練法</span></h3>
+                <div class="helper-text" data-i18n="hint_methods_intro" style="margin-bottom: 8px;">輸入目標全馬時間，套用名師課表</div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; flex-wrap: wrap; margin-bottom: 10px;">
+                    <input type="text" id="methods-time-input" placeholder="3:30:00" aria-label="目標全馬時間" style="width: 10ch; text-align: center;">
+                    <select id="methods-select" aria-label="訓練法">
+                        <option value="yasso" data-i18n="method_yasso">Yasso 800</option>
+                        <option value="norwegian4x4" data-i18n="method_norwegian4x4">挪威 4×4</option>
+                        <option value="hansons" data-i18n="method_hansons">Hansons</option>
+                        <option value="doubleThreshold" data-i18n="method_double">挪威雙閾值</option>
+                    </select>
+                </div>
+                <div id="methods-result" class="vdot-grid"></div>
+                <div id="methods-note" class="helper-text" style="margin-top: 6px;"></div>
+            </div>
+        </div> <!-- End of tab-science -->
 
         <div class="tab-pane" id="tab-settings" role="tabpanel" aria-labelledby="tabbtn-settings">
             <div id="settings-panel" class="container" style="margin-top: 10px;" role="region" aria-label="Settings Panel">

@@ -21,6 +21,11 @@ import SplitViewController from './controllers/SplitViewController.js';
 import PredictionController from './controllers/PredictionController.js';
 import LanguageController from './controllers/LanguageController.js';
 import ShareLoadController from './controllers/ShareLoadController.js';
+import VdotController from './controllers/VdotController.js';
+import HeartRateController from './controllers/HeartRateController.js';
+import IntervalController from './controllers/IntervalController.js';
+import RacePlanController from './controllers/RacePlanController.js';
+import MethodsController from './controllers/MethodsController.js';
 import type { TMode } from '../../types/index';
 
 export class UIController {
@@ -63,6 +68,11 @@ export class UIController {
     SplitViewController.syncSplitModeUI(StateManager.getSplitMode());
     ModeController.updateModeCardAccessibility();
     TrainingController.populateSettingsPanel();
+    VdotController.initialize();
+    HeartRateController.initialize();
+    IntervalController.initialize();
+    RacePlanController.initialize();
+    MethodsController.initialize();
     ShareLoadController.applySharedPayloadFromURL();
 
     RaceDataManager.setApiUrl(StateManager.getGasApiUrl());
@@ -282,6 +292,20 @@ export class UIController {
         CalcController.refreshTrainingCycle();
       });
     }
+
+    // Plan customization (difficulty preset + weeks / start & peak volume)
+    const trainingDifficulty = document.getElementById('training-difficulty');
+    if (trainingDifficulty) {
+      trainingDifficulty.addEventListener('change', () => {
+        TrainingController.applyDifficultyPreset();
+        CalcController.refreshTrainingCycle();
+      });
+    }
+    ['training-weeks', 'training-start-vol', 'training-peak-vol'].forEach((id) => {
+      document
+        .getElementById(id)
+        ?.addEventListener('input', () => CalcController.refreshTrainingCycle());
+    });
 
     // Track distance segmented control
     const trackSegmentBtns = document.querySelectorAll('#track-distance-segmented .segment-btn');

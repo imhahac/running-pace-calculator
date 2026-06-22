@@ -3,6 +3,7 @@ import Calculator from '../core/Calculator.js';
 import TimeFormatter from '../core/TimeFormatter.js';
 import TranslationManager from '../state/TranslationManager.js';
 import StateManager from '../state/StateManager.js';
+import type { ITrainingPlanConfig } from '../../types/index';
 
 export class TrainingCycleManager {
   static getPlanDistanceMeters(): number {
@@ -19,6 +20,20 @@ export class TrainingCycleManager {
     if (planDistanceInput && isFinite(distanceMeters) && distanceMeters > 0) {
       planDistanceInput.value = distanceMeters.toString();
     }
+  }
+
+  /** Read optional plan customization (weeks / start & peak volume) from the UI. */
+  private static readPlanConfig(): ITrainingPlanConfig | undefined {
+    const num = (id: string): number =>
+      parseFloat((document.getElementById(id) as HTMLInputElement | null)?.value || '');
+    const weeks = num('training-weeks');
+    const start = num('training-start-vol');
+    const peak = num('training-peak-vol');
+    const config: ITrainingPlanConfig = {};
+    if (weeks > 0) config.weeks = Math.floor(weeks);
+    if (start > 0) config.startVolumeKm = start;
+    if (peak > 0) config.peakVolumeKm = peak;
+    return Object.keys(config).length > 0 ? config : undefined;
   }
 
   static update(paceSecondsPerKm: number): void {
@@ -57,7 +72,9 @@ export class TrainingCycleManager {
       workoutMap,
       planDistanceMeters,
       isTriathlon,
-      (key) => TranslationManager.get(key)
+      (key) => TranslationManager.get(key),
+      new Date(),
+      this.readPlanConfig()
     );
 
     container.innerHTML = '';

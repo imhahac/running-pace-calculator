@@ -10,6 +10,26 @@ export class TrainingController {
     }
   }
 
+  /** Difficulty presets fill the weeks / start / peak volume fields. */
+  static applyDifficultyPreset(): void {
+    const sel = document.getElementById('training-difficulty') as HTMLSelectElement | null;
+    if (!sel) return;
+    const presets: Record<string, { weeks: number; start: number; peak: number }> = {
+      beginner: { weeks: 16, start: 25, peak: 45 },
+      intermediate: { weeks: 16, start: 40, peak: 70 },
+      elite: { weeks: 18, start: 60, peak: 110 }
+    };
+    const preset = presets[sel.value];
+    if (!preset) return;
+    const setVal = (id: string, v: number): void => {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      if (el) el.value = String(v);
+    };
+    setVal('training-weeks', preset.weeks);
+    setVal('training-start-vol', preset.start);
+    setVal('training-peak-vol', preset.peak);
+  }
+
   static populateSettingsPanel(): void {
     const state = StateManager.getState();
     const t = TranslationManager.getAll();

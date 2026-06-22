@@ -14,7 +14,13 @@ import {
 import TimeFormatter from './TimeFormatter.js';
 import Converter from './Converter.js';
 import TrainingPlanBuilder, { type ITrainingPlanContext } from './TrainingPlanBuilder.js';
-import type { IPaceState, ITrainingWeekPlan, ITrainingDay, TWorkoutType } from '../../types/index';
+import type {
+  IPaceState,
+  ITrainingWeekPlan,
+  ITrainingDay,
+  ITrainingPlanConfig,
+  TWorkoutType
+} from '../../types/index';
 
 export class Calculator {
   /**
@@ -206,7 +212,8 @@ export class Calculator {
     planDistanceMeters: number = FULL_MARATHON_METERS,
     isTriathlon: boolean = false,
     translate: (key: string) => string,
-    now: Date = new Date()
+    now: Date = new Date(),
+    config?: ITrainingPlanConfig
   ): ITrainingWeekPlan[] {
     if (!isFinite(paceSecondsPerKm) || paceSecondsPerKm <= 0 || !targetDateISO) {
       return [];
@@ -219,7 +226,10 @@ export class Calculator {
     }
 
     const diffDays = Math.ceil((target.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-    const weekCount = Math.min(TRAINING_PLAN.maxWeeks, Math.max(1, Math.ceil(diffDays / 7)));
+    const weekCount =
+      config && config.weeks && config.weeks >= 1
+        ? Math.min(TRAINING_PLAN.maxWeeks, Math.floor(config.weeks))
+        : Math.min(TRAINING_PLAN.maxWeeks, Math.max(1, Math.ceil(diffDays / 7)));
 
     const ctx: ITrainingPlanContext = {
       paceSecondsPerKm,
@@ -228,7 +238,8 @@ export class Calculator {
       planDistanceMeters,
       isTriathlon,
       translate,
-      workoutTextMap
+      workoutTextMap,
+      config
     };
 
     const plans: ITrainingWeekPlan[] = [];
