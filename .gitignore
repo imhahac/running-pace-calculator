@@ -1,0 +1,27 @@
+# Dependencies
+node_modules/
+
+# TypeScript declaration files (not needed for runtime)
+*.d.ts
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
+assets/js/
+scratch/
+
+# Test coverage output
+coverage/
+.nyc_output/

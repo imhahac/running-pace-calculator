@@ -1,0 +1,92 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: ['main']
+  pull_request:
+    branches: ['main']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  # 階段 1：品質閘門 (Lint / Typecheck / Format / Test + Coverage)
+  test-and-validate:
+    name: Lint, Typecheck & Test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Typecheck
+        run: npm run typecheck
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Format check
+        run: npm run format:check
+
+      - name: Unit tests + coverage gate
+        run: npm run test:cov
+
+  # 階段 2：部署到 GitHub Pages (Deploy)
+  # 只有在 test-and-validate 成功，且是推送到 main 分支時才執行
+  deploy-pages:
+    name: Deploy to GitHub Pages
+    needs: test-and-validate
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build (bundle + minify)
+        run: npm run build
+
+      # Assemble only the runtime files — no src/, tests/, node_modules/, configs.
+      - name: Assemble deployable site
+        run: |
+          mkdir -p _site/assets
+          cp index.html diagnostics.html training-report.html manifest.json service-worker.js _site/
+          cp -r assets/css assets/images assets/js _site/assets/
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '_site'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

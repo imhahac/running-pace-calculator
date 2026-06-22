@@ -1,0 +1,484 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>配速計算機</title>
+    <meta name="theme-color" content="#0b0f1a">
+    <meta name="description" content="跑者專用配速換算工具：田徑場、跑步機、完賽時間預測與科學化訓練週期。">
+    <link rel="icon" href="assets/images/icons8-exercise-96.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/images/icons8-exercise-96.png">
+    <link rel="manifest" href="manifest.json">
+    <link rel="stylesheet" href="assets/css/main.css">
+    <!-- Leaflet.js for Interactive GPX Maps -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&family=Roboto+Mono:wght@400;700&display=swap"
+        rel="stylesheet">
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('./service-worker.js')
+                    .then(reg => {
+                        console.log('SW register success', reg);
+
+                        const updateBar = document.getElementById('sw-update-bar');
+                        const refreshBtn = document.getElementById('sw-refresh-btn');
+
+                        const showUpdateBar = () => {
+                            if (updateBar) {
+                                updateBar.classList.remove('hidden-update');
+                            }
+                        };
+
+                        const wireWaitingWorker = () => {
+                            if (!reg.waiting) return;
+                            showUpdateBar();
+                            if (refreshBtn) {
+                                refreshBtn.onclick = () => {
+                                    reg.waiting?.postMessage({ type: 'SKIP_WAITING' });
+                                };
+                            }
+                        };
+
+                        wireWaitingWorker();
+
+                        reg.addEventListener('updatefound', () => {
+                            const installingWorker = reg.installing;
+                            if (!installingWorker) return;
+
+                            installingWorker.addEventListener('statechange', () => {
+                                if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+                                    wireWaitingWorker();
+                                }
+                            });
+                        });
+
+                        navigator.serviceWorker.addEventListener('controllerchange', () => {
+                            window.location.reload();
+                        });
+                    })
+                    .catch(err => console.log('SW register fail', err));
+            });
+        }
+    </script>
+</head>
+
+<body>
+    <div id="sw-update-bar" class="sw-update-bar hidden-update" role="status" aria-live="polite">
+        <span id="sw-update-text">有新版可用</span>
+        <button id="sw-refresh-btn" class="action-btn">立即更新</button>
+    </div>
+
+    <div class="main-wrapper">
+        <header>
+            <div class="header-top">
+                <h1 class="box title">配速計算機</h1>
+                <div style="display: flex; gap: 10px;">
+                    <button id="lang-toggle" aria-label="Switch Language" style="font-size: 0.9rem; font-weight: bold;">
+                        中/EN
+                    </button>
+                    <button id="theme-toggle" aria-label="Switch Theme">
+                        <span id="theme-icon-text">🌙</span>
+                    </button>
+                </div>
+            </div>
+            <div class="footer subtitle">
+                <button id='slide-button2' aria-label="Info">
+                    <svg class="info-icon-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                </button>
+            </div>
+            <div class="helper-text" data-i18n="helper">任意輸入、即刻換算</div>
+            <hr>
+        </header>
+
+
+        <nav class="tab-bar" role="tablist" aria-label="功能分頁">
+            <div class="tab-item active" id="tabbtn-pace" data-tab="tab-pace" tabindex="0" role="tab" aria-selected="true" aria-controls="tab-pace">🏃 <span data-i18n="tab_pace">配速與分析</span></div>
+            <div class="tab-item" id="tabbtn-triathlon" data-tab="tab-triathlon" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-triathlon">🏊‍♂️ <span data-i18n="tab_triathlon">鐵人三項</span></div>
+            <div class="tab-item" id="tabbtn-training" data-tab="tab-training" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-training">📅 <span data-i18n="tab_training">課表與賽事</span></div>
+            <div class="tab-item" id="tabbtn-settings" data-tab="tab-settings" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-settings">⚙️ <span data-i18n="tab_settings">系統設定</span></div>
+        </nav>
+
+        <main>
+        <div class="tab-pane active" id="tab-pace" role="tabpanel" aria-labelledby="tabbtn-pace">
+            <div id="container2" class="footer float-right animation container2 SlideDown">
+            <span class="highlight-text" data-i18n="info_time_format">時間格式：m:ss（分:秒）或 h:mm:ss（時:分:秒）。任一欄位輸入即時換算，點上方分頁切換功能。</span><br>
+        </div>
+
+            <div class="calculator-grid">
+            <!-- Pace Section -->
+            <div class="box input-group">
+                <label>
+                    <input class="hidden-radio" type="radio" id="c_pace" name="type" value="pace" checked>
+                </label>
+                <div class="row selected" id="pace_icon">
+                    <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span data-i18n="mode_pace">配速</span>
+                </div>
+                <div class="helper-text" data-i18n="hint_pace_mode">輸入每公里配速（分:秒），自動換算時速、分段與完賽時間</div>
+
+                <div class="column2 inputs-row">
+                    <input class="pace_input" type="number" id="pace_input" placeholder="4" autofocus aria-label="配速分鐘" min="0">
+                    <span>:</span>
+                    <input class="pace_input" type="number" id="pace_input2" placeholder="30" aria-label="配速秒數" min="0">
+                    <span id="unit" data-unit="km">/km</span>
+                    <button id='mile-button'>
+                        <svg class="switch-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg><span id="switch">/mile</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Track Section -->
+            <div class="box input-group">
+                <label>
+                    <input class="hidden-radio" type="radio" id="c_track" name="type" value="track">
+                </label>
+                <div class="row" id="track_icon">
+                    <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="6"/><path d="M12 6v12"/><path d="M6 12h12"/></svg><span data-i18n="mode_track">田徑場</span>
+                </div>
+                <div class="helper-text" data-i18n="hint_track_mode">選場地與道次，輸入單圈秒數，自動算各距離分段</div>
+                <div class="column2 inputs-grid">
+                    <div class="lane-selector">
+                        <select id="venue-select" aria-label="場地選擇">
+                            <!-- Options populated by JS -->
+                        </select>
+                        <div class="lane-sub-row">
+                            <select id="laneNumber" aria-label="跑道道次選擇">
+                                <!-- Options populated by JS default -->
+                            </select>
+                            <span id="lane-length2">400m</span>
+                        </div>
+                    </div>
+                    <div class="track-input-container">
+                        <input type="number" id="track_input" placeholder="" size="4" maxlength="4" aria-label="每圈秒數輸入" min="0">
+                        <div id="track-distance-segmented" class="segmented-control" style="margin: 0 5px;">
+                            <button class="segment-btn" data-value="400">400m</button>
+                            <button class="segment-btn" data-value="300">300m</button>
+                            <button class="segment-btn" data-value="200">200m</button>
+                            <button class="segment-btn" data-value="100">100m</button>
+                        </div>
+                        <input type="hidden" id="track_distance_select" value="400">
+                        <button id='slide-button' aria-label="展開/收合分段時間" aria-expanded="true" aria-controls="container">−</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Treadmill Section -->
+            <div class="box input-group">
+                <label>
+                    <input class="hidden-radio" type="radio" id="c_treadmill" name="type" value="treadmill">
+                </label>
+                <div class="row" id="treadmill_icon">
+                    <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h.01"/><path d="M14 20v-4l-2-3-3 4-2-1"/><path d="m17 12-4-2-2 3H7"/><path d="M12 5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg><span data-i18n="mode_treadmill">跑步機</span>
+                </div>
+                <div class="helper-text" data-i18n="hint_treadmill_mode">輸入跑步機時速，換算成路跑配速</div>
+                <div class="column2 inputs-row">
+                    <input type="number" id="treadmill_input" placeholder="" step="0.1" aria-label="跑步機速度輸入" min="0"><span id="unit2"
+                        data-unit="km">km/h</span>
+                    <button id='perHour-button'>
+                        <svg class="switch-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg><span id="switch2">mile/h</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Finish Time Section -->
+            <div class="box input-group" style="align-items: flex-start; align-content: flex-start;">
+                <label>
+                    <input class="hidden-radio" type="radio" id="c_finish_time" name="type" value="finish_time">
+                </label>
+                <div class="row" id="finish_time_icon" style="margin-top: 4px;">
+                    <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M12 2v2"/><path d="M9 2h6"/></svg><span data-i18n="mode_finish">完成</span>
+                </div>
+                <div class="helper-text" data-i18n="hint_finish_mode">選距離並輸入目標完賽時間，反推所需配速</div>
+
+                <div class="column2" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+                    <input type="text" id="finish_time_input" placeholder="例 3:30:00" aria-label="完成時間輸入" style="min-width: 14ch;">
+                    
+                    <div id="finish-distance-chips" class="chip-group scrollable" style="width: 100%;">
+                        <button class="chip-btn" data-value="42195" data-i18n="dist_marathon">全馬</button>
+                        <button class="chip-btn" data-value="21097.5" data-i18n="dist_half">半馬</button>
+                        <button class="chip-btn" data-value="10000">10K</button>
+                        <button class="chip-btn" data-value="5000">5K</button>
+                        <button class="chip-btn" data-value="3000">3K</button>
+                        <button class="chip-btn" data-value="1600">1 Mile</button>
+                        <button class="chip-btn" data-value="1500">1500m</button>
+                        <button class="chip-btn" data-value="800">800m</button>
+                        <button class="chip-btn" data-value="400">400m</button>
+                    </div>
+                    <input type="hidden" id="dropdown" value="42195">
+                </div>
+                <div id="finish-time-feedback" class="field-feedback" aria-live="polite" style="margin-top: 0;"></div>
+            </div>
+        </div>
+
+            <div class='container animation' id='container'>
+            <!-- Split Mode Toggle -->
+            <div class="split-toggle-container">
+                <button id="toggle-track" class="toggle-btn active" data-i18n="tab_track" aria-pressed="true">🏟️ 田徑場</button>
+                <button id="toggle-road" class="toggle-btn" data-i18n="tab_road" aria-pressed="false">🛣️ 路跑分段</button>
+            </div>
+
+            <!-- Track Splits (Default) -->
+            <div id="split-detail" role="region" aria-label="Track splits">
+                <div class="box indent-text splits-column">
+                    <div class="split-row">
+                        <div class="increment-label">100m</div><input class="increment input-right" type="text"
+                            id="m100_input" disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label">200m</div><input class="increment input-right" type="text"
+                            id="m200_input" disabled><input class="increment diff" type="text" id="m200_increment"
+                            disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label">300m</div><input class="increment input-right" type="text"
+                            id="m300_input" disabled><input class="increment diff" type="text" id="m300_increment"
+                            disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label">400m</div><input class="increment input-right" type="text"
+                            id="m400_input" disabled><input class="increment diff" type="text" id="m400_increment"
+                            disabled>
+                    </div>
+                </div>
+                <div id="laps-result2" class="indent-text splits-column">
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_2">2圈</span><span
+                                id="twolaps">&emsp;800</span></div><input class="increment input-right" type="text"
+                            id="m800_input" disabled>
+                    </div>
+
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_3">3圈</span><span
+                                id="threelaps">&ensp;1200</span></div><input class="increment input-right" type="text"
+                            id="m1200_input" disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_4">4圈</span><span id="fourlaps">1600</span>
+                        </div><input class="increment input-right" type="text" id="m1600_input" disabled>
+                    </div>
+                    <div class="split-row">
+                        <div class="increment-label"><span data-i18n="lap_5">5圈</span><span id="fivelaps">2000</span>
+                        </div><input class="increment input-right" type="text" id="m2000_input" disabled>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Road Splits (Hidden by default) -->
+            <div id="road-detail" style="display: none;" role="region" aria-label="Road splits">
+                <!-- Content populated by JS -->
+            </div>
+
+            <div class="action-row" style="text-align: center; margin-top: 10px;">
+                <button id="copy-btn" class="action-btn">
+                    <span data-i18n="btn_copy">📋 複製結果</span>
+                </button>
+                <button id="share-link-btn" class="action-btn">
+                    <span data-i18n="btn_share_link">🔗 分享連結</span>
+                </button>
+                <button id="export-pdf-btn" class="action-btn">
+                    <span data-i18n="btn_export_pdf">📄 匯出 PDF</span>
+                </button>
+                <button id="export-image-btn" class="action-btn">
+                    <span data-i18n="btn_export_image">🖼️ 匯出圖片</span>
+                </button>
+                <button id="open-report-btn" class="action-btn">
+                    <span data-i18n="btn_open_report">📑 開啟訓練報表</span>
+                </button>
+            </div>
+        </div>
+
+            <!-- Training Zones -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;"><span data-i18n="title_zones">🏃 訓練配速區間
+                        (基於當前配速)</span></h3>
+                <div id="zones-table"
+                    style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.9rem;">
+                    <div>Easy (E)</div>
+                    <div id="zone-e" class="mono-text">--</div>
+                    <div>Marathon (M)</div>
+                    <div id="zone-m" class="mono-text">--</div>
+                    <div>Threshold (T)</div>
+                    <div id="zone-t" class="mono-text">--</div>
+                    <div>Interval (I)</div>
+                    <div id="zone-i" class="mono-text">--</div>
+                    <div>Repetition (R)</div>
+                    <div id="zone-r" class="mono-text">--</div>
+                </div>
+            </div>
+
+            <!-- Race Predictor -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;"><span data-i18n="title_predict">🔮 完賽成績預測 (Riegel's
+                        Formula)</span></h3>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
+                    <select id="pred-dist-select" style="flex: 1;">
+                        <option value="42195" data-i18n="dist_marathon">全馬 Marathon</option>
+                        <option value="21097.5" data-i18n="dist_half">半馬 Half-Marathon</option>
+                        <option value="10000">10K</option>
+                        <option value="5000">5K</option>
+                    </select>
+                    <input type="text" id="pred-time-input" placeholder="mm:ss"
+                        style="width: 8ch; text-align: center;">
+                </div>
+                <div id="predictions-grid"
+                    style="width: 100%; display: grid; grid-template-columns: 1fr 1fr; gap: 5px; font-size: 0.9rem;">
+                    <div>5K</div>
+                    <div id="pred-5k" class="mono-text">--</div>
+                    <div>10K</div>
+                    <div id="pred-10k" class="mono-text">--</div>
+                    <div>Half</div>
+                    <div id="pred-half" class="mono-text">--</div>
+                    <div>Full</div>
+                    <div id="pred-full" class="mono-text">--</div>
+                </div>
+            </div>
+        </div> <!-- End of tab-pace -->
+
+        <div class="tab-pane" id="tab-triathlon" role="tabpanel" aria-labelledby="tabbtn-triathlon">
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;"><span data-i18n="mode_triathlon">🏊‍♂️🚴🏃 鐵人三項配速規劃</span></h3>
+                <div class="helper-text" data-i18n="hint_triathlon_intro" style="margin-bottom: 8px;">輸入目標總時間或各段配速，推算游／騎／跑分段</div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
+                    <select id="tri-dist-select" style="flex: 1;">
+                        <option value="51.5">51.5 (標鐵)</option>
+                        <option value="113">113 (半程)</option>
+                        <option value="226">226 (全程)</option>
+                    </select>
+                </div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
+                    <label style="flex: 1; font-size:0.9rem;" data-i18n="triathlon_total_time">目標總時間 (輸入自動反推)</label>
+                    <input type="text" id="tri-total-input" placeholder="h:mm:ss" style="width: 10ch; text-align: center;">
+                </div>
+                
+                <div id="triathlon-grid" style="width: 100%; display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; font-size: 0.9rem; margin-top: 5px; align-items: center;">
+                    <label data-i18n="tri_swim_pace">游泳配速 (/100m)</label>
+                    <input type="text" id="tri-swim-input" placeholder="m:ss" style="width: 8ch; text-align: right; justify-self: start;">
+                    
+                    <label data-i18n="tri_t1_time">T1 轉換 (分鐘)</label>
+                    <input type="text" id="tri-t1-input" placeholder="m:ss" style="width: 8ch; text-align: right; justify-self: start;">
+                    
+                    <label data-i18n="tri_bike_speed">單車時速 (km/h)</label>
+                    <input type="number" step="0.1" id="tri-bike-input" placeholder="30.0" style="width: 8ch; text-align: right; justify-self: start;">
+                    
+                    <label data-i18n="tri_t2_time">T2 轉換 (分鐘)</label>
+                    <input type="text" id="tri-t2-input" placeholder="m:ss" style="width: 8ch; text-align: right; justify-self: start;">
+                    
+                    <label data-i18n="tri_run_pace">跑步配速 (/km)</label>
+                    <input type="text" id="tri-run-input" placeholder="m:ss" style="width: 8ch; text-align: right; justify-self: start;">
+                </div>
+                
+                <div style="width: 100%; text-align: left; margin-top: 15px; font-weight: bold; padding-left: 5px;">
+                    <span data-i18n="tri_total">總計</span>: <span id="tri-total-display" class="highlight-text mono-text" style="font-size: 1.1rem; margin-left: 10px;">--:--:--</span>
+                </div>
+            </div>
+        </div> <!-- End of tab-triathlon -->
+
+        <div class="tab-pane" id="tab-training" role="tabpanel" aria-labelledby="tabbtn-training">
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;"><span data-i18n="title_training_cycle">📅 訓練週期建議</span></h3>
+                <div class="helper-text" data-i18n="hint_training_intro" style="margin-bottom: 8px;">選賽事日期並輸入配速，自動產生每週課表與里程</div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 5px;" id="race-selector-container">
+                        <label for="race-list" data-i18n="label_race_list" style="font-size:0.9rem;">快速選擇賽事</label>
+                        <select id="race-list" style="min-width: 120px;">
+                            <option value="">-- 請選擇 --</option>
+                        </select>
+                    </div>
+                </div>
+                <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px; flex-wrap: wrap;">
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-target-date" data-i18n="label_target_race_date" style="font-size:0.9rem;">目標賽事日期</label>
+                        <input type="date" id="training-target-date" style="width:auto; text-align:left;">
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-plan-distance" data-i18n="label_plan_race" style="font-size:0.9rem;">課表項目</label>
+                        <select id="training-plan-distance" style="min-width: 100px;">
+                            <option value="42195" data-i18n="plan_full">全馬課表</option>
+                            <option value="21097.5" data-i18n="plan_half">半馬課表</option>
+                            <option value="10000" data-i18n="plan_10k">10K課表</option>
+                            <option value="5000">5K</option>
+                            <option value="226000">226 (全程鐵人)</option>
+                            <option value="113000">113 (半程鐵人)</option>
+                            <option value="51500">51.5 (標準鐵人)</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-plan-type" data-i18n="label_plan_type" style="font-size:0.9rem;">訓練類型</label>
+                        <select id="training-plan-type" style="min-width: 100px;">
+                            <option value="running" data-i18n="type_running">純跑步</option>
+                            <option value="triathlon" data-i18n="type_triathlon">鐵人三項</option>
+                        </select>
+                    </div>
+                </div>
+                <div id="race-countdown" style="margin-bottom: 10px; font-weight: bold; font-size: 1rem; color: var(--highlight); display: none;">
+                    <!-- Countdown populated by JS -->
+                </div>
+                <div id="race-info-container" style="width:100%; margin-bottom: 10px; display: none;">
+                    <div style="margin-bottom: 5px;">
+                        <a id="race-registration-link" href="#" target="_blank" style="font-size: 0.9rem; color: var(--highlight); text-decoration: underline; display: none;">👉 前往賽事官網/報名連結</a>
+                    </div>
+                     <div class="strava-container" id="strava-container" style="display: none;">
+                        <div class="strava-skeleton" id="strava-skeleton"></div>
+                        <iframe id="strava-embed" allowtransparency="true" frameborder="0" scrolling="no" style="width: 100%; height: 100%; border: none; z-index: 2; position: relative; opacity: 0; transition: opacity 0.3s ease;"></iframe>
+                    </div>
+                    <div class="map-container" id="leaflet-map-container" style="display: none;">
+                        <div id="leaflet-map" style="width: 100%; height: 100%;"></div>
+                    </div>
+                </div>
+                <div id="training-plan-context" class="helper-text" data-i18n="training_context_empty">目前尚未產生課表時間</div>
+                <div id="training-plan-empty" class="helper-text" data-i18n="no_training_cycle">請先設定目標日期並輸入配速</div>
+                <div id="training-plan-container" style="width:100%; display:none; display:flex; flex-direction:column; gap:10px;">
+                    <!-- Daily Cards populated by JS -->
+                </div>
+            </div>
+        </div> <!-- End of tab-training -->
+
+        <div class="tab-pane" id="tab-settings" role="tabpanel" aria-labelledby="tabbtn-settings">
+            <div id="settings-panel" class="container" style="margin-top: 10px;" role="region" aria-label="Settings Panel">
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start;">
+                <h3 style="margin: 5px 0 10px 0; font-size: 1rem;" data-i18n="title_settings">偏好設定</h3>
+                <div class="helper-text" data-i18n="hint_settings_intro" style="margin-bottom: 8px;">調整語言、單位、預設場地與賽事 API</div>
+                <div class="settings-grid">
+                    <label for="settings-lang" data-i18n="settings_lang">語言</label>
+                    <select id="settings-lang" aria-label="設定語言"></select>
+
+                    <label for="settings-pace-unit" data-i18n="settings_pace_unit">配速單位</label>
+                    <select id="settings-pace-unit" aria-label="設定配速單位"></select>
+
+                    <label for="settings-treadmill-unit" data-i18n="settings_treadmill_unit">跑步機單位</label>
+                    <select id="settings-treadmill-unit" aria-label="設定跑步機單位"></select>
+
+                    <label for="settings-split-mode" data-i18n="settings_split_mode">分段顯示偏好</label>
+                    <select id="settings-split-mode" aria-label="設定分段顯示偏好"></select>
+
+                    <label for="settings-venue" data-i18n="settings_venue">預設場地</label>
+                    <select id="settings-venue" aria-label="設定預設場地"></select>
+
+                    <label for="settings-lane" data-i18n="settings_lane">預設跑道道次</label>
+                    <select id="settings-lane" aria-label="設定預設跑道道次"></select>
+
+                    <label for="settings-gas-url" data-i18n="settings_gas_url">賽事 API (GAS)</label>
+                    <input type="text" id="settings-gas-url" placeholder="https://script.google.com/..." style="width: 100%; font-size: 0.8rem; padding: 4px;" aria-label="GAS API URL">
+                </div>
+                <div class="settings-actions">
+                    <button id="settings-apply" class="action-btn" data-i18n="btn_apply_settings">套用設定</button>
+                    <a href="diagnostics.html" class="diag-link" data-i18n="btn_open_diagnostics">開啟離線診斷</a>
+                </div>
+            </div>
+        </div>
+        </div> <!-- End of tab-settings -->
+        </main>
+
+    </div> <!-- End of main-wrapper -->
+
+    <!-- Logic -->
+    <script type="module" src="assets/js/main.js"></script>
+</body>
+</html>

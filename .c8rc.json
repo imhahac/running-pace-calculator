@@ -1,0 +1,9 @@
+{
+  "check-coverage": true,
+  "all": false,
+  "include": ["src/**/*.ts"],
+  "reporter": ["text-summary"],
+  "lines": 85,
+  "branches": 72,
+  "functions": 60
+}

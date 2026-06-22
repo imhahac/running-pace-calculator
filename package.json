@@ -1,0 +1,41 @@
+{
+  "name": "running-pace-calculator",
+  "version": "2.0.0",
+  "description": "A powerful running pace calculator PWA with TypeScript",
+  "main": "main.js",
+  "type": "module",
+  "scripts": {
+    "clean": "rm -rf assets/js",
+    "typecheck": "tsc --noEmit",
+    "build": "npm run clean && npm run typecheck && node scripts/build.mjs",
+    "watch": "tsc --watch",
+    "dev": "npm run build && open index.html",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "test": "node --import tsx --test tests/**/*.test.ts",
+    "test:cov": "c8 node --import tsx --test \"tests/**/*.test.ts\""
+  },
+  "keywords": [
+    "running",
+    "pace",
+    "calculator",
+    "pwa"
+  ],
+  "author": "@imhahac",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.0.0",
+    "@types/node": "^22.0.0",
+    "c8": "^10.0.0",
+    "esbuild": "^0.24.0",
+    "eslint": "^9.0.0",
+    "eslint-config-prettier": "^9.0.0",
+    "globals": "^15.0.0",
+    "prettier": "^3.0.0",
+    "tsx": "^4.20.6",
+    "typescript": "^5.3.0",
+    "typescript-eslint": "^8.0.0"
+  }
+}

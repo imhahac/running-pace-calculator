@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "ESNext",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "outDir": "./assets/js",
+    "rootDir": "./src",
+    "declaration": false,
+    "sourceMap": false,
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "removeComments": true,
+    "inlineSourceMap": false
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}

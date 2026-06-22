@@ -1,0 +1,9 @@
+node_modules/
+assets/js/
+coverage/
+docs/
+*.html
+*.css
+*.md
+service-worker.js
+package-lock.json
