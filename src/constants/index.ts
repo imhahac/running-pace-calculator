@@ -164,7 +164,7 @@ export const TRANSLATIONS: ITranslations = {
   zh: {
     helper: '任意輸入、即刻換算',
     hint_pace_mode: '輸入每公里配速（分:秒），自動換算時速、分段與完賽時間',
-    hint_track_mode: '選場地與道次，輸入單圈秒數，自動算各距離分段',
+    hint_track_mode: '選場地後輸入單圈秒數，自動算各距離分段',
     hint_treadmill_mode: '輸入跑步機時速，換算成路跑配速',
     hint_finish_mode: '選距離並輸入目標完賽時間，反推所需配速',
     hint_triathlon_intro: '輸入目標總時間或各段配速，推算游／騎／跑分段',
@@ -296,7 +296,7 @@ export const TRANSLATIONS: ITranslations = {
     helper: 'Input anything, calculate instantly.',
     hint_pace_mode:
       'Enter pace per km (min:sec); speed, splits and finish time update automatically',
-    hint_track_mode: 'Pick a venue and lane, enter lap seconds; per-distance splits are computed',
+    hint_track_mode: 'Pick a venue, enter lap seconds; per-distance splits are computed',
     hint_treadmill_mode: 'Enter treadmill speed to convert it into road pace',
     hint_finish_mode: 'Pick a distance and target finish time to back-calculate the required pace',
     hint_triathlon_intro: 'Enter a target total time or per-leg paces for swim / bike / run',

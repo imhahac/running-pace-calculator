@@ -53,10 +53,12 @@ export class MapController {
         }).addTo(this.leafletMap);
       }
 
+      const map = this.leafletMap;
+
       // Clear previous layers (paths and markers)
-      this.leafletMap!.eachLayer((layer: L.Layer) => {
+      map.eachLayer((layer: L.Layer) => {
         if (layer && typeof layer.getTileUrl !== 'function') {
-          this.leafletMap!.removeLayer(layer);
+          map.removeLayer(layer);
         }
       });
 
@@ -65,10 +67,10 @@ export class MapController {
         color: '#2563eb',
         weight: 4,
         opacity: 0.85
-      }).addTo(this.leafletMap!);
+      }).addTo(map);
 
       // Fit map bounds
-      this.leafletMap!.fitBounds(routePath.getBounds(), { padding: [30, 30] });
+      map.fitBounds(routePath.getBounds(), { padding: [30, 30] });
 
       // Draw Start & Finish markers
       const startPt = points[0];
@@ -81,7 +83,7 @@ export class MapController {
         weight: 2,
         fillOpacity: 1
       })
-        .addTo(this.leafletMap!)
+        .addTo(map)
         .bindPopup('🏁 <b>起點 Start</b>');
 
       L.circleMarker(endPt, {
@@ -91,7 +93,7 @@ export class MapController {
         weight: 2,
         fillOpacity: 1
       })
-        .addTo(this.leafletMap!)
+        .addTo(map)
         .bindPopup('🏁 <b>終點 Finish</b>');
 
       // Trigger redraw in case the container was hidden initially

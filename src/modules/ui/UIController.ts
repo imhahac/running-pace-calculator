@@ -174,12 +174,9 @@ export class UIController {
       );
     }
 
-    // Venue and lane selectors
+    // Venue selector (lane is always the innermost lane of the venue)
     if (this.dom.venueSelect) {
       this.dom.venueSelect.addEventListener('change', () => ModeController.onVenueChange());
-    }
-    if (this.dom.laneSelect) {
-      this.dom.laneSelect.addEventListener('change', () => ModeController.onLaneChange());
     }
 
     // Finish distance chips
@@ -263,12 +260,6 @@ export class UIController {
     const settingsApply = document.getElementById('settings-apply');
     if (settingsApply) {
       settingsApply.addEventListener('click', () => SettingsController.applySettingsFromPanel());
-    }
-    const settingsVenue = document.getElementById('settings-venue') as HTMLSelectElement | null;
-    if (settingsVenue) {
-      settingsVenue.addEventListener('change', () =>
-        TrainingController.populateSettingsLaneOptions(settingsVenue.value)
-      );
     }
 
     // Training cycle controls

@@ -93,15 +93,7 @@ export class ModeController {
     const venue = this.dom.venueSelect?.value;
     if (venue) {
       StateManager.setVenue(venue);
-      this.populateVenues();
-    }
-  }
-
-  static onLaneChange(): void {
-    const laneValue = this.dom.laneSelect?.value;
-    if (laneValue) {
-      StateManager.setLane(parseInt(laneValue, 10));
-      this.updateLaneState();
+      this.applyVenueLane();
     }
   }
 
@@ -125,44 +117,23 @@ export class ModeController {
     });
 
     this.dom.venueSelect.value = state.venue;
-    this.populateLanes();
+    this.applyVenueLane();
   }
 
-  static populateLanes(): void {
-    if (!this.dom.laneSelect) return;
-
+  /**
+   * Always use the innermost lane (lane 1) of the selected venue — its distance
+   * is the full track distance (400m / 300m). The per-lane selector was removed,
+   * so the venue switch is the only track variable.
+   */
+  static applyVenueLane(): void {
     const venue = VENUES[StateManager.getVenue() as keyof typeof VENUES];
     if (!venue) return;
 
-    this.dom.laneSelect.innerHTML = '';
-    const t = TranslationManager.getAll();
-    const state = StateManager.getState();
-
-    venue.lanes.forEach((lane) => {
-      const opt = document.createElement('option');
-      opt.value = lane.dist.toString();
-      opt.textContent = `${t.lane_prefix || '第'}${lane.id}${t.lane_suffix || '道'}`;
-      this.dom.laneSelect!.appendChild(opt);
-    });
-
-    if (state.lane && venue.lanes.find((l) => l.dist === state.lane)) {
-      this.dom.laneSelect.value = state.lane.toString();
-    } else {
-      this.dom.laneSelect.value = venue.lanes[0].dist.toString();
-    }
-
-    this.updateLaneState();
-  }
-
-  static updateLaneState(): void {
-    const laneValue = this.dom.laneSelect?.value;
-    if (!laneValue) return;
-
-    const lane = parseInt(laneValue, 10);
-    StateManager.setLane(lane);
+    const laneDist = venue.lanes[0].dist;
+    StateManager.setLane(laneDist);
 
     if (this.dom.displays.laneLength) {
-      this.dom.displays.laneLength.textContent = `${lane}m`;
+      this.dom.displays.laneLength.textContent = `${laneDist}m`;
     }
 
     const currentInput = getInputIdForMode(StateManager.getMode());

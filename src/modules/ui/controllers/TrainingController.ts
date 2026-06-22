@@ -25,7 +25,6 @@ export class TrainingController {
       'settings-split-mode'
     ) as HTMLSelectElement | null;
     const venueSelect = document.getElementById('settings-venue') as HTMLSelectElement | null;
-    const laneSelect = document.getElementById('settings-lane') as HTMLSelectElement | null;
 
     if (langSelect) {
       langSelect.innerHTML = '';
@@ -69,25 +68,7 @@ export class TrainingController {
         venueSelect.appendChild(new Option(venue.name, venue.id));
       });
       venueSelect.value = state.venue;
-      this.populateSettingsLaneOptions(state.venue);
     }
-
-    if (laneSelect && laneSelect.options.length > 0) {
-      laneSelect.value = state.lane.toString();
-    }
-  }
-
-  static populateSettingsLaneOptions(venueId: string): void {
-    const laneSelect = document.getElementById('settings-lane') as HTMLSelectElement | null;
-    if (!laneSelect) return;
-
-    const venue = VENUES[venueId as keyof typeof VENUES];
-    laneSelect.innerHTML = '';
-    if (!venue) return;
-
-    venue.lanes.forEach((lane) => {
-      laneSelect.appendChild(new Option(`${lane.label} (${lane.dist}m)`, lane.dist.toString()));
-    });
   }
 
   static getPlanLabel(distanceMeters: number): string {

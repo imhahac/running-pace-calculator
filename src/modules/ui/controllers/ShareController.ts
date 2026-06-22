@@ -1,3 +1,4 @@
+import { getDOMCache } from '../../../constants/domElements.js';
 import StateManager from '../../state/StateManager.js';
 import ShareExportManager from '../../state/ShareExportManager.js';
 import TrainingCycleManager from '../TrainingCycleManager.js';
@@ -23,25 +24,16 @@ export class ShareController {
     const trainingDate =
       (document.getElementById('training-target-date') as HTMLInputElement | null)?.value || '';
     const trainingPlanDistance = TrainingCycleManager.getPlanDistanceMeters();
+    const inputs = getDOMCache().inputs;
 
     return ShareExportManager.buildPayload(
       StateManager.getState(),
       {
-        pace_input: (document.getElementById('pace_input') as HTMLInputElement | null)
-          ? (document.getElementById('pace_input') as HTMLInputElement).value
-          : '',
-        pace_input2: (document.getElementById('pace_input2') as HTMLInputElement | null)
-          ? (document.getElementById('pace_input2') as HTMLInputElement).value
-          : '',
-        track_input: (document.getElementById('track_input') as HTMLInputElement | null)
-          ? (document.getElementById('track_input') as HTMLInputElement).value
-          : '',
-        treadmill_input: (document.getElementById('treadmill_input') as HTMLInputElement | null)
-          ? (document.getElementById('treadmill_input') as HTMLInputElement).value
-          : '',
-        finish_time_input: (document.getElementById('finish_time_input') as HTMLInputElement | null)
-          ? (document.getElementById('finish_time_input') as HTMLInputElement).value
-          : ''
+        pace_input: inputs.paceMin?.value || '',
+        pace_input2: inputs.paceSec?.value || '',
+        track_input: inputs.track?.value || '',
+        treadmill_input: inputs.treadmill?.value || '',
+        finish_time_input: inputs.finishTime?.value || ''
       },
       trainingDate,
       trainingPlanDistance

@@ -60,6 +60,18 @@ export type TWorkoutType =
   | 'race';
 
 /**
+ * Triathlon per-leg inputs (raw string values from the form)
+ */
+export interface ITriathlonInputs {
+  totalTarget: string;
+  swim: string;
+  t1: string;
+  bike: string;
+  t2: string;
+  run: string;
+}
+
+/**
  * Application global state
  */
 export interface IPaceState {
@@ -77,14 +89,7 @@ export interface IPaceState {
   gasApiUrl: string;
   activeTab: string;
   triDistance: 51.5 | 113 | 226;
-  triInputs?: {
-    totalTarget: string;
-    swim: string;
-    t1: string;
-    bike: string;
-    t2: string;
-    run: string;
-  };
+  triInputs?: ITriathlonInputs;
 }
 
 /**

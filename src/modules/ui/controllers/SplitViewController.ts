@@ -62,6 +62,10 @@ export class SplitViewController {
   static toggleInfoContainer(): void {
     if (this.dom.displays.infoContainer) {
       this.dom.displays.infoContainer.classList.toggle('SlideDown');
+      const collapsed = this.dom.displays.infoContainer.classList.contains('SlideDown');
+      if (this.dom.buttons.info) {
+        this.dom.buttons.info.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+      }
     }
   }
 

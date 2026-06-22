@@ -90,7 +90,7 @@
                 </div>
             </div>
             <div class="footer subtitle">
-                <button id='slide-button2' aria-label="Info">
+                <button id='slide-button2' aria-label="Info" aria-expanded="false" aria-controls="container2">
                     <svg class="info-icon-svg" xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
                 </button>
             </div>
@@ -121,12 +121,12 @@
                 <div class="row selected" id="pace_icon">
                     <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="m12 14 4-4"/><path d="M3.34 19a10 10 0 1 1 17.32 0"/></svg><span data-i18n="mode_pace">配速</span>
                 </div>
-                <div class="helper-text" data-i18n="hint_pace_mode">輸入每公里配速（分:秒），自動換算時速、分段與完賽時間</div>
+                <div class="helper-text" id="hint-pace" data-i18n="hint_pace_mode">輸入每公里配速（分:秒），自動換算時速、分段與完賽時間</div>
 
                 <div class="column2 inputs-row">
-                    <input class="pace_input" type="number" id="pace_input" placeholder="4" autofocus aria-label="配速分鐘" min="0">
+                    <input class="pace_input" type="number" id="pace_input" placeholder="4" autofocus aria-label="配速分鐘" aria-describedby="hint-pace" min="0">
                     <span>:</span>
-                    <input class="pace_input" type="number" id="pace_input2" placeholder="30" aria-label="配速秒數" min="0">
+                    <input class="pace_input" type="number" id="pace_input2" placeholder="30" aria-label="配速秒數" aria-describedby="hint-pace" min="0">
                     <span id="unit" data-unit="km">/km</span>
                     <button id='mile-button'>
                         <svg class="switch-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg><span id="switch">/mile</span>
@@ -142,21 +142,15 @@
                 <div class="row" id="track_icon">
                     <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect width="20" height="12" x="2" y="6" rx="6"/><path d="M12 6v12"/><path d="M6 12h12"/></svg><span data-i18n="mode_track">田徑場</span>
                 </div>
-                <div class="helper-text" data-i18n="hint_track_mode">選場地與道次，輸入單圈秒數，自動算各距離分段</div>
+                <div class="helper-text" id="hint-track" data-i18n="hint_track_mode">選場地後輸入單圈秒數，自動算各距離分段</div>
                 <div class="column2 inputs-grid">
                     <div class="lane-selector">
                         <select id="venue-select" aria-label="場地選擇">
                             <!-- Options populated by JS -->
                         </select>
-                        <div class="lane-sub-row">
-                            <select id="laneNumber" aria-label="跑道道次選擇">
-                                <!-- Options populated by JS default -->
-                            </select>
-                            <span id="lane-length2">400m</span>
-                        </div>
                     </div>
                     <div class="track-input-container">
-                        <input type="number" id="track_input" placeholder="" size="4" maxlength="4" aria-label="每圈秒數輸入" min="0">
+                        <input type="number" id="track_input" placeholder="" size="4" maxlength="4" aria-label="每圈秒數輸入" aria-describedby="hint-track" min="0">
                         <div id="track-distance-segmented" class="segmented-control" style="margin: 0 5px;">
                             <button class="segment-btn" data-value="400">400m</button>
                             <button class="segment-btn" data-value="300">300m</button>
@@ -177,9 +171,9 @@
                 <div class="row" id="treadmill_icon">
                     <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h.01"/><path d="M14 20v-4l-2-3-3 4-2-1"/><path d="m17 12-4-2-2 3H7"/><path d="M12 5a1 1 0 1 0 0-2 1 1 0 0 0 0 2z"/></svg><span data-i18n="mode_treadmill">跑步機</span>
                 </div>
-                <div class="helper-text" data-i18n="hint_treadmill_mode">輸入跑步機時速，換算成路跑配速</div>
+                <div class="helper-text" id="hint-treadmill" data-i18n="hint_treadmill_mode">輸入跑步機時速，換算成路跑配速</div>
                 <div class="column2 inputs-row">
-                    <input type="number" id="treadmill_input" placeholder="" step="0.1" aria-label="跑步機速度輸入" min="0"><span id="unit2"
+                    <input type="number" id="treadmill_input" placeholder="" step="0.1" aria-label="跑步機速度輸入" aria-describedby="hint-treadmill" min="0"><span id="unit2"
                         data-unit="km">km/h</span>
                     <button id='perHour-button'>
                         <svg class="switch-icon-svg" xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg><span id="switch2">mile/h</span>
@@ -195,12 +189,12 @@
                 <div class="row" id="finish_time_icon" style="margin-top: 4px;">
                     <svg class="mode-icon-svg" xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l2 2"/><path d="M12 2v2"/><path d="M9 2h6"/></svg><span data-i18n="mode_finish">完成</span>
                 </div>
-                <div class="helper-text" data-i18n="hint_finish_mode">選距離並輸入目標完賽時間，反推所需配速</div>
+                <div class="helper-text" id="hint-finish" data-i18n="hint_finish_mode">選距離並輸入目標完賽時間，反推所需配速</div>
 
                 <div class="column2" style="flex-direction: column; align-items: flex-start; gap: 12px;">
-                    <input type="text" id="finish_time_input" placeholder="例 3:30:00" aria-label="完成時間輸入" style="min-width: 14ch;">
+                    <input type="text" id="finish_time_input" placeholder="例 3:30:00" aria-label="完成時間輸入" aria-describedby="hint-finish" style="min-width: 14ch;">
                     
-                    <div id="finish-distance-chips" class="chip-group scrollable" style="width: 100%;">
+                    <div id="finish-distance-chips" class="chip-group" style="width: 100%;">
                         <button class="chip-btn" data-value="42195" data-i18n="dist_marathon">全馬</button>
                         <button class="chip-btn" data-value="21097.5" data-i18n="dist_half">半馬</button>
                         <button class="chip-btn" data-value="10000">10K</button>
@@ -460,9 +454,6 @@
 
                     <label for="settings-venue" data-i18n="settings_venue">預設場地</label>
                     <select id="settings-venue" aria-label="設定預設場地"></select>
-
-                    <label for="settings-lane" data-i18n="settings_lane">預設跑道道次</label>
-                    <select id="settings-lane" aria-label="設定預設跑道道次"></select>
 
                     <label for="settings-gas-url" data-i18n="settings_gas_url">賽事 API (GAS)</label>
                     <input type="text" id="settings-gas-url" placeholder="https://script.google.com/..." style="width: 100%; font-size: 0.8rem; padding: 4px;" aria-label="GAS API URL">

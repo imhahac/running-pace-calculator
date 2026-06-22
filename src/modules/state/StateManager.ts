@@ -5,7 +5,15 @@
 
 import { DEFAULT_STATE } from '../../constants/index.js';
 import StorageManager from './StorageManager.js';
-import type { IPaceState, TMode, TUnit, TTheme, TLanguage, TSplitMode } from '../../types/index';
+import type {
+  IPaceState,
+  ITriathlonInputs,
+  TMode,
+  TUnit,
+  TTheme,
+  TLanguage,
+  TSplitMode
+} from '../../types/index';
 
 export class StateManager {
   private static state: IPaceState = { ...DEFAULT_STATE };
@@ -163,7 +171,7 @@ export class StateManager {
   static getTriInputs() {
     return this.state.triInputs;
   }
-  static setTriInputs(inputs: any): void {
+  static setTriInputs(inputs: ITriathlonInputs): void {
     this.setState({ triInputs: inputs });
   }
 

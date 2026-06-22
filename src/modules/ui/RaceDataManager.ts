@@ -71,7 +71,16 @@ export class RaceDataManager {
         }
       }
 
-      const response = await fetch(this.apiBaseUrl);
+      // Abort the request if it hangs so we fall back to cache instead of
+      // leaving the UI waiting on a stalled network indefinitely.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      let response: Response;
+      try {
+        response = await fetch(this.apiBaseUrl, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
       if (!response.ok) throw new Error('API response error');
 
       const data: Partial<IRaceEvent>[] = await response.json();

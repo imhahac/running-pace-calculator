@@ -29,13 +29,11 @@ export class SettingsController {
     const splitMode = (document.getElementById('settings-split-mode') as HTMLSelectElement | null)
       ?.value as 'track' | 'road' | undefined;
     const venue = (document.getElementById('settings-venue') as HTMLSelectElement | null)?.value;
-    const lane = (document.getElementById('settings-lane') as HTMLSelectElement | null)?.value;
 
     this.applyLanguage(lang);
     this.applyPaceUnit(paceUnit);
     this.applyTreadmillUnit(treadmillUnit);
     this.applyVenue(venue);
-    this.applyLane(lane);
     this.applySplitMode(splitMode);
 
     InputStore.snapshot();
@@ -83,16 +81,9 @@ export class SettingsController {
   static applyVenue(venue: string | undefined): void {
     if (!venue) return;
     StateManager.setVenue(venue);
+    // Re-populates the venue dropdown and sets the lane to the venue's
+    // innermost lane (lane 1) via ModeController.applyVenueLane().
     ModeController.populateVenues();
-  }
-
-  static applyLane(lane: string | undefined): void {
-    if (!lane) return;
-    StateManager.setLane(parseInt(lane, 10));
-    if (this.dom.laneSelect) {
-      this.dom.laneSelect.value = lane;
-    }
-    ModeController.updateLaneState();
   }
 
   static applySplitMode(splitMode: string | undefined): void {

@@ -105,7 +105,7 @@ body {
 
 .main-wrapper {
     width: 100%;
-    max-width: 480px; /* Mobile first standard width */
+    max-width: 520px; /* Mobile-first; phablets get a touch more room */
     padding: 10px 20px 60px 20px;
     display: flex;
     flex-direction: column;
@@ -113,10 +113,17 @@ body {
     transition: max-width var(--transition-speed) ease;
 }
 
-/* On desktop, expand main-wrapper for 2x2 grid */
+/* Tablet: expand main-wrapper for the 2x2 card grid */
 @media (min-width: 768px) {
     .main-wrapper {
-        max-width: 800px;
+        max-width: 820px;
+    }
+}
+
+/* Desktop: more breathing room, avoid an over-narrow column on large screens */
+@media (min-width: 1024px) {
+    .main-wrapper {
+        max-width: 960px;
     }
 }
 
@@ -292,6 +299,12 @@ hr {
     .calculator-grid {
         grid-template-columns: 1fr 1fr;
         gap: 20px;
+    }
+}
+
+@media (min-width: 1024px) {
+    .calculator-grid {
+        gap: 24px;
     }
 }
 
@@ -553,12 +566,6 @@ select:hover {
     width: 100%;
     min-width: 140px;
     flex: 1;
-}
-
-.lane-sub-row {
-    display: flex;
-    gap: 8px;
-    align-items: center;
 }
 
 div.inputs-grid {
@@ -1089,7 +1096,8 @@ input.diff {
 
 .chip-group {
     display: flex;
-    gap: 6px;
+    flex-wrap: wrap; /* wrap to multiple rows so every chip (incl. 5K) is visible */
+    gap: 8px;
     padding-bottom: 4px;
 }
 
@@ -1109,7 +1117,7 @@ input.diff {
 
 .chip-btn {
     padding: 10px 14px;
-    min-height: 42px;
+    min-height: 44px;
     border-radius: 16px;
     background-color: var(--option-bg);
     border: 1px solid var(--border-color);

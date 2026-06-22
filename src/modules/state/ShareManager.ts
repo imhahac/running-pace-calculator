@@ -106,7 +106,7 @@ function base64UrlDecode(str: string): string {
   return decodeURIComponent(escape(atob(padded)));
 }
 
-function modeToCode(mode: any): 0 | 1 | 2 | 3 | undefined {
+function modeToCode(mode: unknown): 0 | 1 | 2 | 3 | undefined {
   if (mode === 'pace') return 0;
   if (mode === 'track') return 1;
   if (mode === 'treadmill') return 2;
@@ -114,7 +114,7 @@ function modeToCode(mode: any): 0 | 1 | 2 | 3 | undefined {
   return undefined;
 }
 
-function codeToMode(code: any): 'pace' | 'track' | 'treadmill' | 'finish_time' | undefined {
+function codeToMode(code: unknown): 'pace' | 'track' | 'treadmill' | 'finish_time' | undefined {
   if (code === 0) return 'pace';
   if (code === 1) return 'track';
   if (code === 2) return 'treadmill';
@@ -122,49 +122,49 @@ function codeToMode(code: any): 'pace' | 'track' | 'treadmill' | 'finish_time' |
   return undefined;
 }
 
-function unitToCode(unit: any): 0 | 1 | undefined {
+function unitToCode(unit: unknown): 0 | 1 | undefined {
   if (unit === 'km') return 0;
   if (unit === 'mile') return 1;
   return undefined;
 }
 
-function codeToUnit(code: any): 'km' | 'mile' | undefined {
+function codeToUnit(code: unknown): 'km' | 'mile' | undefined {
   if (code === 0) return 'km';
   if (code === 1) return 'mile';
   return undefined;
 }
 
-function splitModeToCode(mode: any): 0 | 1 | undefined {
+function splitModeToCode(mode: unknown): 0 | 1 | undefined {
   if (mode === 'track') return 0;
   if (mode === 'road') return 1;
   return undefined;
 }
 
-function codeToSplitMode(code: any): 'track' | 'road' | undefined {
+function codeToSplitMode(code: unknown): 'track' | 'road' | undefined {
   if (code === 0) return 'track';
   if (code === 1) return 'road';
   return undefined;
 }
 
-function venueToCode(v: any): 0 | 1 | undefined {
+function venueToCode(v: unknown): 0 | 1 | undefined {
   if (v === 'standard_400') return 0;
   if (v === 'warmup_300') return 1;
   return undefined;
 }
 
-function codeToVenue(code: any): 'standard_400' | 'warmup_300' | undefined {
+function codeToVenue(code: unknown): 'standard_400' | 'warmup_300' | undefined {
   if (code === 0) return 'standard_400';
   if (code === 1) return 'warmup_300';
   return undefined;
 }
 
-function langToCode(l: any): 0 | 1 | undefined {
+function langToCode(l: unknown): 0 | 1 | undefined {
   if (l === 'zh') return 0;
   if (l === 'en') return 1;
   return undefined;
 }
 
-function codeToLang(code: any): 'zh' | 'en' | undefined {
+function codeToLang(code: unknown): 'zh' | 'en' | undefined {
   if (code === 0) return 'zh';
   if (code === 1) return 'en';
   return undefined;
