@@ -1,0 +1,27 @@
+name = "running-pace-backend"
+main = "src/index.js"
+compatibility_date = "2024-11-01"
+
+# KV namespace for tokens / sessions / races / user data.
+# Create it once:  npx wrangler kv namespace create KV
+# then paste the returned id below.
+[[kv_namespaces]]
+binding = "KV"
+id = "REPLACE_WITH_KV_NAMESPACE_ID"
+
+[vars]
+# Public app origin the magic link points back to (no trailing slash needed).
+APP_URL = "https://imhahac.github.io/running-pace-calculator/"
+# CORS: restrict to the app origin in production (or "*" while testing).
+ALLOWED_ORIGIN = "https://imhahac.github.io"
+# Verified Resend sender address.
+FROM_EMAIL = "login@example.com"
+# Comma-separated admin emails allowed to PUT /api/races.
+ADMIN_EMAILS = ""
+
+# Daily best-effort race refresh (see scheduled() in src/index.js).
+[triggers]
+crons = ["0 18 * * *"]
+
+# Secret (do NOT put here): set with
+#   npx wrangler secret put RESEND_API_KEY

@@ -15,13 +15,15 @@ export class ShareExportManager {
     state: IPaceState,
     inputs: TShareInputSnapshot,
     trainingTargetDate: string,
-    trainingPlanDistance: number
+    trainingPlanDistance: number,
+    toolInputs?: Record<string, string>
   ): ISharePayload {
     return {
       state,
       inputs,
       trainingTargetDate,
-      trainingPlanDistance
+      trainingPlanDistance,
+      toolInputs
     };
   }
 
@@ -52,7 +54,7 @@ export class ShareExportManager {
     }
 
     const exportFn = () => {
-      const html2canvasFn = (window as any).html2canvas;
+      const html2canvasFn = window.html2canvas;
       if (!html2canvasFn) return;
       html2canvasFn(target, { backgroundColor: null, scale: 2 }).then(
         (canvas: HTMLCanvasElement) => {
@@ -64,7 +66,7 @@ export class ShareExportManager {
       );
     };
 
-    if (!(window as any).html2canvas) {
+    if (!window.html2canvas) {
       const script = document.createElement('script');
       script.src = 'https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js';
       script.onload = exportFn;

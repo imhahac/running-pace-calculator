@@ -1,0 +1,17 @@
+{
+  "name": "running-pace-backend",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Cloudflare Worker backend for Running Pace Calculator (race API + magic-link auth + per-user sync)",
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "check": "node --check src/index.js && node --check src/lib.js",
+    "test": "node --test test/*.test.mjs",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^3.80.0"
+  }
+}

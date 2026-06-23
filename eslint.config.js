@@ -5,7 +5,14 @@ import prettier from 'eslint-config-prettier';
 
 export default tseslint.config(
   {
-    ignores: ['assets/js/**', 'node_modules/**', 'docs/**', 'scripts/**', 'service-worker.js']
+    ignores: [
+      'assets/js/**',
+      'node_modules/**',
+      'docs/**',
+      'scripts/**',
+      'worker/**',
+      'service-worker.js'
+    ]
   },
   js.configs.recommended,
   ...tseslint.configs.recommended,
@@ -23,9 +30,8 @@ export default tseslint.config(
   },
   {
     rules: {
-      // `any` is surfaced as a warning to ratchet down over time without
-      // blocking CI (notably the untyped Leaflet integration).
-      '@typescript-eslint/no-explicit-any': 'warn',
+      // No `any` anywhere — CI enforces zero warnings (see the lint script).
+      '@typescript-eslint/no-explicit-any': 'error',
       '@typescript-eslint/no-unused-vars': [
         'error',
         { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }

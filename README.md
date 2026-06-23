@@ -69,6 +69,36 @@
 
 **步驟 4：同步與使用** — 重新整理試算表，使用上方「🏃‍♂️ 賽事助手」選單一鍵爬取賽事；在計算機的 **⚙️ 系統設定** 把 Web App URL 填入「賽事 API (GAS)」並套用；切到 **📅 課表與賽事** 即可選賽事、看倒數與路線。
 
+> ⚠️ **關於自動爬蟲（2026 起）：** 「運動筆記」與「馬拉松世界」的賽事清單已改為 JS/AJAX 動態載入（運動筆記另加登入牆），靜態 HTML 已不含賽事列。爬蟲已改為**改打 AJAX/JSON 端點並在失敗時明確告警**（不再靜默回報「無須更新」）；若某來源仍抓不到，同步視窗會顯示警告，請打開 Apps Script 的**「執行紀錄」**查看記錄的 HTTP 狀態／內容樣本／首筆 JSON 欄位，據此調整 `gas-crawler-script.js` 最上方的 `CONFIG`。
+>
+> 📝 **最可靠的來源是手動輸入**：直接在試算表新增列即可，前端 API（`doGet`）會照常讀取、無須依賴爬蟲。
+
+---
+
+## ☁️ Cloudflare Worker 後端（推薦，取代 GAS）+ 帳號雲端同步
+
+`worker/` 提供一個 Cloudflare Worker，一站包辦：
+
+- **賽事 API** — `GET /api/races`（公開、由 KV 提供）、`PUT /api/races`（管理員）；比 GAS 穩定、由你掌控。
+- **Magic-link 登入** — 免密碼，用 Email 魔術連結（透過 [Resend](https://resend.com)）。
+- **個人雲端同步** — 登入後，各科學/環境工具輸入與主題/語言偏好存到你的後端、跨裝置同步。
+
+部署與設定見 [worker/README.md](worker/README.md)。完成後在 **⚙️ 系統設定** 填入「**後端 URL (Worker)**」即可：賽事改由 `${後端}/api/races` 取得（未填則回退舊的 GAS URL），並出現 Email 登入框。
+
+### 用 GitHub Actions 自動部署（[.github/workflows/deploy-worker.yml](.github/workflows/deploy-worker.yml)）
+
+推送到 `main`（且 `worker/**` 有變動）或手動 `workflow_dispatch` 時，會跑 worker 單元測試並 `wrangler deploy`。**一次性準備：**
+
+1. 在 [worker/wrangler.toml](worker/wrangler.toml) 填入真正的 **KV namespace id**（非機密，需 commit）與 `APP_URL`／`ALLOWED_ORIGIN`（裸來源）／`FROM_EMAIL`／`ADMIN_EMAILS`。
+2. 在 GitHub repo **Settings → Secrets and variables → Actions** 新增：
+   - `CLOUDFLARE_API_TOKEN`（具 Workers 編輯權限）
+   - `CLOUDFLARE_ACCOUNT_ID`
+3. **Resend 金鑰**：Worker secret 會跨部署保留，故設定**一次**即可——`cd worker && npx wrangler secret put RESEND_API_KEY`（或 CF 儀表板）。若想改由 CI 管理，取消 workflow 內 `secrets:`/`env:` 註解並把 `RESEND_API_KEY` 加進 repo secrets。
+
+> 🔐 需要你自備 Cloudflare 帳號、KV namespace 與 Resend API key（Cloudflare 免費 MailChannels 寄信已於 2024 年終止）。我無法在此實際部署/驗證；上述程式、workflow 與設定範本皆已備妥。
+
+> 🔗 **分享連結**也會帶上各工具的輸入，收件者開啟即還原；登入則用於跨裝置長期同步。
+
 ---
 
 ## 🛠️ 開發指南

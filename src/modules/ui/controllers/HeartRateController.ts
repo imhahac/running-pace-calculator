@@ -46,10 +46,21 @@ export class HeartRateController {
       (document.getElementById('hr-max-input') as HTMLInputElement | null)?.value || '',
       10
     );
+    const formulaVal = (document.getElementById('hr-formula-select') as HTMLSelectElement | null)
+      ?.value;
     const formula: THrFormula =
-      (document.getElementById('hr-formula-select') as HTMLSelectElement | null)?.value === 'fox'
-        ? 'fox'
-        : 'tanaka';
+      formulaVal === 'fox' ? 'fox' : formulaVal === 'gellish' ? 'gellish' : 'tanaka';
+
+    // Side-by-side comparison of the three max-HR formulas (informational).
+    const cmpEl = document.getElementById('hr-compare');
+    if (cmpEl) {
+      if (isFinite(age) && age > 0) {
+        const all = HeartRateCalculator.maxHrAll(age);
+        cmpEl.textContent = `Tanaka ${all.tanaka} · Gellish ${all.gellish} · 220−age ${all.fox}`;
+      } else {
+        cmpEl.textContent = '';
+      }
+    }
 
     const maxHr =
       isFinite(measured) && measured > 0 ? measured : HeartRateCalculator.maxHr(age, formula);

@@ -4,7 +4,7 @@ import assert from 'node:assert/strict';
 import ShareManager from '../src/modules/state/ShareManager.js';
 
 test('share manager can build and parse URL payload', () => {
-  const w = globalThis as any;
+  const w = globalThis as unknown as { window: { location: URL } };
   const originalWindow = w.window;
   w.window = { location: new URL('https://example.com/') };
 

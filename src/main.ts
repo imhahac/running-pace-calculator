@@ -36,9 +36,6 @@ function initializeApp(): void {
 
     // Bind all event listeners
     UIController.bindEvents();
-
-    // Log successful initialization
-    console.log('Running Pace Calculator initialized successfully');
   } catch (error) {
     console.error('Failed to initialize application:', error);
   }

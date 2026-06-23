@@ -22,7 +22,13 @@ class MemoryStorage {
   }
 }
 
-let storage: any;
+interface IWebStorage {
+  getItem(key: string): string | null;
+  setItem(key: string, value: string): void;
+  removeItem(key: string): void;
+}
+
+let storage: IWebStorage;
 try {
   if (typeof localStorage !== 'undefined') {
     localStorage.setItem('__storage_test__', '1');

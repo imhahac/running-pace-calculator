@@ -12,6 +12,10 @@ import CalcController from './CalcController.js';
 import ModeController from './ModeController.js';
 import SplitViewController from './SplitViewController.js';
 import LanguageController from './LanguageController.js';
+import RaceDataManager from '../RaceDataManager.js';
+import BackendClient from '../../state/BackendClient.js';
+import RaceController from './RaceController.js';
+import SyncController from './SyncController.js';
 
 export class SettingsController {
   private static get dom() {
@@ -35,6 +39,7 @@ export class SettingsController {
     this.applyTreadmillUnit(treadmillUnit);
     this.applyVenue(venue);
     this.applySplitMode(splitMode);
+    this.applyUrls();
 
     InputStore.snapshot();
     StateManager.saveToStorage(InputStore.getValues());
@@ -90,6 +95,19 @@ export class SettingsController {
     if (splitMode === 'track' || splitMode === 'road') {
       SplitViewController.switchSplitMode(splitMode);
     }
+  }
+
+  /** Persist the race API (GAS) and backend (Worker) URLs, then refresh both. */
+  static applyUrls(): void {
+    const gasUrl = (document.getElementById('settings-gas-url') as HTMLInputElement | null)?.value;
+    const backendUrl = (document.getElementById('settings-backend-url') as HTMLInputElement | null)
+      ?.value;
+    if (typeof gasUrl === 'string') StateManager.setGasApiUrl(gasUrl.trim());
+    if (typeof backendUrl === 'string') StateManager.setBackendUrl(backendUrl.trim());
+
+    RaceDataManager.setApiUrl(BackendClient.racesUrl() || StateManager.getGasApiUrl());
+    RaceController.fetchAndPopulateRaces();
+    SyncController.updateAuthUI();
   }
 }
 

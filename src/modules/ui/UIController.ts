@@ -7,7 +7,10 @@
 import { getDOMCache } from '../../constants/domElements.js';
 import StateManager from '../state/StateManager.js';
 import TranslationManager from '../state/TranslationManager.js';
+import FormPersistence, { TOOL_INPUT_IDS } from '../state/FormPersistence.js';
 import RaceDataManager from './RaceDataManager.js';
+import BackendClient from '../state/BackendClient.js';
+import TrainingCycleManager from './TrainingCycleManager.js';
 import ThemeController from './ThemeController.js';
 import RaceController from './controllers/RaceController.js';
 import ShareController from './controllers/ShareController.js';
@@ -26,6 +29,22 @@ import HeartRateController from './controllers/HeartRateController.js';
 import IntervalController from './controllers/IntervalController.js';
 import RacePlanController from './controllers/RacePlanController.js';
 import MethodsController from './controllers/MethodsController.js';
+import EnvironmentalController from './controllers/EnvironmentalController.js';
+import AcwrController from './controllers/AcwrController.js';
+import CadenceController from './controllers/CadenceController.js';
+import StridesController from './controllers/StridesController.js';
+import FuelingController from './controllers/FuelingController.js';
+import SweatRateController from './controllers/SweatRateController.js';
+import GlycogenController from './controllers/GlycogenController.js';
+import CoolingController from './controllers/CoolingController.js';
+import RecoveryController from './controllers/RecoveryController.js';
+import TaperController from './controllers/TaperController.js';
+import GapController from './controllers/GapController.js';
+import RunningEconomyController from './controllers/RunningEconomyController.js';
+import HrvController from './controllers/HrvController.js';
+import MenstrualController from './controllers/MenstrualController.js';
+import AltitudeController from './controllers/AltitudeController.js';
+import SyncController from './controllers/SyncController.js';
 import type { TMode } from '../../types/index';
 
 export class UIController {
@@ -48,7 +67,7 @@ export class UIController {
     this.dom = getDOMCache();
     CalcController.loadSavedInputs();
     ThemeController.initialize();
-    LanguageController.applyLanguage();
+    LanguageController.applyLanguage(false); // dynamic tools compute on their own init below
 
     if (this.dom.distanceSelect) {
       this.dom.distanceSelect.value = StateManager.getDistance().toString();
@@ -68,15 +87,45 @@ export class UIController {
     SplitViewController.syncSplitModeUI(StateManager.getSplitMode());
     ModeController.updateModeCardAccessibility();
     TrainingController.populateSettingsPanel();
+    TrainingController.applySchoolPreset();
     VdotController.initialize();
     HeartRateController.initialize();
     IntervalController.initialize();
     RacePlanController.initialize();
     MethodsController.initialize();
+    // Restore persisted tool inputs before the new controllers compute, so their
+    // first render reflects saved values.
+    FormPersistence.restore(TOOL_INPUT_IDS);
+    CadenceController.initialize();
+    StridesController.initialize();
+    AcwrController.initialize();
+    EnvironmentalController.initialize();
+    FuelingController.initialize();
+    SweatRateController.initialize();
+    GlycogenController.initialize();
+    CoolingController.initialize();
+    RecoveryController.initialize();
+    TaperController.initialize();
+    GapController.initialize();
+    RunningEconomyController.initialize();
+    HrvController.initialize();
+    MenstrualController.initialize();
+    AltitudeController.initialize();
+    FormPersistence.bindAutosave(TOOL_INPUT_IDS);
     ShareLoadController.applySharedPayloadFromURL();
 
-    RaceDataManager.setApiUrl(StateManager.getGasApiUrl());
+    // Populate the URL settings fields from state.
+    const gasField = document.getElementById('settings-gas-url') as HTMLInputElement | null;
+    if (gasField) gasField.value = StateManager.getGasApiUrl();
+    const backendField = document.getElementById('settings-backend-url') as HTMLInputElement | null;
+    if (backendField) backendField.value = StateManager.getBackendUrl();
+
+    // Races come from the Worker (/api/races) when a backend URL is set,
+    // otherwise fall back to the legacy GAS URL.
+    RaceDataManager.setApiUrl(BackendClient.racesUrl() || StateManager.getGasApiUrl());
     RaceController.fetchAndPopulateRaces();
+
+    void SyncController.initialize();
   }
 
   /** Bind all event listeners. */
@@ -300,6 +349,17 @@ export class UIController {
         TrainingController.applyDifficultyPreset();
         CalcController.refreshTrainingCycle();
       });
+    }
+    const trainingSchool = document.getElementById('training-school');
+    if (trainingSchool) {
+      trainingSchool.addEventListener('change', () => {
+        TrainingController.applySchoolPreset();
+        CalcController.refreshTrainingCycle();
+      });
+    }
+    const exportCsvBtn = document.getElementById('training-export-csv');
+    if (exportCsvBtn) {
+      exportCsvBtn.addEventListener('click', () => TrainingCycleManager.exportCsv());
     }
     ['training-weeks', 'training-start-vol', 'training-peak-vol'].forEach((id) => {
       document

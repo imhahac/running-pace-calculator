@@ -7,6 +7,7 @@
 import { getDOMCache, getInputIdForMode } from '../../../constants/domElements.js';
 import StateManager from '../../state/StateManager.js';
 import ShareManager from '../../state/ShareManager.js';
+import FormPersistence from '../../state/FormPersistence.js';
 import TrainingCycleManager from '../TrainingCycleManager.js';
 import InputStore from './InputStore.js';
 import ModeController from './ModeController.js';
@@ -48,6 +49,12 @@ export class ShareLoadController {
 
     if (typeof payload.trainingPlanDistance === 'number') {
       TrainingCycleManager.setPlanDistanceMeters(payload.trainingPlanDistance);
+    }
+
+    // Restore science/environment tool inputs from the shared link (dispatch so
+    // each tool recomputes its output).
+    if (payload.toolInputs) {
+      FormPersistence.apply(payload.toolInputs, true);
     }
 
     ModeController.setMode(StateManager.getMode());

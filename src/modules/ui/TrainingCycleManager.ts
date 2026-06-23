@@ -5,7 +5,11 @@ import TranslationManager from '../state/TranslationManager.js';
 import StateManager from '../state/StateManager.js';
 import type { ITrainingPlanConfig } from '../../types/index';
 
+type TPlan = ReturnType<typeof Calculator.generateTrainingCycle>;
+
 export class TrainingCycleManager {
+  private static lastPlan: TPlan = [];
+
   static getPlanDistanceMeters(): number {
     const planDistanceInput = document.getElementById(
       'training-plan-distance'
@@ -77,7 +81,11 @@ export class TrainingCycleManager {
       this.readPlanConfig()
     );
 
+    this.lastPlan = plan;
     container.innerHTML = '';
+
+    const csvBtn = document.getElementById('training-export-csv');
+    if (csvBtn) csvBtn.style.display = plan.length > 0 ? 'inline-block' : 'none';
 
     if (plan.length === 0) {
       emptyState.style.display = 'block';
@@ -151,6 +159,53 @@ export class TrainingCycleManager {
 
     emptyState.style.display = 'none';
     container.style.display = 'flex';
+  }
+
+  /** Serialise a plan to CSV (pure; every field quoted/escaped). */
+  static planToCsv(plan: TPlan): string {
+    const esc = (v: string | number): string => `"${String(v).replace(/"/g, '""')}"`;
+    const t = (k: string): string => TranslationManager.get(k);
+    const header = [
+      t('label_week'),
+      t('label_focus'),
+      t('label_mileage'),
+      t('label_recovery'),
+      t('label_workout'),
+      t('label_duration'),
+      t('col_pace')
+    ];
+    const lines = [header.map(esc).join(',')];
+    plan.forEach((w) => {
+      w.days.forEach((d) => {
+        lines.push(
+          [
+            w.weekLabel,
+            w.focus,
+            w.totalMileageKm,
+            w.isRecoveryWeek ? 'Y' : 'N',
+            `${d.dayOfWeek} ${d.description}`,
+            d.durationOrDistance,
+            d.paceOrIntensity
+          ]
+            .map(esc)
+            .join(',')
+        );
+      });
+    });
+    return lines.join('\n');
+  }
+
+  /** Download the current plan as a CSV file (UTF-8 BOM for Excel/CJK). */
+  static exportCsv(): void {
+    if (!this.lastPlan.length) return;
+    const csv = this.planToCsv(this.lastPlan);
+    const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'training-plan.csv';
+    link.click();
+    URL.revokeObjectURL(url);
   }
 
   static getPlanLabel(distanceMeters: number): string {

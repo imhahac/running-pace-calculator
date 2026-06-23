@@ -154,6 +154,13 @@ export class StateManager {
     this.setState({ gasApiUrl: url });
   }
 
+  static getBackendUrl(): string {
+    return this.state.backendUrl || '';
+  }
+  static setBackendUrl(url: string): void {
+    this.setState({ backendUrl: url });
+  }
+
   static getActiveTab(): string {
     return this.state.activeTab || 'tab-pace';
   }

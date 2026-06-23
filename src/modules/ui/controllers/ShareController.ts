@@ -1,6 +1,7 @@
 import { getDOMCache } from '../../../constants/domElements.js';
 import StateManager from '../../state/StateManager.js';
 import ShareExportManager from '../../state/ShareExportManager.js';
+import FormPersistence, { TOOL_INPUT_IDS } from '../../state/FormPersistence.js';
 import TrainingCycleManager from '../TrainingCycleManager.js';
 
 export class ShareController {
@@ -36,7 +37,8 @@ export class ShareController {
         finish_time_input: inputs.finishTime?.value || ''
       },
       trainingDate,
-      trainingPlanDistance
+      trainingPlanDistance,
+      FormPersistence.snapshot(TOOL_INPUT_IDS)
     );
   }
 }

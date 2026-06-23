@@ -5,7 +5,7 @@ import StateManager from '../src/modules/state/StateManager.js';
 import ThemeController from '../src/modules/ui/ThemeController.js';
 
 test('ThemeController reinitializes without stacking subscriptions', () => {
-  const w = globalThis as any;
+  const w = globalThis as unknown as Record<string, unknown>;
   const originalDocument = w.document;
   const originalApplyTheme = ThemeController.applyTheme;
 

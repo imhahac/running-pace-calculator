@@ -25,3 +25,7 @@ scratch/
 # Test coverage output
 coverage/
 .nyc_output/
+
+# Cloudflare Worker local secrets / build
+worker/.dev.vars
+worker/.wrangler/

@@ -23,6 +23,7 @@ type TCompactPayload = {
   i?: [string, string, string, string, string];
   td?: string;
   pd?: number;
+  ti?: Record<string, string>;
 };
 
 export function encodePayload(payload: ISharePayload): string {
@@ -47,7 +48,11 @@ export function encodePayload(payload: ISharePayload): string {
       payload.inputs?.finish_time_input || ''
     ],
     td: payload.trainingTargetDate || undefined,
-    pd: typeof payload.trainingPlanDistance === 'number' ? payload.trainingPlanDistance : undefined
+    pd: typeof payload.trainingPlanDistance === 'number' ? payload.trainingPlanDistance : undefined,
+    ti:
+      payload.toolInputs && Object.keys(payload.toolInputs).length > 0
+        ? payload.toolInputs
+        : undefined
   };
 
   const json = JSON.stringify(compact);
@@ -81,7 +86,8 @@ export function decodePayload(encoded: string): ISharePayload | null {
         finish_time_input: i[4] || ''
       },
       trainingTargetDate: parsed.td || '',
-      trainingPlanDistance: typeof parsed.pd === 'number' ? parsed.pd : undefined
+      trainingPlanDistance: typeof parsed.pd === 'number' ? parsed.pd : undefined,
+      toolInputs: parsed.ti && typeof parsed.ti === 'object' ? parsed.ti : undefined
     };
   } catch {
     try {

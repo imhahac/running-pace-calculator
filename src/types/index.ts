@@ -87,6 +87,7 @@ export interface IPaceState {
   splitMode: TSplitMode;
   planType: TPlanType;
   gasApiUrl: string;
+  backendUrl: string;
   activeTab: string;
   triDistance: 51.5 | 113 | 226;
   triInputs?: ITriathlonInputs;
@@ -279,7 +280,7 @@ export interface IIntervalSession {
 /**
  * Max-HR estimation formula
  */
-export type THrFormula = 'tanaka' | 'fox';
+export type THrFormula = 'tanaka' | 'gellish' | 'fox';
 
 /**
  * Heart-rate training zone (Karvonen / %HRR)
@@ -350,6 +351,8 @@ export interface ISharePayload {
   inputs: Record<string, string>;
   trainingTargetDate?: string;
   trainingPlanDistance?: number;
+  /** Science/environment tool inputs (id → value); omitted when empty. */
+  toolInputs?: Record<string, string>;
 }
 
 /**
@@ -376,14 +379,20 @@ export type TCountdownPhase = 'future' | 'base' | 'taper' | 'peak' | 'today' | '
  * Minimal Leaflet types
  */
 declare global {
+  // html2canvas is loaded on demand from a CDN for image export.
+  interface Window {
+    html2canvas?: (el: HTMLElement, opts?: Record<string, unknown>) => Promise<HTMLCanvasElement>;
+  }
+
   // Leaflet is loaded as a global UMD bundle from a CDN; an ambient namespace
-  // is the idiomatic way to describe it.
+  // is the idiomatic way to describe it. Args are loosely typed (unknown) since
+  // we only pass values through to Leaflet and never inspect them.
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace L {
     interface Map {
       eachLayer(fn: (layer: Layer) => void): this;
       removeLayer(layer: Layer): this;
-      fitBounds(bounds: any, options?: any): this;
+      fitBounds(bounds: unknown, options?: unknown): this;
       invalidateSize(): this;
       remove(): this;
     }
@@ -392,7 +401,7 @@ declare global {
       addTo(map: Map): this;
     }
     interface Polyline extends Layer {
-      getBounds(): any;
+      getBounds(): unknown;
       addTo(map: Map): this;
     }
     interface CircleMarker extends Layer {
@@ -400,10 +409,10 @@ declare global {
       bindPopup(content: string): this;
     }
 
-    function polyline(latlngs: any[], options?: any): Polyline;
-    function circleMarker(latlng: any, options?: any): CircleMarker;
-    function map(id: string | HTMLElement, options?: any): Map;
-    function tileLayer(urlTemplate: string, options?: any): Layer;
+    function polyline(latlngs: unknown[], options?: unknown): Polyline;
+    function circleMarker(latlng: unknown, options?: unknown): CircleMarker;
+    function map(id: string | HTMLElement, options?: unknown): Map;
+    function tileLayer(urlTemplate: string, options?: unknown): Layer;
   }
 }
 

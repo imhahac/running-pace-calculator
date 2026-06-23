@@ -104,6 +104,7 @@
             <div class="tab-item" id="tabbtn-triathlon" data-tab="tab-triathlon" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-triathlon">🏊‍♂️ <span data-i18n="tab_triathlon">鐵人三項</span></div>
             <div class="tab-item" id="tabbtn-training" data-tab="tab-training" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-training">📅 <span data-i18n="tab_training">課表與賽事</span></div>
             <div class="tab-item" id="tabbtn-science" data-tab="tab-science" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-science">🧪 <span data-i18n="tab_science">科學訓練</span></div>
+            <div class="tab-item" id="tabbtn-environment" data-tab="tab-environment" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-environment">🌡️ <span data-i18n="tab_environment">環境與補給</span></div>
             <div class="tab-item" id="tabbtn-settings" data-tab="tab-settings" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-settings">⚙️ <span data-i18n="tab_settings">系統設定</span></div>
         </nav>
 
@@ -432,6 +433,15 @@
                         </select>
                     </div>
                     <div style="display: flex; align-items: center; gap: 5px;">
+                        <label for="training-school" data-i18n="school_label" style="font-size:0.9rem;">派別</label>
+                        <select id="training-school" style="min-width: 110px;">
+                            <option value="" data-i18n="school_none">自動</option>
+                            <option value="higdon" data-i18n="school_higdon">Higdon</option>
+                            <option value="pfitzinger" data-i18n="school_pfitzinger">Pfitzinger</option>
+                            <option value="daniels" data-i18n="school_daniels">Daniels</option>
+                        </select>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 5px;">
                         <label for="training-weeks" data-i18n="plan_weeks" style="font-size:0.9rem;">週數</label>
                         <input type="number" id="training-weeks" placeholder="auto" min="1" max="24" style="width: 6ch;">
                     </div>
@@ -444,7 +454,8 @@
                         <input type="number" id="training-peak-vol" placeholder="km" min="0" style="width: 6ch;">
                     </div>
                 </div>
-                <div class="explain" data-i18n="explain_plan_config">難度（初/進/菁英）會自動帶入建議的週數與起始/巔峰週里程；想自訂可直接改數字，全部留白則依賽事日期與目前配速自動推算。</div>
+                <div id="training-school-desc" class="helper-text" style="margin-bottom: 6px;"></div>
+                <div class="explain" data-i18n="explain_plan_config">難度（初/進/菁英）會自動帶入建議的週數與起始/巔峰週里程；派別（Higdon/Pfitzinger/Daniels）會帶入該流派的量化取向；想自訂可直接改數字，全部留白則依賽事日期與目前配速自動推算。</div>
                 <div id="race-countdown" style="margin-bottom: 10px; font-weight: bold; font-size: 1rem; color: var(--highlight); display: none;">
                     <!-- Countdown populated by JS -->
                 </div>
@@ -465,6 +476,7 @@
                 <div id="training-plan-container" style="width:100%; display:none; display:flex; flex-direction:column; gap:10px;">
                     <!-- Daily Cards populated by JS -->
                 </div>
+                <button id="training-export-csv" class="btn-secondary" style="margin-top: 8px; display: none;"><span data-i18n="btn_export_csv">⬇️ 匯出 CSV</span></button>
                 <div class="explain" data-i18n="explain_training_cycle">計畫分期：基礎→進展→巔峰→減量→比賽週；每 4 週安排一次減量恢復週。里程與配速隨分期自動調整。</div>
             </div>
 
@@ -489,6 +501,34 @@
                 <div id="raceplan-summary" class="helper-text"></div>
                 <div id="raceplan-table" class="raceplan-table"></div>
                 <div class="explain" data-i18n="explain_raceplan">策略：平均（穩定）；負分段（後半加速，通常成績較佳）；正分段（前快後掉，較不建議）。表格為每公里目標配速與累積時間。提醒：起步勿過快、約 30k 易撞牆、依表補給。</div>
+            </div>
+
+            <!-- GPX Route GAP Analysis -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="gap_title">⛰️ GPX 路線 GAP 配速分析</span></h3>
+                <div class="helper-text" data-i18n="hint_gap_intro" style="margin-bottom: 8px;">上傳賽事 GPX 並輸入平路目標配速，算出每公里坡度修正配速與爬升</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="gap-file-input" data-i18n="gap_file">GPX 檔案</label>
+                    <input type="file" id="gap-file-input" accept=".gpx,application/gpx+xml,text/xml" style="max-width: 100%;">
+                    <label for="gap-pace-input" data-i18n="gap_pace">平路目標配速 (m:ss/km)</label>
+                    <input type="text" id="gap-pace-input" placeholder="5:30" style="width: 8ch;">
+                    <label for="gap-maxhr-input" data-i18n="gap_maxhr">最大心率 (可選)</label>
+                    <input type="number" id="gap-maxhr-input" placeholder="185" min="100" max="240" style="width: 8ch;">
+                    <label for="gap-resthr-input" data-i18n="gap_resthr">靜息心率 (可選)</label>
+                    <input type="number" id="gap-resthr-input" placeholder="50" min="20" max="120" style="width: 8ch;">
+                </div>
+                <div class="vdot-grid" style="margin-top: 10px;">
+                    <span class="zone-badge">📏</span><span data-i18n="gap_totaldist_label">總距離</span><span id="gap-totaldist" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">⬆</span><span data-i18n="gap_ascent_label">總爬升</span><span id="gap-ascent" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">⬇</span><span data-i18n="gap_descent_label">總下降</span><span id="gap-descent" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🎯</span><span data-i18n="gap_predicted_label">預估完賽配速</span><span id="gap-predicted" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">❤️</span><span data-i18n="gap_hr_band_label">建議耐力心率</span><span id="gap-hr-band" class="mono-text vdot-pace">--</span>
+                </div>
+                <div id="gap-profile" class="gap-profile" style="width: 100%; margin-top: 10px;"></div>
+                <div class="helper-text" data-i18n="gap_hr_note" style="margin-top: 8px;">🍬 標記為補給時機（約 45 分起、每 30 分）；上坡心率易飆，以心率為上限、別追配速。</div>
+                <div class="helper-text" data-i18n="gap_splits_label" style="margin-top: 4px;">每公里坡度修正配速</div>
+                <div id="gap-splits" class="fuel-timeline" style="width: 100%; margin-top: 4px;"></div>
+                <div class="explain" data-i18n="explain_gap">上傳 GPX 後，系統用 haversine 算距離、逐段坡度套用 Minetti（2002）能量成本，預估在你「平路配速」的努力下各公里實際配速（上坡變慢、下坡變快）與總爬升。海拔資料可能有雜訊，數字僅供配速與補給策略參考；丘陵賽事可據此在陡坡保留體力。</div>
             </div>
         </div> <!-- End of tab-training -->
 
@@ -541,12 +581,16 @@
                     <label for="hr-formula-select" data-i18n="hr_formula">最大心率公式</label>
                     <select id="hr-formula-select">
                         <option value="tanaka" data-i18n="hr_formula_tanaka">Tanaka (建議)</option>
+                        <option value="gellish" data-i18n="hr_formula_gellish">Gellish</option>
                         <option value="fox" data-i18n="hr_formula_fox">220 − 年齡</option>
                     </select>
                 </div>
                 <div style="width: 100%; margin-top: 10px; font-size: 0.9rem;">
                     <span data-i18n="hr_maxhr">最大心率</span>: <span id="hr-max-display" class="highlight-text mono-text">--</span>
                     &emsp;<span data-i18n="hr_vo2max">估計 VO₂max</span>: <span id="hr-vo2-display" class="mono-text">--</span>
+                </div>
+                <div class="helper-text" style="width: 100%; margin-top: 4px;">
+                    <span data-i18n="hr_compare_label">公式比較</span>: <span id="hr-compare" class="mono-text"></span>
                 </div>
                 <div id="hr-zones" class="vdot-grid" style="margin-top: 10px;"></div>
                 <div class="explain" data-i18n="explain_hr">先用 Tanaka 公式（208−0.7×年齡）或實測值估最大心率，再以 Karvonen（心率儲備）分成五區，各區對應不同訓練目的。VO₂max 為由最大/靜息心率比值推估（非實測）。</div>
@@ -588,7 +632,341 @@
                 <div id="methods-note" class="helper-text" style="margin-top: 6px;"></div>
                 <div class="explain" data-i18n="explain_methods">Yasso 800：以 800m 反覆預估全馬。挪威 4×4：4×4 分鐘高強度練 VO₂max。Hansons：累積疲勞、長跑不過量。挪威雙閾值：同日兩次閾值、控制強度。</div>
             </div>
+
+            <!-- Cadence Analysis -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="cadence_title">👟 步頻分析</span></h3>
+                <div class="helper-text" data-i18n="hint_cadence_intro" style="margin-bottom: 8px;">輸入配速與目前步頻，算出合理步頻區間與 +5/+10% 目標</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="cadence-pace-input" data-i18n="cadence_pace">配速 (m:ss/km)</label>
+                    <input type="text" id="cadence-pace-input" placeholder="5:30" style="width: 8ch;">
+                    <label for="cadence-current-input" data-i18n="cadence_current">目前步頻 (可選)</label>
+                    <input type="number" id="cadence-current-input" placeholder="170" min="120" max="240" style="width: 8ch;">
+                </div>
+                <div class="vdot-grid" style="margin-top: 10px;">
+                    <span class="zone-badge">↔</span><span data-i18n="cadence_band_label">建議步頻區間</span><span id="cadence-band" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">📏</span><span data-i18n="cadence_stride_label">步幅</span><span id="cadence-stride" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">+5</span><span data-i18n="cadence_plus5_label">+5% 目標</span><span id="cadence-plus5" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">+10</span><span data-i18n="cadence_plus10_label">+10% 目標</span><span id="cadence-plus10" class="mono-text vdot-pace">--</span>
+                </div>
+                <div id="cadence-advice" class="helper-text" style="margin-top: 6px;"></div>
+                <div class="explain" data-i18n="explain_cadence">180 SPM 是迷思：合理步頻隨速度變化、因人而異。提高步頻 5–10% 可縮短跨步、降低膝與跟腱的單步衝擊（Heiderscheit 2011）。步幅過大（步頻偏低）常是過度跨步的訊號。</div>
+            </div>
+
+            <!-- Strides -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="strides_title">🏃‍♂️💨 Strides 加速段</span></h3>
+                <div class="helper-text" data-i18n="hint_strides_intro" style="margin-bottom: 8px;">選擇進度週，產生加速段課表與 12 週漸進</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="strides-week-input" data-i18n="strides_week_input">進度週 (1–12)</label>
+                    <input type="number" id="strides-week-input" placeholder="1" min="1" max="12" value="1" style="width: 8ch;">
+                </div>
+                <div id="strides-session" class="highlight-text" style="margin-top: 10px;"></div>
+                <div class="helper-text" data-i18n="strides_progression_label" style="margin-top: 8px;">12 週漸進</div>
+                <div id="strides-progression" class="vdot-grid" style="margin-top: 4px;"></div>
+                <div class="explain" data-i18n="explain_strides">Strides＝約 15–30 秒「可控的快」（非衝刺），組間完全恢復，一週插入 2–3 次（輕鬆跑後或質量課表前）。改善神經肌肉協調與跑步經濟性（Daniels & Gilbert 1979；Blagrove 2018）。本表為 12 週漸進：4×15s → 8×30s。</div>
+            </div>
+
+            <!-- Injury Risk (ACWR) -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="acwr_title">🩹 傷害風險 (ACWR)</span></h3>
+                <div class="helper-text" data-i18n="hint_acwr_intro" style="margin-bottom: 8px;">輸入最近 4 週里程（最後一欄為本週），算出急慢性負荷比</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="acwr-w1" data-i18n="acwr_w1">第 1 週 (最舊)</label>
+                    <input type="number" id="acwr-w1" placeholder="40" min="0" style="width: 8ch;">
+                    <label for="acwr-w2" data-i18n="acwr_w2">第 2 週</label>
+                    <input type="number" id="acwr-w2" placeholder="42" min="0" style="width: 8ch;">
+                    <label for="acwr-w3" data-i18n="acwr_w3">第 3 週</label>
+                    <input type="number" id="acwr-w3" placeholder="44" min="0" style="width: 8ch;">
+                    <label for="acwr-w4" data-i18n="acwr_w4">第 4 週 (本週)</label>
+                    <input type="number" id="acwr-w4" placeholder="46" min="0" style="width: 8ch;">
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    ACWR: <span id="acwr-value" class="highlight-text mono-text">--</span>&emsp;<span id="acwr-zone"></span>
+                </div>
+                <div class="vdot-grid" style="margin-top: 8px;">
+                    <span class="zone-badge">A</span><span data-i18n="acwr_acute_label">急性 (本週)</span><span id="acwr-acute" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">C</span><span data-i18n="acwr_chronic_label">慢性 (4週均)</span><span id="acwr-chronic" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">→</span><span data-i18n="acwr_rec_label">下週建議里程</span><span id="acwr-rec" class="mono-text vdot-pace">--</span>
+                </div>
+                <div class="explain" data-i18n="explain_acwr">ACWR＝本週里程÷近 4 週平均。甜蜜區約 0.8–1.3；&gt;1.5 代表負荷暴增，軟組織傷害風險上升（Gabbett 2016）；&lt;0.8 多為訓練不足或剛回歸。據此調整下週里程，避免一次加太多。</div>
+            </div>
+
+            <!-- Running Economy + Body Composition -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="re_title">🏋️ 跑步經濟性 + 體組成</span></h3>
+                <div class="helper-text" data-i18n="hint_re_intro" style="margin-bottom: 8px;">由 5K 成績估 VO₂max、判讀體脂級距，給三層優化策略</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="re-5k-input" data-i18n="re_5k">5K 成績 (m:ss)</label>
+                    <input type="text" id="re-5k-input" placeholder="22:00" style="width: 8ch;">
+                    <label for="re-sex-select" data-i18n="re_sex">生理性別</label>
+                    <select id="re-sex-select">
+                        <option value="male" data-i18n="re_sex_male">男性</option>
+                        <option value="female" data-i18n="re_sex_female">女性</option>
+                    </select>
+                    <label for="re-bf-input" data-i18n="re_bf">體脂率 (%)</label>
+                    <input type="number" id="re-bf-input" placeholder="15" min="2" max="60" style="width: 8ch;">
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="re_vo2max_label">估計 VO₂max</span>: <span id="re-vo2max" class="highlight-text mono-text">--</span>&emsp;<span data-i18n="re_band_label">體脂級距</span>: <span id="re-band"></span>
+                </div>
+                <ul id="re-strategies" class="strategy-list" style="margin-top: 8px;"></ul>
+                <div class="explain" data-i18n="explain_re">由 5K 成績以 Daniels 引擎推估 VO₂max（即 VDOT）。體脂級距採 ACE 常用標準（男/女不同）。提升跑步經濟性三層：肌力訓練（重訓改善 RE 約 2–8%，Beattie 2017）、增強式（跳躍/彈振強化肌腱剛性）、體組成（在健康範圍內降低非功能性體重以改善功率體重比）。</div>
+            </div>
+
+            <!-- HRV-guided Training -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="hrv_title">📈 HRV 訓練調整</span></h3>
+                <div class="helper-text" data-i18n="hint_hrv_intro" style="margin-bottom: 8px;">輸入晨起 RMSSD（逗號分隔 3–7 筆，最後一筆為今天）</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="hrv-input" data-i18n="hrv_input_label">晨起 RMSSD</label>
+                    <input type="text" id="hrv-input" placeholder="60, 62, 58, 61, 59, 63, 55" style="width: 100%; max-width: 30ch;">
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="hrv_status_label">今日狀態</span>: <span id="hrv-status"></span>
+                </div>
+                <div class="vdot-grid" style="margin-top: 8px;">
+                    <span class="zone-badge">μ</span><span data-i18n="hrv_baseline_label">基線</span><span id="hrv-baseline" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">今</span><span data-i18n="hrv_today_label">今日</span><span id="hrv-today" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">±</span><span data-i18n="hrv_band_label">正常區間</span><span id="hrv-band" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">CV</span><span data-i18n="hrv_cv_label">變異係數</span><span id="hrv-cv" class="mono-text vdot-pace">--</span>
+                </div>
+                <div id="hrv-advice" class="helper-text" style="margin-top: 6px;"></div>
+                <div class="explain" data-i18n="explain_hrv">用晨起 7 日 RMSSD 算出個人基線（平均 ± 1 標準差）。今日落在區間內＝照計畫；明顯偏低＝副交感受抑制，改輕鬆/恢復；偏高＝多為良好適應，但也可能是飽和，留意身體訊號。變異係數（CV）越大代表越不穩定、宜保守（Plews 法）。</div>
+            </div>
+
+            <!-- Menstrual Cycle Adjustment -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="cycle_title">🌸 月經週期訓練調整</span></h3>
+                <div class="helper-text" data-i18n="hint_cycle_intro" style="margin-bottom: 8px;">輸入週期第幾天與週期長度，給該階段訓練微調</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="cycle-day-input" data-i18n="cycle_day">週期第幾天</label>
+                    <input type="number" id="cycle-day-input" placeholder="14" min="1" max="40" style="width: 8ch;">
+                    <label for="cycle-length-input" data-i18n="cycle_length">週期長度 (天)</label>
+                    <input type="number" id="cycle-length-input" placeholder="28" min="21" max="40" style="width: 8ch;">
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="cycle_phase_label">目前階段</span>: <span id="cycle-phase"></span>
+                </div>
+                <div id="cycle-advice" class="helper-text" style="margin-top: 6px;"></div>
+                <div class="explain" data-i18n="explain_cycle">依週期分四階段給訓練微調。重要：McNulty 2020 系統綜述指出「個體差異遠大於群體效應」，所以這些只是起點，請以自身體感與症狀為準（黃體期常見體溫升高、較易疲勞與不耐熱，宜加強補水與恢復）。</div>
+            </div>
+
+            <!-- Altitude Training Planner -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="alt_title">🏔️ 海拔訓練規劃</span></h3>
+                <div class="helper-text" data-i18n="hint_alt_intro" style="margin-bottom: 8px;">輸入海拔、天數與每日時數，估 Hb mass / VO₂max 增益</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="alt-altitude-input" data-i18n="alt_altitude">海拔 (m)</label>
+                    <input type="number" id="alt-altitude-input" placeholder="2200" min="0" style="width: 8ch;">
+                    <label for="alt-days-input" data-i18n="alt_days">天數</label>
+                    <input type="number" id="alt-days-input" placeholder="21" min="1" style="width: 8ch;">
+                    <label for="alt-hours-input" data-i18n="alt_hours">每日高住時數</label>
+                    <input type="number" id="alt-hours-input" placeholder="16" min="1" max="24" style="width: 8ch;">
+                    <label for="alt-protocol-select" data-i18n="alt_protocol">協議</label>
+                    <select id="alt-protocol-select">
+                        <option value="LHTL" data-i18n="alt_lhtl">LHTL 高住低練</option>
+                        <option value="LHTH" data-i18n="alt_lhth">LHTH 高住高練</option>
+                        <option value="IHE" data-i18n="alt_ihe">IHE 間歇低氧</option>
+                    </select>
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="alt_status_label">評估</span>: <span id="alt-status"></span>
+                </div>
+                <div class="vdot-grid" style="margin-top: 8px;">
+                    <span class="zone-badge">⏱</span><span data-i18n="alt_hours_label">總曝露時數</span><span id="alt-hours" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🩸</span><span data-i18n="alt_hbmass_label">Hb mass 增益</span><span id="alt-hbmass" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🫁</span><span data-i18n="alt_vo2_label">VO₂max 增益</span><span id="alt-vo2" class="mono-text vdot-pace">--</span>
+                </div>
+                <div class="explain" data-i18n="explain_alt">有效「高住」窗約 2000–3000m；Hb mass 隨足量曝露時數上升（約每 100 有效小時 +1%，本工具上限 5%），VO₂max 增益約為 Hb 的 0.6 倍。賽事時機：常見建議下山後 1–2 天或 2–3 週後出賽、避開第 5–10 天。數字為估計、反應者差異大（Levine 1997；Wilber 2007；Chapman 2014）。</div>
+            </div>
+
+            <!-- Science & Principles Reference -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="ref_title">📚 科學實證與訓練原則</span></h3>
+                <div class="helper-text" data-i18n="ref_intro" style="margin-bottom: 8px;">本站工具方法論的依據與引用來源</div>
+                <div class="explain" data-i18n="ref_daniels">Daniels VDOT 公式：Jack Daniels《Running Formula》— VO₂=−4.60+0.182258v+0.000104v²；被 RQ、VDOT Pro、Runalyze 等平台廣泛採用。</div>
+                <div class="explain" data-i18n="ref_seiler">Seiler 80/20 極化訓練：菁英耐力選手約 80% 訓練在輕鬆區、20% 高強度；極化分布常勝過大量中強度（Seiler 2006/2013）。</div>
+                <div class="explain" data-i18n="ref_stellingwerff">Stellingwerff 碳水補給：運動 &gt;90 分鐘需 60–90 g/h 碳水（多種可轉運醣類）；近年超馬探索更高上限，需訓練腸道耐受（Stellingwerff & Cox 2014）。</div>
+                <div class="explain" data-i18n="ref_periard">熱適應：10–14 天熱適應血漿容量 +10–12%、核心體溫下降，約 70–80% 效益在前 4–7 天取得（Périard 2015）。</div>
+                <div class="explain" data-i18n="ref_principles">訓練原則：80/20 極化、每週里程增幅 ≤ 10%、硬日/輕鬆日交替、超過 60 分鐘運動每小時補碳水 30–60 g。</div>
+                <div class="explain" data-i18n="ref_resources">延伸資源：RQ（訓練平台 + VDOT 分析）、Strava（GPS + 社群）；書籍：Daniels《Running Formula》、Fitzgerald《80/20 Running》。工具內各頁標註引用來源，可追 PubMed/PMC/原著。</div>
+                <div class="explain" data-i18n="ref_accuracy">準確度與信任：標示「公式」者為教科書精確公式（VDOT、Tanaka/Gellish 最大心率、Karvonen、Minetti 坡度、Riegel、碳水 30–90 g/h、冰沙 7.5 g/kg、Mujika 減量），數值已用單元測試鎖定；標示「估算」者（高溫減速、汗率、步頻區間、恢復天數、海拔增益）為依文獻建立的合理模型，個體差異大，請當作起點而非保證。海拔/HRV/月經週期等尤其因人而異。</div>
+            </div>
         </div> <!-- End of tab-science -->
+
+        <div class="tab-pane" id="tab-environment" role="tabpanel" aria-labelledby="tabbtn-environment">
+            <!-- Environmental Pace Adjustment -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="env_title">🌡️ 環境配速調整</span></h3>
+                <div class="helper-text" data-i18n="hint_env_intro" style="margin-bottom: 8px;">輸入氣溫、濕度與基準配速，算出露點、WBGT 與今日實際目標配速</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="env-temp-input" data-i18n="env_temp">氣溫 (°C)</label>
+                    <input type="number" id="env-temp-input" placeholder="30" style="width: 8ch;">
+                    <label for="env-humidity-input" data-i18n="env_humidity">相對濕度 (%)</label>
+                    <input type="number" id="env-humidity-input" placeholder="75" min="0" max="100" style="width: 8ch;">
+                    <label for="env-pace-input" data-i18n="env_pace">基準配速 (m:ss/km)</label>
+                    <input type="text" id="env-pace-input" placeholder="5:30" style="width: 8ch;">
+                    <label for="env-grade-input" data-i18n="env_grade">坡度 (%, 可選)</label>
+                    <input type="number" id="env-grade-input" placeholder="0" style="width: 8ch;">
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="env_risk_label">熱壓力等級</span>: <span id="env-risk"></span>
+                </div>
+                <div class="vdot-grid" style="margin-top: 8px;">
+                    <span class="zone-badge">💧</span><span data-i18n="env_dewpoint_label">露點</span><span id="env-dewpoint" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🌡</span><span data-i18n="env_wbgt_label">WBGT</span><span id="env-wbgt" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🔥</span><span data-i18n="env_heat_label">高溫減速</span><span id="env-heat-pct" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">⛰</span><span data-i18n="env_grade_label">坡度係數</span><span id="env-grade-factor" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🎯</span><span data-i18n="env_adjusted_label">建議目標配速</span><span id="env-adjusted-pace" class="mono-text vdot-pace">--</span>
+                </div>
+                <div class="explain" data-i18n="explain_env">露點與 WBGT 反映身體散熱難度：高溫高濕下汗水難蒸發，配速需放慢。本工具用 WBGT（ABM 陰影近似）對應減速幅度，並用 Minetti（2002）坡度能量成本換算坡度係數。台灣夏天常落在「高/極端」區，務必依建議配速放慢並加強補水。</div>
+            </div>
+
+            <!-- Calories + Fueling Timeline -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="fuel_title">🍫 卡路里 + 補給時間軸</span></h3>
+                <div class="helper-text" data-i18n="hint_fuel_intro" style="margin-bottom: 8px;">輸入體重、距離與目標完賽時間，算出熱量與每站補給</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="fuel-weight-input" data-i18n="fuel_weight">體重 (kg)</label>
+                    <input type="number" id="fuel-weight-input" placeholder="65" min="30" max="150" style="width: 8ch;">
+                    <label for="fuel-dist-select" data-i18n="fuel_dist">距離</label>
+                    <select id="fuel-dist-select">
+                        <option value="10000">10K</option>
+                        <option value="21097.5" data-i18n="dist_half">半馬</option>
+                        <option value="42195" selected data-i18n="dist_marathon">全馬</option>
+                    </select>
+                    <label for="fuel-time-input" data-i18n="fuel_time">目標完賽時間</label>
+                    <input type="text" id="fuel-time-input" placeholder="4:00:00" style="width: 10ch;">
+                </div>
+                <div class="vdot-grid" style="margin-top: 10px;">
+                    <span class="zone-badge">🔥</span><span data-i18n="fuel_kcal_label">總熱量</span><span id="fuel-kcal" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🍬</span><span data-i18n="fuel_carbrate_label">建議碳水</span><span id="fuel-carbrate" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">💧</span><span data-i18n="fuel_fluidrate_label">建議水分</span><span id="fuel-fluidrate" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">Σ</span><span data-i18n="fuel_totalcarb_label">全程碳水</span><span id="fuel-totalcarb" class="mono-text vdot-pace">--</span>
+                </div>
+                <div class="helper-text" data-i18n="fuel_timeline_label" style="margin-top: 8px;">補給時間軸</div>
+                <div id="fuel-timeline" class="fuel-timeline" style="width: 100%; margin-top: 4px;"></div>
+                <div class="explain" data-i18n="explain_fuel">跑步約消耗 1 kcal/kg/km。超過 60 分鐘的賽事需邊跑邊補碳水：1–2 小時約 30 g/h、2–2.5 小時約 60 g/h、更久可達 90 g/h（多種可轉運醣類）；水分約 500 ml/h。表格依完賽時間排出每站建議（ACSM／Stellingwerff & Cox 2014）。</div>
+            </div>
+
+            <!-- Personalised Long-Run Fueling (Sweat Rate) -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="sweat_title">💦 長跑個人化補給</span></h3>
+                <div class="helper-text" data-i18n="hint_sweat_intro" style="margin-bottom: 8px;">依體重、配速與氣溫濕度估汗率，產生逐站碳水/水分/鈉</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="sweat-weight-input" data-i18n="sweat_weight">體重 (kg)</label>
+                    <input type="number" id="sweat-weight-input" placeholder="65" min="30" max="150" style="width: 8ch;">
+                    <label for="sweat-pace-input" data-i18n="sweat_pace">配速 (m:ss/km)</label>
+                    <input type="text" id="sweat-pace-input" placeholder="6:00" style="width: 8ch;">
+                    <label for="sweat-dist-input" data-i18n="sweat_dist">距離 (km)</label>
+                    <input type="number" id="sweat-dist-input" placeholder="30" min="1" style="width: 8ch;">
+                    <label for="sweat-temp-input" data-i18n="sweat_temp">氣溫 (°C)</label>
+                    <input type="number" id="sweat-temp-input" placeholder="28" style="width: 8ch;">
+                    <label for="sweat-humidity-input" data-i18n="sweat_humidity">濕度 (%)</label>
+                    <input type="number" id="sweat-humidity-input" placeholder="70" min="0" max="100" style="width: 8ch;">
+                </div>
+                <div class="vdot-grid" style="margin-top: 10px;">
+                    <span class="zone-badge">💦</span><span data-i18n="sweat_rate_label">汗率</span><span id="sweat-rate" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">💧</span><span data-i18n="sweat_fluidrate_label">水分</span><span id="sweat-fluidrate" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🧂</span><span data-i18n="sweat_sodiumrate_label">鈉</span><span id="sweat-sodiumrate" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🍬</span><span data-i18n="sweat_carbrate_label">碳水</span><span id="sweat-carbrate" class="mono-text vdot-pace">--</span>
+                </div>
+                <div class="helper-text" data-i18n="sweat_timeline_label" style="margin-top: 8px;">逐站補給</div>
+                <div id="sweat-timeline" class="fuel-timeline" style="width: 100%; margin-top: 4px;"></div>
+                <div class="explain" data-i18n="explain_sweat">汗率由跑步產熱推估：約 80% 運動能量轉為熱，蒸發 1 L 汗約散熱 580 kcal；高溫高濕下汗水蒸發效率低、流失更多（Périard 2015）。建議補回約 75% 汗失（避免過量導致低血鈉），汗鈉約 1 g/L。最準的方法仍是運動前後量體重。</div>
+            </div>
+
+            <!-- Pre-cooling / Heat Strategy -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="cool_title">🧊 賽前降溫策略</span></h3>
+                <div class="helper-text" data-i18n="hint_cool_intro" style="margin-bottom: 8px;">輸入體重與氣溫濕度，評估熱壓力並給降溫方案</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="cool-weight-input" data-i18n="cool_weight">體重 (kg)</label>
+                    <input type="number" id="cool-weight-input" placeholder="65" min="30" max="150" style="width: 8ch;">
+                    <label for="cool-temp-input" data-i18n="cool_temp">氣溫 (°C)</label>
+                    <input type="number" id="cool-temp-input" placeholder="30" style="width: 8ch;">
+                    <label for="cool-humidity-input" data-i18n="cool_humidity">濕度 (%)</label>
+                    <input type="number" id="cool-humidity-input" placeholder="75" min="0" max="100" style="width: 8ch;">
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="env_risk_label">熱壓力等級</span>: <span id="cool-risk"></span>&emsp;WBGT: <span id="cool-wbgt" class="mono-text">--</span>&emsp;<span data-i18n="cool_slurry_label">冰沙</span>: <span id="cool-slurry" class="mono-text">--</span>
+                </div>
+                <ul id="cool-strategies" class="strategy-list" style="margin-top: 8px;"></ul>
+                <div class="explain" data-i18n="explain_cool">WBGT 反映熱壓力，越高越需主動降溫。賽前冰沙（約 7.5 g/kg 體重，賽前 30–60 分鐘）可降核心溫度延長表現；高溫時搭配陰涼、冷飲、冰毛巾，極端時考慮冷水浸泡甚至延後（Siegel 2010；Périard 2015）。</div>
+            </div>
+
+            <!-- Glycogen Loading -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="glyco_title">🍚 賽前肝醣超補</span></h3>
+                <div class="helper-text" data-i18n="hint_glyco_intro" style="margin-bottom: 8px;">輸入體重與方案，產生賽前每日碳水克數</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="glyco-weight-input" data-i18n="glyco_weight">體重 (kg)</label>
+                    <input type="number" id="glyco-weight-input" placeholder="65" min="30" max="150" style="width: 8ch;">
+                    <label for="glyco-protocol-select" data-i18n="glyco_protocol">方案</label>
+                    <select id="glyco-protocol-select">
+                        <option value="modifiedSherman" data-i18n="glyco_modifiedSherman">Modified Sherman</option>
+                        <option value="classic" data-i18n="glyco_classic">Classic (Bergström)</option>
+                        <option value="wa" data-i18n="glyco_wa">WA 一日法</option>
+                    </select>
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="glyco_load_label">超補量</span>: <span id="glyco-load" class="highlight-text mono-text">--</span>
+                </div>
+                <div class="helper-text" data-i18n="glyco_schedule_label" style="margin-top: 8px;">每日時程</div>
+                <div id="glyco-schedule" class="fuel-timeline" style="width: 100%; margin-top: 4px;"></div>
+                <div class="explain" data-i18n="explain_glyco">超過 90 分鐘的賽事，賽前 36–48 小時提高碳水至 10–12 g/kg/天可填滿肝醣（Burke 2011）。Modified Sherman：免耗竭、減量＋3 天高碳水；Classic：先耗竭再超補；WA：一日壓縮超補。數字為依你體重換算的每日碳水克數。</div>
+            </div>
+
+            <!-- Pre-race Taper Countdown -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="taper_title">📉 賽前 Taper 倒數</span></h3>
+                <div class="helper-text" data-i18n="hint_taper_intro" style="margin-bottom: 8px;">輸入巔峰週里程與減量週數，產生每週降量</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="taper-peak-input" data-i18n="taper_peak">巔峰週里程 (km)</label>
+                    <input type="number" id="taper-peak-input" placeholder="80" min="0" style="width: 8ch;">
+                    <label for="taper-weeks-select" data-i18n="taper_weeks">減量週數</label>
+                    <select id="taper-weeks-select">
+                        <option value="1">1</option>
+                        <option value="2" selected>2</option>
+                        <option value="3">3</option>
+                    </select>
+                </div>
+                <div class="helper-text" data-i18n="taper_schedule_label" style="margin-top: 8px;">每週降量</div>
+                <div id="taper-schedule" class="fuel-timeline" style="width: 100%; margin-top: 4px;"></div>
+                <div class="explain" data-i18n="explain_taper">減量期「降量、不降強度」：1–3 週內把週里程逐步降到巔峰的 40–60%，維持訓練強度與頻率，通常可帶來約 1–3% 的成績提升（Mujika 2010；Bosquet 2007 統合分析）。表格為各週建議里程。</div>
+            </div>
+
+            <!-- Post-race Recovery Protocol -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="rec_title">🛌 賽後恢復協議</span></h3>
+                <div class="helper-text" data-i18n="hint_rec_intro" style="margin-bottom: 8px;">依距離、費力與年齡，估個人化恢復天數</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="rec-dist-select" data-i18n="rec_dist">距離</label>
+                    <select id="rec-dist-select">
+                        <option value="5000">5K</option>
+                        <option value="10000">10K</option>
+                        <option value="21097.5" data-i18n="dist_half">半馬</option>
+                        <option value="42195" selected data-i18n="dist_marathon">全馬</option>
+                    </select>
+                    <label for="rec-effort-select" data-i18n="rec_effort">費力程度</label>
+                    <select id="rec-effort-select">
+                        <option value="easy" data-i18n="rec_effort_easy">輕鬆</option>
+                        <option value="moderate" data-i18n="rec_effort_moderate">中等</option>
+                        <option value="hard" selected data-i18n="rec_effort_hard">辛苦</option>
+                        <option value="allout" data-i18n="rec_effort_allout">全力</option>
+                    </select>
+                    <label for="rec-age-input" data-i18n="rec_age">年齡</label>
+                    <input type="number" id="rec-age-input" placeholder="35" min="10" max="100" style="width: 8ch;">
+                </div>
+                <div class="vdot-grid" style="margin-top: 10px;">
+                    <span class="zone-badge">🟢</span><span data-i18n="rec_easy_label">輕鬆/恢復天數</span><span id="rec-easy" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🔴</span><span data-i18n="rec_beforehard_label">恢復高強度前</span><span id="rec-before-hard" class="mono-text vdot-pace">--</span>
+                </div>
+                <ul id="rec-strategies" class="strategy-list" style="margin-top: 8px;"></ul>
+                <div class="explain" data-i18n="explain_rec">恢復天數隨距離、費力與年齡增加（約 1 天/英里為保守上限）。賽後 24 小時黃金窗：補碳水＋蛋白質、補水、睡眠。策略證據等級：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）對主觀疲勞有益（Mujika 2010；Halson 2013；Ihsan 2016）。</div>
+            </div>
+        </div> <!-- End of tab-environment -->
 
         <div class="tab-pane" id="tab-settings" role="tabpanel" aria-labelledby="tabbtn-settings">
             <div id="settings-panel" class="container" style="margin-top: 10px;" role="region" aria-label="Settings Panel">
@@ -613,10 +991,30 @@
 
                     <label for="settings-gas-url" data-i18n="settings_gas_url">賽事 API (GAS)</label>
                     <input type="text" id="settings-gas-url" placeholder="https://script.google.com/..." style="width: 100%; font-size: 0.8rem; padding: 4px;" aria-label="GAS API URL">
+
+                    <label for="settings-backend-url" data-i18n="settings_backend_url">後端 URL (Worker)</label>
+                    <input type="text" id="settings-backend-url" placeholder="https://....workers.dev" style="width: 100%; font-size: 0.8rem; padding: 4px;" aria-label="Backend URL">
                 </div>
                 <div class="settings-actions">
                     <button id="settings-apply" class="action-btn" data-i18n="btn_apply_settings">套用設定</button>
                     <a href="diagnostics.html" class="diag-link" data-i18n="btn_open_diagnostics">開啟離線診斷</a>
+                </div>
+
+                <div class="box input-group" id="auth-box" style="flex-direction: column; align-items: flex-start; margin-top: 14px;">
+                    <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="auth_title">☁️ 帳號與雲端同步</span></h3>
+                    <div class="helper-text" data-i18n="hint_auth_intro" style="margin-bottom: 8px;">用 Email 魔術連結登入，跨裝置同步工具輸入與偏好</div>
+                    <div id="auth-logged-out" style="width: 100%;">
+                        <div style="display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                            <input type="email" id="auth-email-input" placeholder="you@example.com" autocomplete="email" style="flex: 1; min-width: 180px; padding: 4px;" aria-label="Email">
+                            <button id="auth-login-btn" class="action-btn"><span data-i18n="auth_send_link">寄送登入連結</span></button>
+                        </div>
+                    </div>
+                    <div id="auth-logged-in" style="width: 100%; display: none;">
+                        <span data-i18n="auth_signed_in_as">已登入</span>: <span id="auth-email-display" class="mono-text highlight-text"></span>
+                        <button id="auth-logout-btn" class="action-btn" style="margin-left: 8px;"><span data-i18n="auth_logout">登出</span></button>
+                    </div>
+                    <div id="auth-status" class="helper-text" style="margin-top: 6px;"></div>
+                    <div class="explain" data-i18n="explain_auth">用 Email 收到的魔術連結登入（免密碼）。登入後，各科學/環境工具的輸入與主題/語言偏好會存到你的雲端後端、跨裝置同步；登出即停止同步。需先在上方填入自架的 Worker「後端 URL」。</div>
                 </div>
             </div>
         </div>

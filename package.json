@@ -10,7 +10,7 @@
     "build": "npm run clean && npm run typecheck && node scripts/build.mjs",
     "watch": "tsc --watch",
     "dev": "npm run build && open index.html",
-    "lint": "eslint .",
+    "lint": "eslint . --max-warnings 0",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",

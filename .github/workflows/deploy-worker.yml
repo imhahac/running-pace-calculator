@@ -1,0 +1,46 @@
+name: Deploy Worker
+
+# Deploys the Cloudflare Worker backend (worker/) on push to main when worker
+# files change, or manually. The GitHub Pages site is handled by pipeline.yml.
+
+on:
+  push:
+    branches: ['main']
+    paths:
+      - 'worker/**'
+      - '.github/workflows/deploy-worker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  deploy-worker:
+    name: Test & Deploy Cloudflare Worker
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+
+      # Pure-logic unit tests (no deps) — gate the deploy on them.
+      - name: Worker unit tests
+        run: node --test worker/test/*.test.mjs
+
+      - name: Deploy to Cloudflare
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: worker
+          # Worker secrets (RESEND_API_KEY) persist on the Worker across deploys,
+          # so set them ONCE (dashboard or `wrangler secret put`). To let CI manage
+          # it instead, uncomment below and add RESEND_API_KEY to repo secrets:
+          # secrets: |
+          #   RESEND_API_KEY
+        # env:
+        #   RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}

@@ -41,6 +41,27 @@ test('encode -> decode preserves state, inputs and training fields', () => {
   assert.equal(decoded!.trainingPlanDistance, 42195);
 });
 
+test('encode -> decode preserves science/environment tool inputs', () => {
+  const payload: ISharePayload = {
+    state: { mode: 'pace' },
+    inputs: { pace_input: '5', pace_input2: '00' },
+    toolInputs: {
+      'env-temp-input': '32',
+      'env-humidity-input': '75',
+      'glyco-protocol-select': 'wa'
+    }
+  };
+  const decoded = decodePayload(encodePayload(payload));
+  assert.ok(decoded);
+  assert.deepEqual(decoded!.toolInputs, payload.toolInputs);
+});
+
+test('toolInputs omitted when empty', () => {
+  const decoded = decodePayload(encodePayload({ state: { mode: 'pace' }, inputs: {} }));
+  assert.ok(decoded);
+  assert.equal(decoded!.toolInputs, undefined);
+});
+
 test('decode returns null for malformed input', () => {
   assert.equal(decodePayload('!!!not-valid-base64!!!@@@'), null);
 });

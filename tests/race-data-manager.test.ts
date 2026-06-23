@@ -22,7 +22,7 @@ function createMemoryStorage(initial: Record<string, string> = {}) {
 }
 
 test('fetchRaces ignores corrupted cache and still uses API data', async () => {
-  const w = globalThis as any;
+  const w = globalThis as unknown as Record<string, unknown>;
   const originalFetch = w.fetch;
   const originalLocalStorage = w.localStorage;
   w.localStorage = createMemoryStorage({ pace_calc_race_data_cache: 'not-json' });
@@ -53,7 +53,7 @@ test('fetchRaces ignores corrupted cache and still uses API data', async () => {
 });
 
 test('fetchRaces returns empty list when cache is corrupted and api fails', async () => {
-  const w = globalThis as any;
+  const w = globalThis as unknown as Record<string, unknown>;
   const originalFetch = w.fetch;
   const originalLocalStorage = w.localStorage;
   w.localStorage = createMemoryStorage({ pace_calc_race_data_cache: 'not-json' });

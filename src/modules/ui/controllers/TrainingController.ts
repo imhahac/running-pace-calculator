@@ -30,6 +30,33 @@ export class TrainingController {
     setVal('training-peak-vol', preset.peak);
   }
 
+  /**
+   * Named-school presets (Higdon / Pfitzinger / Daniels) bias the volume profile
+   * by filling the same weeks/start/peak fields, and show the school's approach.
+   * Empty value ("自動") leaves the fields untouched.
+   */
+  static applySchoolPreset(): void {
+    const sel = document.getElementById('training-school') as HTMLSelectElement | null;
+    if (!sel) return;
+    const descEl = document.getElementById('training-school-desc');
+    if (descEl) descEl.textContent = TranslationManager.get(`school_desc_${sel.value || 'none'}`);
+
+    const presets: Record<string, { weeks: number; start: number; peak: number }> = {
+      higdon: { weeks: 18, start: 30, peak: 55 },
+      pfitzinger: { weeks: 18, start: 45, peak: 90 },
+      daniels: { weeks: 18, start: 40, peak: 70 }
+    };
+    const preset = presets[sel.value];
+    if (!preset) return;
+    const setVal = (id: string, v: number): void => {
+      const el = document.getElementById(id) as HTMLInputElement | null;
+      if (el) el.value = String(v);
+    };
+    setVal('training-weeks', preset.weeks);
+    setVal('training-start-vol', preset.start);
+    setVal('training-peak-vol', preset.peak);
+  }
+
   static populateSettingsPanel(): void {
     const state = StateManager.getState();
     const t = TranslationManager.getAll();

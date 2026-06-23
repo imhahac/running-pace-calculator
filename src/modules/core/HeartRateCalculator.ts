@@ -19,9 +19,22 @@ export class HeartRateCalculator {
   /** Estimated maximum heart rate (bpm) for an age. */
   static maxHr(age: number, formula: THrFormula = 'tanaka'): number {
     if (!isFinite(age) || age <= 0) return 0;
-    // Tanaka 2001: 208 − 0.7·age (recommended). Fox/classic: 220 − age.
-    const hr = formula === 'fox' ? 220 - age : 208 - 0.7 * age;
+    // Tanaka 2001: 208 − 0.7·age (recommended). Gellish 2007: 207 − 0.7·age.
+    // Fox/classic: 220 − age.
+    let hr: number;
+    if (formula === 'fox') hr = 220 - age;
+    else if (formula === 'gellish') hr = 207 - 0.7 * age;
+    else hr = 208 - 0.7 * age;
     return Math.round(hr);
+  }
+
+  /** Max-HR from every supported formula, for side-by-side comparison. */
+  static maxHrAll(age: number): Record<THrFormula, number> {
+    return {
+      tanaka: this.maxHr(age, 'tanaka'),
+      gellish: this.maxHr(age, 'gellish'),
+      fox: this.maxHr(age, 'fox')
+    };
   }
 
   /** Uth–Sørensen VO2max estimate from the max/resting HR ratio. */

@@ -3,10 +3,18 @@ import assert from 'node:assert/strict';
 
 import HeartRateCalculator from '../src/modules/core/HeartRateCalculator.js';
 
-test('maxHr: Tanaka and Fox formulas', () => {
+test('maxHr: Tanaka, Gellish and Fox formulas', () => {
   assert.equal(HeartRateCalculator.maxHr(30, 'tanaka'), 187); // 208 - 0.7*30
+  assert.equal(HeartRateCalculator.maxHr(30, 'gellish'), 186); // 207 - 0.7*30
   assert.equal(HeartRateCalculator.maxHr(30, 'fox'), 190); // 220 - 30
   assert.equal(HeartRateCalculator.maxHr(0), 0);
+});
+
+test('maxHrAll returns all three formulas for comparison', () => {
+  const all = HeartRateCalculator.maxHrAll(40);
+  assert.equal(all.tanaka, 180); // 208 - 28
+  assert.equal(all.gellish, 179); // 207 - 28
+  assert.equal(all.fox, 180); // 220 - 40
 });
 
 test('karvonenZones: 5 contiguous zones in bpm', () => {
