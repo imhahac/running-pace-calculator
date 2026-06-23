@@ -7,6 +7,8 @@
 import RunningEconomyCalculator from '../../core/RunningEconomyCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { gauge } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import type { TSex } from '../../core/RunningEconomyCalculator.js';
 
 const BAND_RISK: Record<string, string> = {
@@ -51,7 +53,7 @@ export class RunningEconomyController {
     const vo2 = sec !== null && sec > 0 ? RunningEconomyCalculator.vo2maxFrom5k(sec) : 0;
     set('re-vo2max', vo2 > 0 ? vo2.toFixed(1) : '--');
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const bandKey = RunningEconomyCalculator.bodyFatBand(sex, bf);
     if (bandKey) {
       bandEl.textContent = t[`re_band_${bandKey}`] || bandKey;
@@ -60,12 +62,33 @@ export class RunningEconomyController {
       bandEl.textContent = '--';
       bandEl.className = '';
     }
+
+    renderInsight('re', {
+      ok: vo2 > 0,
+      // VO₂max gauge — higher is fitter; band edges align with VdotCalculator
+      // grade thresholds (recreational 38, intermediate 48).
+      chartHtml: gauge({
+        value: vo2,
+        min: 30,
+        max: 75,
+        valueLabel: `VO₂max ${vo2.toFixed(1)}`,
+        bands: [
+          { upTo: 38, cls: 'bad' },
+          { upTo: 48, cls: 'warn' },
+          { upTo: 75, cls: 'good' }
+        ]
+      }),
+      readoutText: TranslationManager.format('re_readout', {
+        vo2: vo2.toFixed(1),
+        band: bandKey ? t[`re_band_${bandKey}`] || bandKey : '—'
+      })
+    });
   }
 
   private static renderStrategies(): void {
     const el = document.getElementById('re-strategies');
     if (!el) return;
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     el.innerHTML = ['strength', 'plyo', 'bodycomp']
       .map((k) => `<li>${t[`re_strat_${k}`] || k}</li>`)
       .join('');

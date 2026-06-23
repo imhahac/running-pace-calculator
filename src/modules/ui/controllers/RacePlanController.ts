@@ -7,6 +7,8 @@
 import RacePlanBuilder from '../../core/RacePlanBuilder.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { sparkline } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import type { TRaceStrategy } from '../../../types/index';
 
 export class RacePlanController {
@@ -24,7 +26,7 @@ export class RacePlanController {
     const tableEl = document.getElementById('raceplan-table');
     if (!summaryEl || !tableEl) return;
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const distEl = document.getElementById('raceplan-dist-select') as HTMLSelectElement | null;
     const timeEl = document.getElementById('raceplan-time-input') as HTMLInputElement | null;
     const stratEl = document.getElementById('raceplan-strategy-select') as HTMLSelectElement | null;
@@ -34,6 +36,7 @@ export class RacePlanController {
     if (seconds === null || seconds <= 0 || !(distance > 0)) {
       summaryEl.textContent = '';
       tableEl.innerHTML = '';
+      renderInsight('raceplan', { ok: false });
       return;
     }
 
@@ -42,6 +45,7 @@ export class RacePlanController {
     if (plan.rows.length === 0) {
       summaryEl.textContent = '';
       tableEl.innerHTML = '';
+      renderInsight('raceplan', { ok: false });
       return;
     }
 
@@ -63,6 +67,13 @@ export class RacePlanController {
       })
       .join('');
     tableEl.innerHTML = head + body;
+
+    // Per-km pace profile (shape shows the split strategy).
+    const pts = plan.rows.map((r) => r.paceSec);
+    renderInsight('raceplan', {
+      ok: true,
+      chartHtml: pts.length >= 2 ? sparkline({ points: pts }) : ''
+    });
   }
 }
 

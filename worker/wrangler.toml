@@ -4,11 +4,17 @@ compatibility_date = "2024-11-01"
 
 # KV namespace for tokens / sessions / races / user data.
 # Create it once:  npx wrangler kv namespace create KV
-# then paste the returned id below.
+# The id below is a PLACEHOLDER kept for local `wrangler dev` (local mode does
+# not need a real id). In CI the deploy workflow rewrites it from the
+# KV_NAMESPACE_ID repository *variable* — so the real id is never committed.
 [[kv_namespaces]]
 binding = "KV"
 id = "REPLACE_WITH_KV_NAMESPACE_ID"
 
+# These are LOCAL-DEV DEFAULTS only. In production the deploy workflow overrides
+# every one of them with `--var KEY:VALUE` sourced from GitHub repository
+# *Variables* (APP_URL / ALLOWED_ORIGIN / FROM_EMAIL / ADMIN_EMAILS), so real
+# values are not committed here.
 [vars]
 # Public app origin the magic link points back to (no trailing slash needed).
 APP_URL = "https://imhahac.github.io/running-pace-calculator/"
@@ -16,7 +22,7 @@ APP_URL = "https://imhahac.github.io/running-pace-calculator/"
 ALLOWED_ORIGIN = "https://imhahac.github.io"
 # Verified SendGrid Single Sender (or verified-domain) address.
 FROM_EMAIL = "login@example.com"
-# Comma-separated admin emails allowed to PUT /api/races.
+# Comma-separated admin emails allowed to PUT /api/races (no spaces).
 ADMIN_EMAILS = ""
 
 # Daily best-effort race refresh (see scheduled() in src/index.js).

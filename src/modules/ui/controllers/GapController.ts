@@ -58,9 +58,12 @@ export class GapController {
         ? GapCalculator.analyze(points, paceSec)
         : null;
 
+    const readoutEl = document.getElementById('gap-readout');
+
     if (!analysis) {
       OUTPUT_IDS.forEach((id) => set(id, '--'));
       if (profileEl) profileEl.innerHTML = '';
+      if (readoutEl) readoutEl.textContent = '';
       splitsEl.innerHTML = '';
       return;
     }
@@ -69,6 +72,13 @@ export class GapController {
     set('gap-ascent', `+${analysis.totalAscentM} m`);
     set('gap-descent', `-${analysis.totalDescentM} m`);
     set('gap-predicted', `${TimeFormatter.format(analysis.gapPaceSec)}/km`);
+    if (readoutEl) {
+      readoutEl.textContent = TranslationManager.format('gap_readout', {
+        dist: analysis.totalDistKm,
+        ascent: analysis.totalAscentM,
+        pace: `${TimeFormatter.format(analysis.gapPaceSec)}/km`
+      });
+    }
     if (profileEl) profileEl.innerHTML = this.buildProfile(analysis.elevations);
 
     // Optional heart-rate band: Karvonen marathon→threshold (endurance) zone.
@@ -82,7 +92,7 @@ export class GapController {
       isFinite(maxHr) && isFinite(restHr) ? HeartRateCalculator.karvonenZones(maxHr, restHr) : [];
     set('gap-hr-band', zones.length >= 3 ? `${zones[1].loBpm}–${zones[2].hiBpm} bpm` : '--');
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const head = `<div class="fuel-row fuel-head"><span>${t.col_km || 'km'}</span><span>${t.gap_ascent_col || '+m'}</span><span>${t.gap_gf_col || '×'}</span><span>${t.col_pace || ''}</span></div>`;
     let nextFuel = FIRST_FUEL_SEC;
     splitsEl.innerHTML =

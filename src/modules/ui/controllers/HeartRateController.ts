@@ -7,6 +7,8 @@
 
 import HeartRateCalculator from '../../core/HeartRateCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { zoneBar } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import type { THrFormula, TVdotZoneKey } from '../../../types/index';
 
 const ZONE_BADGE: Record<TVdotZoneKey, string> = {
@@ -69,13 +71,14 @@ export class HeartRateController {
       maxEl.textContent = '--';
       vo2El.textContent = '--';
       zonesEl.innerHTML = '';
+      renderInsight('hr', { ok: false });
       return;
     }
 
     maxEl.textContent = String(maxHr);
     vo2El.textContent = HeartRateCalculator.estimateVo2max(maxHr, rest).toFixed(1);
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const zones = HeartRateCalculator.karvonenZones(maxHr, rest);
     zonesEl.innerHTML = zones
       .map((z) => {
@@ -83,6 +86,18 @@ export class HeartRateController {
         return `<span class="zone-badge">${ZONE_BADGE[z.key]}</span><span>${desc}</span><span class="mono-text vdot-pace">${z.loBpm}–${z.hiBpm} bpm</span>`;
       })
       .join('');
+
+    renderInsight('hr', {
+      ok: true,
+      chartHtml: zoneBar(
+        zones.map((z) => ({
+          label: ZONE_BADGE[z.key],
+          value: `${z.loBpm}–${z.hiBpm}`,
+          caption: t[`zone_${z.key}_desc`] || z.key
+        }))
+      ),
+      readoutText: TranslationManager.format('hr_readout', { max: maxHr, rest })
+    });
   }
 }
 

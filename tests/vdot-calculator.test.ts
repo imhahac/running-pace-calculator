@@ -52,3 +52,13 @@ test('equivalentRaceTime is self-consistent and ordered by distance', () => {
   // round-trip: time → vdot → time recovers the same VDOT
   assert.ok(Math.abs(VdotCalculator.vdotFromRace(10000, t10k) - vdot) < 0.2);
 });
+
+test('gradeFor: VDOT bands beginner→elite, monotonic by threshold', () => {
+  assert.equal(VdotCalculator.gradeFor(30), 'beginner');
+  assert.equal(VdotCalculator.gradeFor(37.9), 'beginner');
+  assert.equal(VdotCalculator.gradeFor(38), 'recreational');
+  assert.equal(VdotCalculator.gradeFor(48), 'intermediate');
+  assert.equal(VdotCalculator.gradeFor(58), 'advanced');
+  assert.equal(VdotCalculator.gradeFor(66), 'elite');
+  assert.equal(VdotCalculator.gradeFor(80), 'elite');
+});

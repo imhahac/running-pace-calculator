@@ -40,6 +40,20 @@ export class AltitudeCalculator {
       hoursOk: totalHours >= hoursThreshold
     };
   }
+
+  /**
+   * Illustrative Hb-mass adaptation curve: a per-day ramp from ~0 up to the
+   * final gain, used only for the sparkline. Returns `[]` when there is no gain
+   * or too few days to draw a line. Capped at 30 points.
+   */
+  static adaptationCurve(hbMassGainPct: number, days: number): number[] {
+    if (!(hbMassGainPct > 0) || !(days >= 2)) return [];
+    const n = Math.min(Math.max(Math.round(days), 2), 30);
+    return Array.from(
+      { length: n },
+      (_, i) => Math.round(((hbMassGainPct * (i + 1)) / n) * 100) / 100
+    );
+  }
 }
 
 export default AltitudeCalculator;

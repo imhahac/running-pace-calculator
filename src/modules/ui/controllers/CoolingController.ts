@@ -6,6 +6,8 @@
 
 import CoolingCalculator from '../../core/CoolingCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { gauge } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 
 export class CoolingController {
   static initialize(): void {
@@ -36,16 +38,38 @@ export class CoolingController {
       riskEl.textContent = '--';
       riskEl.className = '';
       strategiesEl.innerHTML = '';
+      renderInsight('cool', { ok: false });
       return;
     }
 
     const p = CoolingCalculator.plan(weight, temp, rh);
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     set('cool-wbgt', `${p.wbgtC}°C`);
     set('cool-slurry', p.iceSlurryG > 0 ? `${p.iceSlurryG} g` : '--');
-    riskEl.textContent = t[`env_risk_${p.risk}`] || p.risk;
+    const riskLabel = t[`env_risk_${p.risk}`] || p.risk;
+    riskEl.textContent = riskLabel;
     riskEl.className = `risk-badge risk-${p.risk}`;
     strategiesEl.innerHTML = p.strategyKeys.map((k) => `<li>${t[`cool_${k}`] || k}</li>`).join('');
+
+    renderInsight('cool', {
+      ok: true,
+      chartHtml: gauge({
+        value: p.wbgtC,
+        min: 10,
+        max: 32,
+        valueLabel: `WBGT ${p.wbgtC}°C`,
+        bands: [
+          { upTo: 18, cls: 'good' },
+          { upTo: 23, cls: 'warn' },
+          { upTo: 32, cls: 'bad' }
+        ]
+      }),
+      readoutText: TranslationManager.format('cool_readout', {
+        wbgt: p.wbgtC,
+        risk: riskLabel,
+        slurry: p.iceSlurryG > 0 ? `${p.iceSlurryG} g` : '—'
+      })
+    });
   }
 }
 

@@ -5,6 +5,8 @@
 
 import GlycogenCalculator from '../../core/GlycogenCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { barSeries } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import type { TGlycogenProtocol } from '../../core/GlycogenCalculator.js';
 
 const PROTOCOLS: TGlycogenProtocol[] = ['modifiedSherman', 'classic', 'wa'];
@@ -37,11 +39,12 @@ export class GlycogenController {
     if (!(weight > 0)) {
       loadEl.textContent = '--';
       schedule.innerHTML = '';
+      renderInsight('glyco', { ok: false });
       return;
     }
 
     const p = GlycogenCalculator.plan(weight, protocol);
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     loadEl.textContent = `${p.loadGperKg} g/kg · ${t.glyco_peak || 'peak'} ${p.peakCarbG} g`;
     schedule.innerHTML = p.days
       .map((d) => {
@@ -50,6 +53,22 @@ export class GlycogenController {
         return `<div class="fuel-row"><span>${dayLabel}</span><span>${d.carbGperKg} g/kg</span><span class="mono-text">${d.carbG} g</span><span>${train}</span></div>`;
       })
       .join('');
+
+    renderInsight('glyco', {
+      ok: true,
+      // Daily carbohydrate staircase up to race day.
+      chartHtml: barSeries(
+        p.days.map((d) => ({
+          label: d.dayOffset === 0 ? t.glyco_raceday || 'Race' : `D${d.dayOffset}`,
+          value: d.carbG,
+          caption: `${d.carbGperKg}`
+        }))
+      ),
+      readoutText: TranslationManager.format('glyco_readout', {
+        load: p.loadGperKg,
+        peak: p.peakCarbG
+      })
+    });
   }
 }
 

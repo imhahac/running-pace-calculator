@@ -23,7 +23,7 @@ export class MethodsController {
     const noteEl = document.getElementById('methods-note');
     if (!resultEl || !noteEl) return;
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const timeEl = document.getElementById('methods-time-input') as HTMLInputElement | null;
     const selEl = document.getElementById('methods-select') as HTMLSelectElement | null;
 

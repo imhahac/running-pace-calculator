@@ -7,6 +7,8 @@
 import SweatRateCalculator from '../../core/SweatRateCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { barSeries } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 
 const INPUT_IDS = [
   'sweat-weight-input',
@@ -53,15 +55,30 @@ export class SweatRateController {
     ) {
       OUTPUT_IDS.forEach((id) => set(id, '--'));
       timeline.innerHTML = '';
+      renderInsight('sweat', { ok: false });
       return;
     }
 
     const p = SweatRateCalculator.plan(weight, paceSec, distKm, temp, rh);
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     set('sweat-rate', `${p.sweatRateLh} L/h`);
     set('sweat-fluidrate', `${p.fluidRateMlh} ml/h`);
     set('sweat-sodiumrate', `${p.sodiumRateMgh} mg/h`);
     set('sweat-carbrate', `${p.carbRateGh} g/h`);
+
+    renderInsight('sweat', {
+      ok: true,
+      // Fluid to take at each station (ml).
+      chartHtml: barSeries(
+        p.stations.map((s) => ({ label: `${s.km}`, value: s.fluidMl, caption: `${s.fluidMl}` }))
+      ),
+      readoutText: TranslationManager.format('sweat_readout', {
+        rate: p.sweatRateLh,
+        fluid: p.fluidRateMlh,
+        sodium: p.sodiumRateMgh,
+        carb: p.carbRateGh
+      })
+    });
 
     const head = `<div class="fuel-row fuel-head"><span>${t.col_km || 'km'}</span><span>💧 ml</span><span>🍬 g</span><span>🧂 mg</span></div>`;
     timeline.innerHTML =

@@ -30,6 +30,16 @@
 //   4) 回應 JSON 的結構：首筆物件中「日期 / 名稱 / 地點 / 連結」對應的欄位名
 // 取得後：marathonsWorld 改 url+payload+referer；runningBiji 把真實 URL 放進
 // candidateUrls（必要時於 fetchJson 加上 headers），並對齊 tryParse* 的欄位對映。
+//
+// ── 回報範本（擷取後把以下填好貼回／交付，即可據此重新對接）──────────────
+//   來源：       [ ] 馬拉松世界   [ ] 運動筆記
+//   請求 URL：   <完整 URL，含 query>
+//   方法：       GET / POST
+//   送出內容：   <POST body 或 query 參數，原樣貼>
+//   必要 headers：Referer / Cookie / X-Requested-With ...（有就附）
+//   回應首筆範例：<貼一筆 JSON 物件，用來對映 日期/名稱/地點/連結 欄位>
+//   ★ 最省事：DevTools 對該請求按右鍵 → Copy → "Copy as cURL"，整段貼回即可。
+// ──────────────────────────────────────────────────────────────────────
 // ===== 可調整設定（來源網站若再改版，改這裡即可）=====
 var CONFIG = {
   marathonsWorld: {

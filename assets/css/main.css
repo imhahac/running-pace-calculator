@@ -1387,6 +1387,111 @@ input.diff {
     to { opacity: 1; transform: translateY(0); }
 }
 
+.app-footer {
+    margin-top: 20px;
+    padding: 14px 12px;
+    text-align: center;
+    font-size: 0.82rem;
+    color: var(--text-muted);
+    border-top: 1px solid var(--border-color);
+    line-height: 1.9;
+}
+
+.app-footer .app-footer-sep {
+    margin: 0 4px;
+    opacity: 0.5;
+}
+
+.app-footer .app-footer-status {
+    margin-left: 6px;
+}
+
+.app-footer .app-footer-status.is-stale {
+    color: var(--highlight);
+    font-weight: 700;
+}
+
+/* ── Collapsible "詳解" (per-tool detailed explanation) ───────────────── */
+.detail-toggle {
+    background: none;
+    border: none;
+    color: var(--highlight);
+    font-size: 0.8rem;
+    font-weight: 600;
+    cursor: pointer;
+    padding: 4px 0;
+    margin-top: 6px;
+}
+.detail-toggle::before { content: "▸ "; }
+.detail-toggle[aria-expanded="true"]::before { content: "▾ "; }
+/* Collapsible via grid-template-rows 0fr→1fr: animates to the panel's natural
+   height with no magic max-height, so arbitrarily long 詳解 panels never clip.
+   The container clips the inner's padding while collapsed; min-height:0 lets
+   the inner shrink below its content height during the transition. Older
+   engines that don't interpolate fr units simply snap (content still shows). */
+.tool-detail {
+    display: grid;
+    grid-template-rows: 0fr;
+    overflow: hidden;
+    transition: grid-template-rows var(--transition-speed) ease;
+}
+.tool-detail.open { grid-template-rows: 1fr; }
+.tool-detail-inner { min-height: 0; overflow: hidden; padding: 4px 0 2px; }
+.tool-detail-inner h4 { margin: 8px 0 2px; font-size: 0.82rem; color: var(--text-light); }
+.tool-detail-inner p { margin: 0 0 4px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.7; }
+
+/* ── Result readout (plain-language interpretation) ───────────────────── */
+.tool-readout { margin-top: 8px; font-size: 0.85rem; line-height: 1.7; color: var(--text-light); }
+.tool-readout:empty { display: none; }
+.tool-chart { width: 100%; margin-top: 10px; }
+.tool-chart:empty { display: none; }
+
+/* ── Zone bar (E/M/T/I/R paces, HR zones) ─────────────────────────────── */
+.zbar { display: flex; gap: 4px; width: 100%; }
+.zbar-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; min-width: 0; }
+.zbar-seg { width: 100%; height: 30px; border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+.zbar-label { color: #fff; font-weight: 700; font-size: 0.85rem; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
+.zbar-val { font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-light); white-space: nowrap; }
+.zbar-cap { font-size: 0.66rem; color: var(--text-muted); text-align: center; }
+
+/* Intensity ramp (blue; legible on both themes) — also reused by phase/bars */
+.z1 { background: rgba(96, 165, 250, 0.32); }
+.z2 { background: rgba(96, 165, 250, 0.48); }
+.z3 { background: rgba(96, 165, 250, 0.64); }
+.z4 { background: rgba(96, 165, 250, 0.82); }
+.z5 { background: rgba(37, 99, 235, 0.95); }
+.z6 { background: rgba(29, 78, 216, 1); }
+
+/* ── Linear gauge (ACWR, WBGT) ────────────────────────────────────────── */
+.gauge { width: 100%; }
+.gauge-track { position: relative; display: flex; height: 12px; border-radius: 6px; overflow: hidden; border: 1px solid var(--border-color); }
+.gauge-band { height: 100%; }
+.gauge-good { background: var(--success); }
+.gauge-warn { background: var(--warning); }
+.gauge-bad { background: var(--error); }
+.gauge-pointer { position: absolute; top: -3px; width: 2px; height: 18px; background: var(--text-light); transform: translateX(-1px); }
+.gauge-readout { position: relative; height: 1.1rem; margin-top: 3px; }
+.gauge-label { position: absolute; transform: translateX(-50%); font-family: var(--font-mono); font-size: 0.8rem; font-weight: 700; color: var(--text-light); white-space: nowrap; }
+
+/* ── Phase strip (periodisation, taper, recovery milestones) ──────────── */
+.phase-strip { display: flex; gap: 3px; width: 100%; }
+.phase-seg { min-width: 0; padding: 6px 4px; border-radius: 6px; display: flex; flex-direction: column; align-items: center; gap: 2px; overflow: hidden; }
+.phase-label { color: #fff; font-weight: 700; font-size: 0.72rem; white-space: nowrap; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.45); }
+.phase-cap { color: rgba(255, 255, 255, 0.88); font-size: 0.66rem; white-space: nowrap; }
+
+/* ── Vertical bar series (strides, glycogen staircase, taper decay) ───── */
+.bars { display: flex; align-items: flex-end; gap: 6px; width: 100%; }
+.bars-col { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 3px; min-width: 0; }
+.bars-track { width: 100%; height: 64px; display: flex; align-items: flex-end; }
+.bars-fill { width: 100%; border-radius: 4px 4px 0 0; }
+.bars-label { font-size: 0.7rem; color: var(--text-muted); white-space: nowrap; }
+.bars-cap { font-family: var(--font-mono); font-size: 0.68rem; color: var(--text-light); }
+
+/* ── Sparkline (HRV trend, altitude adaptation) ───────────────────────── */
+.spark-svg { width: 100%; height: 64px; background: var(--option-bg); border-radius: 6px; }
+.spark-band { fill: var(--highlight-glow); }
+.spark-last { fill: var(--highlight); stroke: #fff; stroke-width: 1; }
+
 @media (max-width: 480px) {
     /* 2x2 tab grid so all four tabs stay visible without horizontal scroll */
     .tab-bar {

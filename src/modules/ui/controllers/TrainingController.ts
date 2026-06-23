@@ -59,7 +59,7 @@ export class TrainingController {
 
   static populateSettingsPanel(): void {
     const state = StateManager.getState();
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
 
     const langSelect = document.getElementById('settings-lang') as HTMLSelectElement | null;
     const paceUnitSelect = document.getElementById(

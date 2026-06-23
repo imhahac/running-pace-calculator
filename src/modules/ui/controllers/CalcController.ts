@@ -18,6 +18,8 @@ import TimeFormatter from '../../core/TimeFormatter.js';
 import Converter from '../../core/Converter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import AnalyticsManager from '../AnalyticsManager.js';
+import { zoneBar } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import InputStore from './InputStore.js';
 import ModeController from './ModeController.js';
 import TrainingController from './TrainingController.js';
@@ -237,21 +239,40 @@ export class CalcController {
     }
   }
 
+  /** Re-render the training-pace zones (used on language change). */
+  static refreshZones(): void {
+    this.updateZones(InputStore.getLastPace());
+  }
+
   private static updateZones(paceSecondsPerKm: number): void {
-    if (!paceSecondsPerKm || paceSecondsPerKm <= 0) return;
+    if (!paceSecondsPerKm || paceSecondsPerKm <= 0) {
+      renderInsight('zones', { ok: false });
+      return;
+    }
 
     const ref = paceSecondsPerKm;
     const z = this.dom.displays.zones;
+    const fmt = (s: number): string => TimeFormatter.format(s);
+    const range = (lo: number, hi: number): string => `${fmt(lo)} - ${fmt(hi)}`;
 
-    if (z.e)
-      z.e.textContent = `${TimeFormatter.format(ref + 60)} - ${TimeFormatter.format(ref + 90)}`;
-    if (z.m)
-      z.m.textContent = `${TimeFormatter.format(ref + 25)} - ${TimeFormatter.format(ref + 45)}`;
-    if (z.t)
-      z.t.textContent = `${TimeFormatter.format(ref + 10)} - ${TimeFormatter.format(ref + 20)}`;
-    if (z.i) z.i.textContent = `${TimeFormatter.format(ref - 10)} - ${TimeFormatter.format(ref)}`;
-    if (z.r)
-      z.r.textContent = `${TimeFormatter.format(ref - 20)} - ${TimeFormatter.format(ref - 10)}`;
+    if (z.e) z.e.textContent = range(ref + 60, ref + 90);
+    if (z.m) z.m.textContent = range(ref + 25, ref + 45);
+    if (z.t) z.t.textContent = range(ref + 10, ref + 20);
+    if (z.i) z.i.textContent = range(ref - 10, ref);
+    if (z.r) z.r.textContent = range(ref - 20, ref - 10);
+
+    const t = (k: string): string => TranslationManager.get(k);
+    renderInsight('zones', {
+      ok: true,
+      chartHtml: zoneBar([
+        { label: 'E', value: `${fmt(ref + 60)}+`, caption: t('zone_easy_desc') },
+        { label: 'M', value: fmt(ref + 35), caption: t('zone_marathon_desc') },
+        { label: 'T', value: fmt(ref + 15), caption: t('zone_threshold_desc') },
+        { label: 'I', value: fmt(ref - 5), caption: t('zone_interval_desc') },
+        { label: 'R', value: fmt(ref - 15), caption: t('zone_repetition_desc') }
+      ]),
+      readoutText: t('zones_readout')
+    });
   }
 
   private static updateRoadSplits(secondsPerLap: number): void {
@@ -260,7 +281,7 @@ export class CalcController {
     if (!roadContainer) return;
 
     roadContainer.innerHTML = '';
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
 
     const splits = Calculator.generateRoadSplits(secondsPerLap, state.lane);
 
@@ -334,7 +355,7 @@ export class CalcController {
     const feedback = document.getElementById('finish-time-feedback');
     if (!feedback) return;
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const expectedLongFormat = StateManager.getDistance() >= HALF_MARATHON_METERS;
     const hint = expectedLongFormat
       ? t.finish_hint_long || '半馬/全馬建議格式 h:mm:ss，例如 3:30:00'

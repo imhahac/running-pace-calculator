@@ -6,6 +6,8 @@
 
 import AltitudeCalculator from '../../core/AltitudeCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { sparkline } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import type { TAltProtocol } from '../../core/AltitudeCalculator.js';
 
 const PROTOCOLS: TAltProtocol[] = ['LHTL', 'LHTH', 'IHE'];
@@ -45,17 +47,31 @@ export class AltitudeController {
       OUTPUT_IDS.forEach((id) => set(id, '--'));
       statusEl.textContent = '--';
       statusEl.className = '';
+      renderInsight('alt', { ok: false });
       return;
     }
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     set('alt-hours', `${r.totalHours} h`);
     set('alt-hbmass', `+${r.hbMassGainPct}%`);
     set('alt-vo2', `+${r.vo2GainPct}%`);
 
     const statusKey = !r.altitudeOk ? 'lowalt' : !r.hoursOk ? 'lowhours' : 'good';
-    statusEl.textContent = t[`alt_status_${statusKey}`] || statusKey;
+    const statusLabel = t[`alt_status_${statusKey}`] || statusKey;
+    statusEl.textContent = statusLabel;
     statusEl.className = `risk-badge risk-${statusKey === 'good' ? 'low' : 'moderate'}`;
+
+    // Hb-mass adaptation curve: gain accrues with cumulative exposure (days).
+    const curve = AltitudeCalculator.adaptationCurve(r.hbMassGainPct, days);
+    renderInsight('alt', {
+      ok: true,
+      chartHtml: curve.length >= 2 ? sparkline({ points: curve }) : '',
+      readoutText: TranslationManager.format('alt_readout', {
+        hb: r.hbMassGainPct,
+        vo2: r.vo2GainPct,
+        status: statusLabel
+      })
+    });
   }
 }
 

@@ -33,3 +33,13 @@ test('rejects invalid input', () => {
   assert.equal(AltitudeCalculator.analyze(0, 21, 16), null);
   assert.equal(AltitudeCalculator.analyze(2200, 0, 16), null);
 });
+
+test('adaptationCurve: rising ramp to final gain, capped at 30, empty when no gain/<2 days', () => {
+  assert.deepEqual(AltitudeCalculator.adaptationCurve(0, 21), []);
+  assert.deepEqual(AltitudeCalculator.adaptationCurve(3, 1), []);
+  const c = AltitudeCalculator.adaptationCurve(3, 21);
+  assert.equal(c.length, 21);
+  assert.ok(c[0] < c[c.length - 1], 'rising');
+  assert.ok(Math.abs(c[c.length - 1] - 3) < 0.01, 'reaches final gain');
+  assert.equal(AltitudeCalculator.adaptationCurve(5, 100).length, 30, 'capped at 30 points');
+});

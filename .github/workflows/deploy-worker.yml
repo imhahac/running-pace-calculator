@@ -1,10 +1,14 @@
 name: Deploy Worker
 
 # Validates the Cloudflare Worker backend (worker/) on every push to main that
-# touches worker files, and deploys it ONCE the Worker is fully configured
-# (real KV id in wrangler.toml + CLOUDFLARE_API_TOKEN/ACCOUNT_ID secrets).
-# Until then it validates the code and skips the deploy with a notice instead
-# of failing the build. The GitHub Pages site is handled by pipeline.yml.
+# touches worker files, and deploys it ONCE the Worker is fully configured.
+# ALL config comes from GitHub (nothing real is committed):
+#   Repository *Variables*: KV_NAMESPACE_ID, APP_URL, ALLOWED_ORIGIN,
+#                           FROM_EMAIL, ADMIN_EMAILS
+#   Repository *Secrets*:   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
+#                           SENDGRID_API_KEY
+# Until those are set it validates the code and skips the deploy with a notice
+# instead of failing the build. The GitHub Pages site is handled by pipeline.yml.
 
 on:
   push:
@@ -44,37 +48,64 @@ jobs:
         working-directory: worker
         run: npx --yes wrangler@${{ env.WRANGLER_VERSION }} deploy --dry-run
 
-      # Decide whether a real deploy can run. Missing setup is a skip, not a
+      # Decide whether a real deploy can run. Missing config is a skip, not a
       # failure — so pushing Worker code never breaks CI before it's configured.
       - name: Check deploy readiness
         id: ready
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SENDGRID: ${{ secrets.SENDGRID_API_KEY }}
+          KV_ID: ${{ vars.KV_NAMESPACE_ID }}
         run: |
           ready=true
-          if grep -q 'REPLACE_WITH_KV_NAMESPACE_ID' worker/wrangler.toml; then
-            echo "::warning::Skipping deploy — worker/wrangler.toml still has the placeholder KV id. Run 'cd worker && npx wrangler kv namespace create KV' and paste the returned id into wrangler.toml."
+          if [ -z "$KV_ID" ]; then
+            echo "::warning::Skipping deploy — set the KV_NAMESPACE_ID repository *variable* (create the namespace with 'cd worker && npx wrangler kv namespace create KV')."
             ready=false
           fi
           if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then
-            echo "::warning::Skipping deploy — set the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets to enable automatic deploys."
+            echo "::warning::Skipping deploy — set the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets."
+            ready=false
+          fi
+          if [ -z "$SENDGRID" ]; then
+            echo "::warning::Skipping deploy — set the SENDGRID_API_KEY repository secret (magic-link email)."
             ready=false
           fi
           echo "ready=$ready" >> "$GITHUB_OUTPUT"
 
-      - name: Deploy to Cloudflare
+      # Inject the KV namespace id from the repository variable — the committed
+      # wrangler.toml only carries a placeholder, so the real id is never in git.
+      # Pass via env (not direct interpolation) and verify the substitution took.
+      - name: Inject KV namespace id
         if: steps.ready.outputs.ready == 'true'
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          workingDirectory: worker
-          wranglerVersion: ${{ env.WRANGLER_VERSION }}
-          # Worker secrets (SENDGRID_API_KEY) persist on the Worker across deploys,
-          # so set them ONCE (dashboard or `wrangler secret put`). To let CI manage
-          # it instead, uncomment below and add SENDGRID_API_KEY to repo secrets:
-          # secrets: |
-          #   SENDGRID_API_KEY
-        # env:
-        #   SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+        env:
+          KV_ID: ${{ vars.KV_NAMESPACE_ID }}
+        run: |
+          sed -i "s|REPLACE_WITH_KV_NAMESPACE_ID|${KV_ID}|" worker/wrangler.toml
+          grep -q "$KV_ID" worker/wrangler.toml || {
+            echo "::error::KV namespace id injection failed (check KV_NAMESPACE_ID variable)."
+            exit 1
+          }
+
+      # Deploy, then set the runtime secret. Order matters: `secret put` targets
+      # an EXISTING Worker, so the deploy (create/update) must run first. Vars
+      # come from repo Variables via --var; the SendGrid key from a repo Secret
+      # piped via stdin (never written to disk).
+      - name: Deploy Worker + set secret
+        if: steps.ready.outputs.ready == 'true'
+        working-directory: worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          SENDGRID_API_KEY: ${{ secrets.SENDGRID_API_KEY }}
+          APP_URL: ${{ vars.APP_URL }}
+          ALLOWED_ORIGIN: ${{ vars.ALLOWED_ORIGIN }}
+          FROM_EMAIL: ${{ vars.FROM_EMAIL }}
+          ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
+        run: |
+          npx --yes wrangler@"$WRANGLER_VERSION" deploy \
+            --var APP_URL:"$APP_URL" \
+            --var ALLOWED_ORIGIN:"$ALLOWED_ORIGIN" \
+            --var FROM_EMAIL:"$FROM_EMAIL" \
+            --var ADMIN_EMAILS:"$ADMIN_EMAILS"
+          printf '%s' "$SENDGRID_API_KEY" | npx --yes wrangler@"$WRANGLER_VERSION" secret put SENDGRID_API_KEY

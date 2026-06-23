@@ -8,6 +8,8 @@
 import EnvironmentalPaceCalculator from '../../core/EnvironmentalPaceCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { gauge } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 
 const OUTPUT_IDS = [
   'env-dewpoint',
@@ -47,18 +49,42 @@ export class EnvironmentalController {
     if (!isFinite(temp) || !isFinite(rh) || baseSec === null || baseSec <= 0) {
       OUTPUT_IDS.forEach((id) => set(id, '--'));
       riskEl.className = '';
+      renderInsight('env', { ok: false });
       return;
     }
 
     const r = EnvironmentalPaceCalculator.adjust(baseSec, temp, rh, grade);
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     set('env-dewpoint', `${r.dewPointC}°C`);
     set('env-wbgt', `${r.wbgtC}°C`);
     set('env-heat-pct', `+${r.heatPct}%`);
     set('env-grade-factor', `×${r.gradeFactor}`);
     set('env-adjusted-pace', `${TimeFormatter.format(r.adjustedPaceSec)}/km`);
-    riskEl.textContent = t[`env_risk_${r.risk}`] || r.risk;
+    const riskLabel = t[`env_risk_${r.risk}`] || r.risk;
+    riskEl.textContent = riskLabel;
     riskEl.className = `risk-badge risk-${r.risk}`;
+
+    renderInsight('env', {
+      ok: true,
+      // Heat-stress gauge keyed to the shade-WBGT bands (<18 / 18–23 / 23+).
+      chartHtml: gauge({
+        value: r.wbgtC,
+        min: 10,
+        max: 32,
+        valueLabel: `WBGT ${r.wbgtC}°C`,
+        bands: [
+          { upTo: 18, cls: 'good' },
+          { upTo: 23, cls: 'warn' },
+          { upTo: 32, cls: 'bad' }
+        ]
+      }),
+      readoutText: TranslationManager.format('env_readout', {
+        wbgt: r.wbgtC,
+        risk: riskLabel,
+        pct: r.heatPct,
+        pace: `${TimeFormatter.format(r.adjustedPaceSec)}/km`
+      })
+    });
   }
 }
 

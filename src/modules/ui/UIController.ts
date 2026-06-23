@@ -45,6 +45,7 @@ import HrvController from './controllers/HrvController.js';
 import MenstrualController from './controllers/MenstrualController.js';
 import AltitudeController from './controllers/AltitudeController.js';
 import SyncController from './controllers/SyncController.js';
+import VersionController from './controllers/VersionController.js';
 import type { TMode } from '../../types/index';
 
 export class UIController {
@@ -88,14 +89,14 @@ export class UIController {
     ModeController.updateModeCardAccessibility();
     TrainingController.populateSettingsPanel();
     TrainingController.applySchoolPreset();
+    // Restore persisted tool inputs BEFORE any controller computes, so every
+    // tool's first render reflects saved values (not just the later ones).
+    FormPersistence.restore(TOOL_INPUT_IDS);
     VdotController.initialize();
     HeartRateController.initialize();
     IntervalController.initialize();
     RacePlanController.initialize();
     MethodsController.initialize();
-    // Restore persisted tool inputs before the new controllers compute, so their
-    // first render reflects saved values.
-    FormPersistence.restore(TOOL_INPUT_IDS);
     CadenceController.initialize();
     StridesController.initialize();
     AcwrController.initialize();
@@ -126,6 +127,7 @@ export class UIController {
     RaceController.fetchAndPopulateRaces();
 
     void SyncController.initialize();
+    VersionController.initialize();
   }
 
   /** Bind all event listeners. */
@@ -287,6 +289,17 @@ export class UIController {
     if (openReportBtn)
       openReportBtn.addEventListener('click', () => ShareController.openTrainingReportPage());
 
+    // Collapsible "詳解" (one delegated listener for every .detail-toggle). Each
+    // toggle controls the .tool-detail referenced by its aria-controls id.
+    document.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>('.detail-toggle');
+      if (!btn) return;
+      const panel = document.getElementById(btn.getAttribute('aria-controls') || '');
+      if (!panel) return;
+      const open = panel.classList.toggle('open');
+      btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+    });
+
     // Triathlon bindings
     TriathlonController.initBindings();
 
@@ -416,7 +429,7 @@ export class UIController {
 
   /** Copy a textual summary of the results to the clipboard. */
   private static copyResults(): void {
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const state = StateManager.getState();
 
     const paceText = `${this.dom.inputs.paceMin?.value}:${this.dom.inputs.paceSec?.value}/${state.paceUnit}`;

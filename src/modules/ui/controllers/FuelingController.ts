@@ -7,6 +7,8 @@
 import FuelingCalculator from '../../core/FuelingCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { barSeries } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 
 const OUTPUT_IDS = ['fuel-kcal', 'fuel-carbrate', 'fuel-fluidrate', 'fuel-totalcarb'];
 
@@ -38,15 +40,30 @@ export class FuelingController {
     if (!(weight > 0) || !(distM > 0) || finishSec === null || finishSec <= 0) {
       OUTPUT_IDS.forEach((id) => set(id, '--'));
       timeline.innerHTML = '';
+      renderInsight('fuel', { ok: false });
       return;
     }
 
     const p = FuelingCalculator.plan(distM / 1000, finishSec, weight);
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     set('fuel-kcal', `${p.totalKcal} kcal`);
     set('fuel-carbrate', `${p.carbRateGh} g/h`);
     set('fuel-fluidrate', `${p.fluidRateMlh} ml/h`);
     set('fuel-totalcarb', `${p.totalCarbG} g`);
+
+    renderInsight('fuel', {
+      ok: true,
+      // Carbs taken at each station — shows the cumulative fueling demand.
+      chartHtml: barSeries(
+        p.stations.map((s) => ({ label: `${s.km}`, value: s.carbG, caption: `${s.carbG}g` }))
+      ),
+      readoutText: TranslationManager.format('fuel_readout', {
+        kcal: p.totalKcal,
+        carb: p.carbRateGh,
+        fluid: p.fluidRateMlh,
+        total: p.totalCarbG
+      })
+    });
 
     const head = `<div class="fuel-row fuel-head"><span>${t.col_km || 'km'}</span><span>${t.col_time || ''}</span><span>💧 ml</span><span>🍬 g</span></div>`;
     timeline.innerHTML =

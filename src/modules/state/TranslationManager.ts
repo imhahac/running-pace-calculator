@@ -33,6 +33,18 @@ export class TranslationManager {
   }
 
   /**
+   * Get a translation and interpolate {name} placeholders with the given values.
+   * Used to build plain-language result readouts (e.g. "你的 VDOT {v}…").
+   */
+  static format(key: string, vars: Record<string, string | number>): string {
+    let s = this.get(key);
+    for (const name of Object.keys(vars)) {
+      s = s.split(`{${name}}`).join(String(vars[name]));
+    }
+    return s;
+  }
+
+  /**
    * Get current language
    */
   static getCurrentLanguage(): TLanguage {
@@ -76,6 +88,16 @@ export class TranslationManager {
    */
   static getAll(): Record<string, string> {
     return { ...TRANSLATIONS[StateManager.getLanguage()] };
+  }
+
+  /**
+   * Get the live translation dictionary for the current language WITHOUT copying.
+   * Read-only hot-path accessor for per-keystroke `calculate()` render paths: it
+   * skips the full-dictionary spread that `getAll()` performs. The returned object
+   * is shared state and MUST NOT be mutated — call `getAll()` for an owned copy.
+   */
+  static getDict(): Readonly<Record<string, string>> {
+    return TRANSLATIONS[StateManager.getLanguage()];
   }
 
   /**

@@ -173,9 +173,16 @@ export const TRANSLATIONS: ITranslations = {
     hint_settings_intro: '調整語言、單位、預設場地與賽事 API',
     info_time_format:
       '時間格式：m:ss（分:秒）或 h:mm:ss（時:分:秒）。任一欄位輸入即時換算，點上方分頁切換功能。',
+    tab_pace: '配速與分析',
+    tab_triathlon: '鐵人三項',
+    tab_training: '課表與賽事',
     tab_assessment: '科學評估',
     tab_workout: '課表設計',
     tab_monitoring: '監控與適應',
+    tab_settings: '系統設定',
+    footer_tagline: '🏃 RunningPaceNote · 為跑者用 ❤️ 打造',
+    version_latest: '✓ 已是最新版',
+    version_update: '● 有新版，點此更新',
     vdot_title: '📊 VDOT 訓練配速',
     hint_vdot_intro: '輸入近期賽事成績，算出 VDOT 與 E/M/T/I/R 訓練配速',
     zone_easy_desc: '有氧基礎',
@@ -266,8 +273,101 @@ export const TRANSLATIONS: ITranslations = {
       '分段表是配速檢查點：田徑場顯示每段所需時間；路跑每 2.5k 顯示累積時間，方便對錶與補給。',
     explain_zones:
       'E 輕鬆跑（打底/恢復）、M 馬拉松配速、T 乳酸閾值（可維持 20–40 分）、I VO₂max 間歇（3–5 分）、R 重複跑（速度與跑姿）。單次質量課表別超過週里程約 8–10%。',
+    zones_readout:
+      '採 80/20：約 8 成里程放在 E 輕鬆跑，2 成做 T/I/R 質量；輕鬆跑「真的要慢」，質量課表才有品質。更精準請用 VDOT 分頁。',
+    detail_zones_principle:
+      '不同配速刺激不同生理系統：慢跑強化有氧基礎與恢復，閾值提升乳酸耐受，間歇逼近 VO₂max。把訓練分成幾個強度區，才能「該慢的慢、該快的快」，避免全部都跑成中等強度。',
+    detail_zones_how:
+      '這些區間由你目前的配速推估（更精準可改用 VDOT 分頁）。多數里程放在 E；T/I/R 等質量課表合計約佔週里程 8–10%。採 80/20：約 8 成輕鬆、2 成高強度。',
+    detail_zones_stages:
+      'E 有氧打底／恢復（量最多、可對話）；M 馬拉松特定配速；T 乳酸閾值（可維持約 20–40 分）；I VO₂max 間歇（3–5 分反覆）；R 重複跑（短而快，練速度與跑姿）。',
+    detail_zones_note:
+      '由單一配速線性推估，僅供方向參考；正式課表建議以近期成績的 VDOT 為準。輕鬆跑「真的要慢」——多數人 E 跑太快，反而累積疲勞、擠壓質量課表品質。',
     explain_predict:
       '以一個近期成績用 Riegel 公式（時間 × 距離比^1.06）推估其他距離；參考距離與目標距離越接近越準。',
+    pred_readout:
+      '參考距離與目標越接近越準；距離跨越越大（尤其推全馬）通常偏樂觀，請當「理想上限」看待。',
+    detail_pred_principle:
+      'Riegel 公式 T2＝T1×(D2/D1)^1.06：在體能固定下，時間隨距離以次冪成長；指數 1.06 反映長距離的「耐力衰減」。',
+    detail_pred_how:
+      '輸入一筆近期、盡力的成績（參考距離與目標越接近越準）。看四個距離的預估時間，據此設定目標與配速。',
+    detail_pred_stages:
+      '5K↔10K 互推最準；推半馬尚可；推全馬偏樂觀（耐力、補給、肌耐力另外決定），宜當上限參考。',
+    detail_pred_note:
+      '假設你的訓練量足以支撐該距離；長距離若里程不足會明顯慢於預估。當天狀態、賽道、天氣都會影響。',
+    tri_seg_swim: '游泳',
+    tri_seg_bike: '自行車',
+    tri_seg_run: '跑步',
+    tri_readout:
+      '總時間 {total}；游 {swim}、騎 {bike}、跑 {run}。把訓練重點放在佔比高且可進步的段落。',
+    detail_tri_principle:
+      '鐵人成績是三項加兩次轉換的總和；配速分配與轉換效率都影響總時間。下方依各段時間佔比視覺化，幫你看出時間花在哪。',
+    detail_tri_how:
+      '選距離，輸入目標總時間自動反推各段；或直接填各段配速得到總時間。把訓練重點放在耗時最多、最易進步的項目（多為自行車與跑步）。',
+    detail_tri_stages:
+      '游泳（定位、節省力氣）→T1→自行車（最長、補給主場）→T2→跑步（疲勞下維持）。轉換雖短，慌亂與失誤易失分，值得演練。',
+    detail_tri_note:
+      '反推假設典型分配比例，個人強弱項差異大，務必依自身三項能力調整。長距離鐵人自行車若太猛，跑步會崩。',
+    detail_raceplan_principle:
+      '把目標完賽時間依策略分配到每公里。負分段（後半略快）通常成績與體感最佳；均速穩定；正分段（前快後掉）風險最高。下方曲線為每公里配速。',
+    detail_raceplan_how:
+      '選距離、輸入目標時間與策略，得到每公里配速與累積時間。比照曲線控速，起步務必克制，別被現場氣氛帶快。',
+    detail_raceplan_stages:
+      '起步（別衝）→中段（進入節奏、規律補給）→全馬約 30k 易撞牆→收尾（行有餘力再加速）。',
+    detail_raceplan_note:
+      '配速只是計畫，需與體感、心率、天氣動態調整；高溫或丘陵請改用「環境配速」與「GAP」修正預期。',
+    gap_readout:
+      '總距離 {dist} km、爬升 +{ascent} m；在你的平路努力下預估完賽配速約 {pace}。陡坡保留體力、約每 30 分補給。',
+    detail_gap_principle:
+      '用 haversine 算距離、逐段坡度套用 Minetti（2002）能量成本，把「平路配速的努力」換算成各段實際配速：上坡變慢、下坡略快但有限。',
+    detail_gap_how:
+      '上傳賽道 GPX、填平路目標配速（可填心率）。看高程圖與每公里修正配速，在陡坡保留體力、依時間軸補給。',
+    detail_gap_stages:
+      '上坡（降速、縮步，以努力／心率為準）→頂點（別急著追）→下坡（放鬆但控制、別過度衝擊）→補給（約 45 分起、每 30 分）。',
+    detail_gap_note:
+      '海拔資料常有雜訊，數字僅供策略參考；實際受風、路面、疲勞影響。下坡省的時間通常少於上坡損失，淨爬升越多越慢。',
+    re_readout:
+      '估計 VO₂max {vo2}、體脂級距 {band}。先練肌力與增強式改善經濟性，體組成在健康範圍內微調。',
+    detail_re_principle:
+      '由 5K 成績以 Daniels 引擎推估 VO₂max。跑步經濟性指「同樣速度更省氧」，與 VO₂max、乳酸閾值並列耐力三支柱；體組成影響功率體重比。',
+    detail_re_how:
+      '輸入 5K 成績、生理性別與體脂率。看 VO₂max 與體脂級距，再依下方三層策略安排訓練：肌力、增強式、體組成。',
+    detail_re_stages:
+      '① 肌力訓練（重訓改善 RE 約 2–8%，Beattie 2017）② 增強式（跳躍／彈振強化肌腱剛性）③ 體組成（健康範圍內優化功率體重比）。',
+    detail_re_note:
+      'VO₂max 為由成績推估非實測；體脂級距採 ACE 標準、個體差異大。減重勿過度，過低體脂反而傷害表現與健康。',
+    detail_interval_principle:
+      '間歇＝高強度區間與恢復交替，以最少時間累積最多目標強度刺激。I 練 VO₂max、T 練乳酸閾值、R 練速度與跑姿。',
+    detail_interval_how:
+      '先在「VDOT」或上方填好成績取得配速，輸入週里程與類型。系統把單次質量里程限制在 min(10km, 週量 8%) 內；課表＝暖身＋主課表＋緩和。',
+    detail_interval_stages:
+      '暖身（漸進、帶幾趟 strides）→主課表（按配速與恢復反覆）→緩和（輕鬆跑收操）。恢復別偷跑太快，品質重於數量。',
+    detail_interval_note:
+      '質量課表每週至多 2–3 次、與輕鬆日交替；配速以能完成全部反覆為準，跑崩代表設太快。傷痛或大疲勞先跳過。',
+    detail_methods_principle:
+      '名師訓練法是把訓練原理打包成可操作的關鍵課表。各法側重不同：成績預測、VO₂max、累積疲勞、嚴格控速的雙閾值。',
+    detail_methods_how:
+      '輸入目標全馬時間，選一種方法看關鍵課表與配速。挑一個與你目標與可投入時間相符的長期執行，別每週亂換。',
+    detail_methods_stages:
+      'Yasso 800（以 800m 反覆預估全馬）、挪威 4×4（4×4 分鐘 VO₂max）、Hansons（累積疲勞、長跑不過量）、挪威雙閾值（同日兩次閾值、嚴格控速）。',
+    detail_methods_note:
+      '這些是「關鍵課表」非完整週計畫，需嵌入有輕鬆跑與長跑的週期。雙閾值對業餘者的強度控管要求高，務必循序漸進。',
+    detail_strides_principle:
+      'Strides 是約 15–30 秒「可控的快」（非衝刺），組間完全恢復。在低疲勞下改善神經肌肉協調與跑步經濟性（Daniels & Gilbert 1979；Blagrove 2018）。',
+    detail_strides_how:
+      '選進度週看當週課表；一週插入 2–3 次（輕鬆跑後或質量課表前）。加速段要放鬆、由慢漸快、不衝線，恢復走或慢跑到完全回復。',
+    detail_strides_stages:
+      '由 4×15s 漸增到 8×30s（下方長條為各週總時長）。先建立頻率與技術，再逐步加趟數與時長。',
+    detail_strides_note:
+      '強度是「快但放鬆」非全力衝刺；場地平整、避免在疲勞下硬做。傷痛初期或恢復期可降量。',
+    detail_cadence_principle:
+      '合理步頻隨速度變化、因人而異（180 SPM 是迷思）。提高步頻 5–10% 可縮短跨步、降低膝與跟腱的單步衝擊（Heiderscheit 2011）。',
+    detail_cadence_how:
+      '輸入配速（可填目前步頻）。看建議區間與 +5%/+10% 目標；若步幅過大（步頻偏低）代表過度跨步，可循序提頻。下方儀表顯示你目前步頻落在建議帶的位置。',
+    detail_cadence_stages:
+      '漸進提頻：每 2–4 週 +5%，用節拍器或音樂輔助；先在輕鬆跑練熟，再帶入質量課表。',
+    detail_cadence_note:
+      '步頻非越高越好，過高反增能耗；以「落地在重心下方、不過度跨步」為原則。改變跑姿循序漸進，避免代償受傷。',
     explain_triathlon:
       '輸入目標總時間會依賽事類型自動反推游/騎/跑分段配速；也可直接填各段配速得到總時間。T1/T2 為轉換區時間。',
     explain_training_cycle:
@@ -278,8 +378,38 @@ export const TRANSLATIONS: ITranslations = {
       '策略：平均（穩定）；負分段（後半加速，通常成績較佳）；正分段（前快後掉，較不建議）。表格為每公里目標配速與累積時間。提醒：起步勿過快、約 30k 易撞牆、依表補給。',
     explain_vdot:
       'VDOT 是由近期成績推估的「有效 VO₂max」，數字越大代表體能越好。下方 E/M/T/I/R 是對應訓練配速，等效成績是相同體能下各距離的預估成績。',
+    btn_detail: '詳解',
+    detail_h_principle: '原理',
+    detail_h_how: '怎麼用',
+    detail_h_stages: '階段',
+    detail_h_note: '注意',
+    vdot_grade_beginner: '入門',
+    vdot_grade_recreational: '休閒跑者',
+    vdot_grade_intermediate: '進階',
+    vdot_grade_advanced: '高階',
+    vdot_grade_elite: '菁英',
+    vdot_readout:
+      '你的 VDOT {v}（{grade}）。先把輕鬆量堆起來，再加質量：E 打底、T 練閾值、I 練 VO₂max。',
+    detail_vdot_principle:
+      'VDOT 由近期賽事成績反推「有效 VO₂max」，整合配速與可維持時間，是把體能換算成個人化訓練配速的單一指標（Daniels–Gilbert 公式）。',
+    detail_vdot_how:
+      '輸入一筆近期、盡力跑出的比賽成績（距離越接近目標越準）。系統給出 E/M/T/I/R 五種訓練配速與各距離等效成績，據此安排課表並設定合理目標。',
+    detail_vdot_stages:
+      'E 有氧打底／恢復（量最多）；M 馬拉松配速；T 乳酸閾值（可維持約 20–40 分）；I VO₂max 間歇（3–5 分）；R 速度與跑姿（短而快）。由易到難、量由多到少。',
+    detail_vdot_note:
+      '由單筆成績推估，當天狀態、天氣、賽道都會影響；跨距離預測越遠越保守看待。每週質量課表（T/I/R）合計別超過週里程約 8–10%。',
     explain_hr:
       '先用 Tanaka 公式（208−0.7×年齡）或實測值估最大心率，再以 Karvonen（心率儲備）分成五區，各區對應不同訓練目的。VO₂max 為由最大/靜息心率比值推估（非實測）。',
+    hr_readout:
+      '最大心率約 {max} bpm、靜息 {rest} bpm。輕鬆日把心率壓在 E/M 區，質量日才進 T/I 區；以心率為上限控強度，別在熱天或疲勞時硬追配速。',
+    detail_hr_principle:
+      '最大心率以 Tanaka（208−0.7×年齡）或你的實測值估算，再用 Karvonen「心率儲備」＝（最大−靜息）×強度＋靜息，分出五個訓練區。比單純用 220−年齡更貼近個人。',
+    detail_hr_how:
+      '輸入年齡與晨起靜息心率（有實測最大心率更準）。輕鬆日把心率壓在 E/M 區，質量日才進 T/I 區；以心率為「上限」控制強度，熱天、疲勞時同配速心率會偏高。',
+    detail_hr_stages:
+      'E 恢復／有氧（RPE 2–3，可輕鬆對話）；M 馬拉松（RPE 4–5）；T 閾值（RPE 6–7，吃力但可維持）；I VO₂max（RPE 8–9，僅能講短句）；R 最大速度（RPE 10）。',
+    detail_hr_note:
+      '公式估算非實測；個體差異大，最準是實驗室或場測最大心率。心率有延遲（短間歇看配速更可靠）；咖啡因、缺水、睡眠不足都會墊高心率。',
     explain_interval:
       'I 練 VO₂max、T 練乳酸閾值、R 練速度與經濟性。系統依 VDOT 給配速，並把單次質量里程限制在 min(10km, 週量 8%) 以內；課表＝暖身＋主課表＋緩和。',
     explain_methods:
@@ -458,6 +588,15 @@ export const TRANSLATIONS: ITranslations = {
     acwr_zone_highrisk: '🚨 高風險',
     explain_acwr:
       'ACWR＝本週里程÷近 4 週平均。甜蜜區約 0.8–1.3；>1.5 代表負荷暴增，軟組織傷害風險上升（Gabbett 2016）；<0.8 多為訓練不足或剛回歸。據此調整下週里程，避免一次加太多。',
+    acwr_readout: 'ACWR {acwr}（{zone}）。下週里程建議 {min}–{max} km；單週增幅盡量別超過約 10%。',
+    detail_acwr_principle:
+      'ACWR＝急性負荷（本週里程）÷慢性負荷（近 4 週平均）。它衡量「最近的訓練量相對於身體已適應的量」漲得多快——漲太快，軟組織來不及適應，受傷風險就上升（Gabbett 2016）。',
+    detail_acwr_how:
+      '填入最近 4 週的週里程（最後一欄為本週）。比值落在甜蜜區（約 0.8–1.3）較安全；參考「下週建議里程」漸進加量，單週增幅盡量別超過約 10%。',
+    detail_acwr_stages:
+      '<0.8 訓練不足／剛回歸（量偏低）；0.8–1.3 甜蜜區（穩健進步）；1.3–1.5 警戒（留意疲勞與痠痛）；>1.5 高風險（負荷暴增，建議減量）。',
+    detail_acwr_note:
+      '里程只是負荷的一種代理；強度、地形、睡眠與壓力同樣重要。ACWR 是趨勢參考非保證，務必結合自身體感與疼痛訊號。',
     env_title: '🌡️ 環境配速調整',
     hint_env_intro: '輸入氣溫、濕度與基準配速，算出露點、WBGT 與今日實際目標配速',
     env_temp: '氣溫 (°C)',
@@ -476,6 +615,16 @@ export const TRANSLATIONS: ITranslations = {
     env_risk_extreme: '🔴 極端',
     explain_env:
       '露點與 WBGT 反映身體散熱難度：高溫高濕下汗水難蒸發，配速需放慢。本工具用 WBGT（ABM 陰影近似）對應減速幅度，並用 Minetti（2002）坡度能量成本換算坡度係數。台灣夏天常落在「高/極端」區，務必依建議配速放慢並加強補水。',
+    env_readout:
+      'WBGT {wbgt}°C（{risk}）：建議比平路放慢約 {pct}%、目標約 {pace}，並每 15–20 分鐘補水、多走陰涼處。',
+    detail_env_principle:
+      '人體靠流汗蒸發散熱。高溫高濕（露點高）時汗水不易蒸發，核心體溫上升、心率攀高，同樣配速會更吃力。WBGT 綜合溫濕度評估熱壓力，越高越需放慢（ABM 陰影近似）。',
+    detail_env_how:
+      '輸入氣溫、濕度與平路目標配速（可填坡度）。依「建議目標配速」放慢、別硬追原訂配速；以體感與心率為準，並提早、規律補水與電解質。',
+    detail_env_stages:
+      'WBGT <18 低（影響小）；18–23 中（略放慢、注意補水）；23–28 高（明顯放慢、找陰涼、增加補給）；>28 極端（大幅放慢，考慮改時段／縮短／取消）。',
+    detail_env_note:
+      '為陰影近似，烈日直曬、無風或柏油路面會更嚴峻。熱適應需 10–14 天；尚未適應者更保守。出現頭暈、起雞皮疙瘩、停止流汗等中暑徵兆務必立即停下。',
     fuel_title: '🍫 卡路里 + 補給時間軸',
     hint_fuel_intro: '輸入體重、距離與目標完賽時間，算出熱量與每站補給',
     fuel_weight: '體重 (kg)',
@@ -563,6 +712,69 @@ export const TRANSLATIONS: ITranslations = {
     rec_cwi: '冷水浸泡舒緩痠痛（選用）',
     explain_rec:
       '恢復天數隨距離、費力與年齡增加（約 1 天/英里為保守上限）。賽後 24 小時黃金窗：補碳水＋蛋白質、補水、睡眠。策略證據等級：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）對主觀疲勞有益（Mujika 2010；Halson 2013；Ihsan 2016）。',
+    fuel_readout:
+      '全程約 {kcal} kcal。超過 60 分鐘需邊跑邊補：約 {carb} g/h 碳水、{fluid} ml/h 水分，全程共約 {total} g 碳水。提早、少量多次補給。',
+    detail_fuel_principle:
+      '跑步每公里約消耗體重×1 kcal。肝醣存量約僅夠 90–120 分鐘高強度，超過就得邊跑邊補碳水以延後「撞牆」。補碳速率隨時間拉長而提高，並需搭配水分維持血量與散熱。',
+    detail_fuel_how:
+      '輸入體重、距離與目標完賽時間，得到每小時碳水/水分速率與每站建議量。比照下方時間軸，提早、少量多次補給，別等餓了或渴了才補；長賽事務必先在訓練中演練腸胃耐受。',
+    detail_fuel_stages:
+      '<60 分鐘：通常免補；1–2 小時：約 30 g/h；2–2.5 小時：約 60 g/h；>2.5 小時：可達 90 g/h（需葡萄糖＋果糖等多重轉運醣類）。水分約 400–800 ml/h，依汗率調整。',
+    detail_fuel_note:
+      '數值為群體估計，腸胃耐受個體差異大，高劑量需漸進訓練。過量飲水可能導致低血鈉；高溫另見「長跑個人化補給」與「環境配速」。',
+    sweat_readout:
+      '估計汗率約 {rate} L/h：每小時補水約 {fluid} ml、鈉 {sodium} mg、碳水 {carb} g；補回約 75% 汗失即可，別過量。',
+    detail_sweat_principle:
+      '跑步約 80% 能量化為熱，主要靠流汗蒸發散熱（蒸發 1 L 汗約散熱 580 kcal）。配速越快、天氣越熱濕，產熱與流汗越多。本工具由產熱與溫濕度推估個人汗率，再換算補水/鈉/碳水。',
+    detail_sweat_how:
+      '輸入體重、配速、距離、氣溫與濕度。依「每小時」速率與下方逐站建議補給；目標補回約 75% 汗失即可（別過量）。最準仍是賽前後量體重：每少 1 kg≈1 L 汗。',
+    detail_sweat_stages:
+      '水分：補回約 75% 汗失；鈉：汗鈉約 1 g/L（重鹹汗者更高）；碳水：超過 60–90 分鐘比照補給原則。少量多次、規律補給，勝過一次灌大量。',
+    detail_sweat_note:
+      '汗率與汗鈉個體差異大（估計值僅供起點）。喝過量純水＋大量流汗易致低血鈉，務必同時補鈉；熱適應 2 週後汗率與汗鈉會下降，需重新評估。',
+    cool_readout:
+      'WBGT {wbgt}°C（{risk}）：賽前 30–60 分鐘冰沙約 {slurry}；高溫再加陰涼、冷飲、冰毛巾／降溫背心。',
+    detail_cool_principle:
+      '熱天表現受限於核心體溫上升。賽前主動降溫（pre-cooling）先把核心溫度壓低，等於擴大可吸熱的「空間」，延後達到臨界體溫的時間。冰沙從體內降溫、效果好且攜帶方便。',
+    detail_cool_how:
+      '輸入體重、氣溫、濕度，得到熱風險與冰沙建議量。賽前 30–60 分鐘攝取冰沙；WBGT 越高，越要加上陰涼、冷飲、冰毛巾／降溫背心，極端時考慮改時段或縮短。',
+    detail_cool_stages:
+      '低：補水即可；中：冰沙＋陰涼熱身；高：再加冷飲、冰毛巾、降溫背心；極端：冷水浸泡降溫，並認真評估改時段／縮短／取消。',
+    detail_cool_note:
+      '降溫效果會隨開跑遞減，需搭配賽中散熱（澆水、找陰涼）。冰沙一口氣太大量可能頭痛或腸胃不適，先在訓練演練。中暑徵兆出現務必立即停止。',
+    glyco_readout:
+      '賽前把碳水拉到約 {load} g/kg／天、巔峰日約 {peak} g，搭配減量把肝醣填滿；僅 90 分鐘以上賽事需要。',
+    detail_glyco_principle:
+      '肝醣是高強度運動的主要燃料但存量有限。賽前數天搭配減量、提高碳水攝取，能把肌肉與肝臟肝醣「超補」到平常的 1.5–2 倍，延後撞牆、穩住後半段配速（Burke 2011）。',
+    detail_glyco_how:
+      '輸入體重、選方案，得到每日碳水克數。下方長條為逐日攝取量；照表把碳水分散到 4–6 餐、選好消化的來源，並同步減量讓肝醣堆積。僅 90 分鐘以上賽事需要。',
+    detail_glyco_stages:
+      'Modified Sherman（推薦）：免耗竭、賽前 3 天高碳水＋減量；Classic：先耗竭再超補（較辛苦、風險高）；WA：賽前一日壓縮超補（10–12 g/kg 單日）。',
+    detail_glyco_note:
+      '高碳水會伴隨水分滯留、體重短期上升 1–2 kg 屬正常。高纖、高脂、太晚的大餐易腸胃不適；務必在訓練中先試過你的賽前餐。',
+    taper_readout:
+      '減量 {weeks} 週：週量逐步降到約 {pct}%（賽事週約 {km} km），但維持強度與頻率；通常帶來約 1–3% 進步。',
+    detail_taper_principle:
+      '減量是「降量、不降強度」：減少總里程讓累積疲勞消退、肝醣與肌肉修復補滿，同時保留少量高強度維持體感與神經肌肉鋒利度。研究顯示適當減量約可帶來 1–3% 成績提升（Bosquet 2007）。',
+    detail_taper_how:
+      '輸入巔峰週里程與減量週數（1–3 週）。下方長條為各週建議里程；照表逐步降量，但「課表的強度與頻率維持不變」，只是把每次的量縮短。',
+    detail_taper_stages:
+      '週量逐步降到巔峰的約 40–60%（賽事週最低）；保留每週 1–2 次短而帶強度的課表（如閾值/間歇縮短版）；賽前 2–3 天以輕鬆跑＋幾趟 strides 收尾。',
+    detail_taper_note:
+      '最常見錯誤是「完全休息」或連強度一起砍，反而變鈍、腿重。減量期間搭配睡眠與碳水補充；體重微升、偶感腿癢想跑都屬正常。',
+    rec_readout:
+      '建議約 {easy} 天輕鬆、約第 {hard} 天後再進行質量課表；賽後 24 小時補碳水＋蛋白、補水、睡眠最關鍵。',
+    rec_phase_window: '黃金窗',
+    rec_phase_easy: '輕鬆恢復',
+    rec_phase_quality: '回到質量',
+    detail_rec_principle:
+      '激烈比賽造成肌肉微損傷、肝醣耗盡與全身發炎，需時間修復才能再承受高強度。恢復天數隨距離、費力與年齡增加（約 1 天/英里為保守上限），急著回到質量訓練易拉傷或過度訓練。',
+    detail_rec_how:
+      '輸入距離、費力與年齡，得到建議的輕鬆天數與「幾天後再質量」。下方階段條為恢復時間軸；照建議走，並以晨脈/HRV、睡眠與痠痛回穩作為可加量的依據。',
+    detail_rec_stages:
+      '0–24h 黃金窗：補碳水＋蛋白質、補水、睡眠；接著數天全休或輕鬆活動恢復；達建議天數後，先以一次短質量試水溫，再逐步回到正常課表。',
+    detail_rec_note:
+      '證據強度：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）對主觀疲勞有益但可能鈍化長期適應，賽後用可、平時少用。疼痛異常請就醫。',
     gap_title: '⛰️ GPX 路線 GAP 配速分析',
     hint_gap_intro: '上傳賽事 GPX 並輸入平路目標配速，算出每公里坡度修正配速與爬升',
     gap_file: 'GPX 檔案',
@@ -616,6 +828,14 @@ export const TRANSLATIONS: ITranslations = {
     hrv_advice_high: '高於基線：多為良好適應、可安排品質課表；若伴隨疲勞可能是飽和，留意體感。',
     explain_hrv:
       '用晨起 7 日 RMSSD 算出個人基線（平均 ± 1 標準差）。今日落在區間內＝照計畫；明顯偏低＝副交感受抑制，改輕鬆/恢復；偏高＝多為良好適應，但也可能是飽和，留意身體訊號。變異係數（CV）越大代表越不穩定、宜保守（Plews 法）。',
+    detail_hrv_principle:
+      'HRV（以晨起 RMSSD 衡量）反映自律神經的恢復狀態。把連續數日的 RMSSD 取平均 ± 1 標準差當作個人「正常帶」，今日值相對於這條帶的位置，比單一絕對值更能判讀恢復（Plews 法）。',
+    detail_hrv_how:
+      '每天起床後同條件量 RMSSD（同姿勢、同時間、未喝咖啡），輸入逗號分隔的 3–7 天、最後一筆為今天。落在帶內照計畫；明顯偏低改輕鬆／恢復；偏高多為適應良好但也留意是否過勞飽和。',
+    detail_hrv_stages:
+      '陰影帶為個人正常範圍（基線 ± 1 標準差），折線為每日 RMSSD，末點為今天。趨勢比單日更重要：連續下降代表累積疲勞，平穩或上升代表恢復良好。',
+    detail_hrv_note:
+      '需穩定的量測條件才可靠；酒精、生病、缺水、壓力都會影響。變異係數（CV）越大越不穩定、宜保守。單日數字僅供參考，請對齊體感與睡眠。',
     cycle_title: '🌸 月經週期訓練調整',
     hint_cycle_intro: '輸入週期第幾天與週期長度，給該階段訓練微調',
     cycle_day: '週期第幾天',
@@ -649,8 +869,27 @@ export const TRANSLATIONS: ITranslations = {
     alt_status_lowhours: '⚠️ 曝露時數不足',
     explain_alt:
       '有效「高住」窗約 2000–3000m；Hb mass 隨足量曝露時數上升（約每 100 有效小時 +1%，本工具上限 5%），VO₂max 增益約為 Hb 的 0.6 倍。賽事時機：常見建議下山後 1–2 天或 2–3 週後出賽、避開第 5–10 天。數字為估計、反應者差異大（Levine 1997；Wilber 2007；Chapman 2014）。',
+    alt_readout:
+      'Hb mass +{hb}%、VO₂max +{vo2}%（{status}）。下山後 1–2 天或 2–3 週出賽較佳，避開第 5–10 天。',
+    detail_cycle_principle:
+      '雌激素與黃體素在週期中起伏，可能影響體溫、體感與恢復。本工具依週期分四階段給「微調起點」。McNulty 2020 系統綜述強調：個體差異遠大於群體平均效應。',
+    detail_cycle_how:
+      '輸入週期第幾天與週期長度，看目前階段與該階段的訓練微調。下方為週期時間軸（目前階段已標示）。最終仍以自身體感、症狀與表現為準。',
+    detail_cycle_stages:
+      '月經期（症狀因人而異，舒適即可訓練）→濾泡期（精力漸增，適合質量與加量）→排卵期（常為高峰，可衝表現）→黃體期（體溫升、較易疲勞與不耐熱，宜加強補水與恢復）。',
+    detail_cycle_note:
+      '這些是起點而非規則；研究證據分歧、個體差異大。服用荷爾蒙避孕者週期反應不同。以症狀與表現調整，異常出血或經痛請就醫。',
+    detail_alt_principle:
+      '低氧環境刺激紅血球生成（EPO），足量曝露後血紅素總量（Hb mass）上升、攜氧能力變好、VO₂max 提升。關鍵是「足夠的低氧曝露時數」，下方曲線即 Hb 隨曝露累積的概念。',
+    detail_alt_how:
+      '輸入海拔、天數、每日高住時數與協議，估算總曝露時數與 Hb mass／VO₂max 增益。有效高住窗約 2000–3000m；每日高住時數越長、天數越足，效益越大。',
+    detail_alt_stages:
+      '常見建議：下山後 1–2 天（殘餘適應、未失代償）或 2–3 週後出賽較佳；避開第 5–10 天（換氣與酸鹼再適應的低谷）。個體差異大，最好先試驗自己的反應。',
+    detail_alt_note:
+      '數字為估計、反應者差異大（Levine 1997；Wilber 2007；Chapman 2014）；非反應者也不少。高海拔初期睡眠與訓練品質下降、需補鐵與補水；高住高練易訓練過度，宜降強度。',
     ref_title: '📚 科學實證與訓練原則',
-    ref_intro: '本站工具方法論的依據與引用來源',
+    ref_intro:
+      '本站工具方法論的依據與引用來源。每張工具卡片下方點「詳解」可展開原理、用法、階段與注意。',
     ref_daniels:
       'Daniels VDOT 公式：Jack Daniels《Running Formula》— VO₂=−4.60+0.182258v+0.000104v²；被 RQ、VDOT Pro、Runalyze 等平台廣泛採用。',
     ref_seiler:
@@ -678,9 +917,16 @@ export const TRANSLATIONS: ITranslations = {
     hint_settings_intro: 'Adjust language, units, default venue and the race API',
     info_time_format:
       'Time format: m:ss (min:sec) or h:mm:ss (hr:min:sec). Type in any field to convert instantly; switch features via the tabs above.',
+    tab_pace: 'Pace & Analysis',
+    tab_triathlon: 'Triathlon',
+    tab_training: 'Training & Races',
     tab_assessment: 'Assessment',
     tab_workout: 'Workout Design',
     tab_monitoring: 'Monitoring',
+    tab_settings: 'Settings',
+    footer_tagline: '🏃 RunningPaceNote · Made with ❤️ for runners',
+    version_latest: '✓ Up to date',
+    version_update: '● Update available — tap to refresh',
     vdot_title: '📊 VDOT Training Paces',
     hint_vdot_intro: 'Enter a recent race result to get VDOT and E/M/T/I/R paces',
     zone_easy_desc: 'Aerobic base',
@@ -776,8 +1022,101 @@ export const TRANSLATIONS: ITranslations = {
       'Splits are pacing checkpoints: the track view shows each segment’s time; the road view shows cumulative time every 2.5k for watch checks and fueling.',
     explain_zones:
       'E easy (base/recovery), M marathon pace, T threshold (sustainable 20–40 min), I VO₂max intervals (3–5 min), R reps (speed & form). Keep each quality session under ~8–10% of weekly volume.',
+    zones_readout:
+      'Follow 80/20: ~80% of mileage easy (E), ~20% as T/I/R quality. Easy means truly easy so quality days stay sharp. For more precision, use the VDOT tab.',
+    detail_zones_principle:
+      'Different paces train different systems: easy running builds the aerobic base and recovery, threshold raises lactate tolerance, intervals push VO₂max. Splitting training into intensity zones lets you keep easy days easy and hard days hard — instead of grinding everything at medium effort.',
+    detail_zones_how:
+      'These ranges are estimated from your current pace (use the VDOT tab for more precision). Put most mileage in E; keep T/I/R quality to ~8–10% of weekly volume. Aim for 80/20 — about 80% easy, 20% hard.',
+    detail_zones_stages:
+      'E aerobic base/recovery (most volume, conversational); M marathon-specific pace; T lactate threshold (sustain ~20–40 min); I VO₂max intervals (3–5 min reps); R reps (short and fast for speed & form).',
+    detail_zones_note:
+      'A linear estimate from a single pace — directional only; base real plans on a VDOT from a recent race. Easy must be truly easy — most runners run E too fast, piling on fatigue and dulling their quality sessions.',
     explain_predict:
       'Uses one recent result and Riegel’s formula (time × distance-ratio^1.06) to predict other distances; the closer the reference and target distances, the more accurate.',
+    pred_readout:
+      'The closer the reference and target distances, the more accurate; big jumps (especially to the marathon) tend to be optimistic — treat as an ideal ceiling.',
+    detail_pred_principle:
+      'Riegel’s formula T2 = T1×(D2/D1)^1.06: at fixed fitness, time grows with distance as a power law; the 1.06 exponent reflects endurance decay over longer distances.',
+    detail_pred_how:
+      'Enter one recent, all-out result (closer reference-to-target is more accurate). Use the four predicted times to set goals and pacing.',
+    detail_pred_stages:
+      '5K↔10K predict each other best; half-marathon is fair; the marathon runs optimistic (endurance, fueling and muscular endurance decide it) — treat as a ceiling.',
+    detail_pred_note:
+      'Assumes your training supports that distance; with insufficient mileage the long ones come in well slower. Day-form, course and weather all matter.',
+    tri_seg_swim: 'Swim',
+    tri_seg_bike: 'Bike',
+    tri_seg_run: 'Run',
+    tri_readout:
+      'Total {total}; swim {swim}, bike {bike}, run {run}. Focus training on the biggest, most improvable segment.',
+    detail_tri_principle:
+      'A triathlon time is the sum of three legs plus two transitions; both pacing split and transition efficiency shape the total. The strip below visualises each leg’s share of time.',
+    detail_tri_how:
+      'Pick the distance and enter a goal total to back-solve each leg, or enter leg paces to get the total. Focus training on the most time-consuming, most improvable legs (usually bike and run).',
+    detail_tri_stages:
+      'Swim (sight, save energy) → T1 → Bike (longest, main fueling) → T2 → Run (hold form when tired). Transitions are short but fumbles cost time — rehearse them.',
+    detail_tri_note:
+      'Back-solving assumes typical split ratios; individual strengths vary a lot, so adjust to your three-sport profile. Over-cook the bike in long course and the run falls apart.',
+    detail_raceplan_principle:
+      'Distributes your goal finish time across each km by strategy. A negative split (slightly faster second half) usually feels and finishes best; even is steady; a positive split (fast then fade) is riskiest. The curve below is per-km pace.',
+    detail_raceplan_how:
+      'Pick distance, enter goal time and strategy to get per-km pace and cumulative time. Pace to the curve and hold back at the start — don’t let race-day buzz pull you fast.',
+    detail_raceplan_stages:
+      'Start (don’t surge) → middle (settle into rhythm, fuel regularly) → ~30k wall in the marathon → finish (speed up only if you have it).',
+    detail_raceplan_note:
+      'Pace is a plan; adjust to feel, heart rate and weather. In heat or on hills use “Environmental Pace” and “GAP” to reset expectations.',
+    gap_readout:
+      'Total {dist} km, climb +{ascent} m; at your flat-pace effort the predicted pace is about {pace}. Save energy on steep climbs and fuel ~every 30 min.',
+    detail_gap_principle:
+      'Distance from haversine, per-segment grade via Minetti (2002) energy cost — converting your flat-pace effort into actual per-segment pace: slower uphill, a little faster downhill (but limited).',
+    detail_gap_how:
+      'Upload the course GPX and enter your flat target pace (heart rate optional). Read the profile and per-km adjusted pace to save energy on steep climbs and fuel along the timeline.',
+    detail_gap_stages:
+      'Uphill (ease, shorten stride, go by effort/HR) → crest (don’t chase) → downhill (relax but controlled, avoid pounding) → fueling (from ~45 min, every 30 min).',
+    detail_gap_note:
+      'Elevation data is often noisy — numbers are for strategy only; wind, surface and fatigue all affect reality. Downhill rarely returns what the uphill costs, so more net climb = slower.',
+    re_readout:
+      'Estimated VO₂max {vo2}, body-fat band {band}. Train strength and plyometrics first for economy, and fine-tune body composition within a healthy range.',
+    detail_re_principle:
+      'VO₂max is estimated from your 5K with the Daniels engine. Running economy means “using less oxygen at the same speed” — one of the three endurance pillars with VO₂max and lactate threshold; body composition affects power-to-weight.',
+    detail_re_how:
+      'Enter 5K time, sex and body-fat %. Read VO₂max and the body-fat band, then follow the three-layer strategy below: strength, plyometrics, body composition.',
+    detail_re_stages:
+      '① Strength training (lifting improves RE ~2–8%, Beattie 2017) ② Plyometrics (jumps/bounding stiffen tendons) ③ Body composition (optimise power-to-weight within a healthy range).',
+    detail_re_note:
+      'VO₂max is estimated from a result, not measured; body-fat bands use ACE norms and vary a lot. Don’t over-restrict — too-low body fat harms performance and health.',
+    detail_interval_principle:
+      'Intervals alternate hard reps with recovery to bank the most target-intensity stimulus in the least time. I trains VO₂max, T lactate threshold, R speed & form.',
+    detail_interval_how:
+      'Get paces from the VDOT card (or fill the result above), then enter weekly mileage and type. The single quality session is capped at min(10km, 8% of weekly volume); the session = warm-up + main set + cool-down.',
+    detail_interval_stages:
+      'Warm-up (progressive, a few strides) → main set (reps at pace with recovery) → cool-down (easy). Don’t cut recovery short — quality over quantity.',
+    detail_interval_note:
+      'At most 2–3 quality sessions per week, alternating with easy days; set paces you can complete for all reps — blowing up means it was too fast. Skip when injured or very fatigued.',
+    detail_methods_principle:
+      'Named methods package training principles into actionable key sessions, each emphasising something different: prediction, VO₂max, cumulative fatigue, or strictly controlled double threshold.',
+    detail_methods_how:
+      'Enter a goal marathon time, pick a method, and see its key session and paces. Choose one that fits your goal and available time and run it consistently — don’t switch every week.',
+    detail_methods_stages:
+      'Yasso 800 (800m reps predict the marathon), Norwegian 4×4 (4×4-min VO₂max), Hansons (cumulative fatigue, capped long run), Norwegian double threshold (two threshold sessions a day, tight pacing).',
+    detail_methods_note:
+      'These are key sessions, not full weekly plans — embed them in a cycle with easy runs and long runs. Double threshold demands careful intensity control for amateurs; progress gradually.',
+    detail_strides_principle:
+      'Strides are ~15–30 s of “controlled fast” (not sprints) with full recovery between. Done fresh, they improve neuromuscular coordination and running economy (Daniels & Gilbert 1979; Blagrove 2018).',
+    detail_strides_how:
+      'Pick a progression week to see that week’s session; insert 2–3 times a week (after easy runs or before quality). Accelerate relaxed, build gradually, don’t lunge for a line, and recover fully between.',
+    detail_strides_stages:
+      'Progress from 4×15s to 8×30s (bars show each week’s total stride seconds). Establish frequency and technique first, then add reps and duration.',
+    detail_strides_note:
+      'Effort is “fast but relaxed,” not all-out; use flat ground and avoid doing them fatigued. Reduce volume early in injury or during recovery.',
+    detail_cadence_principle:
+      'Optimal cadence varies with speed and the individual (180 SPM is a myth). Raising cadence 5–10% shortens overstride and cuts per-step load on the knee and Achilles (Heiderscheit 2011).',
+    detail_cadence_how:
+      'Enter pace (current cadence optional). Read the recommended band and +5%/+10% targets; an overlong stride (low cadence) signals overstriding you can gradually fix. The gauge shows where your current cadence sits in the band.',
+    detail_cadence_stages:
+      'Raise gradually: +5% every 2–4 weeks, aided by a metronome or music; practise on easy runs first, then bring it into quality sessions.',
+    detail_cadence_note:
+      'Higher isn’t always better — too high wastes energy; aim to land under your centre of mass without overstriding. Change form gradually to avoid compensation injuries.',
     explain_triathlon:
       'Enter a target total time to back-calculate swim/bike/run paces by event type, or fill each leg’s pace to get the total. T1/T2 are transition times.',
     explain_training_cycle:
@@ -788,8 +1127,38 @@ export const TRANSLATIONS: ITranslations = {
       'Strategies: even (steady); negative (faster second half, usually a better result); positive (fast start that fades, not recommended). The table is per-km target pace and cumulative time. Tips: don’t start too fast, the wall often hits ~30k, fuel on schedule.',
     explain_vdot:
       'VDOT is an “effective VO₂max” estimated from a recent result — higher is fitter. The E/M/T/I/R values are the matching training paces; equivalent times are predicted results at the same fitness across distances.',
+    btn_detail: 'Learn more',
+    detail_h_principle: 'Principle',
+    detail_h_how: 'How to use',
+    detail_h_stages: 'Stages',
+    detail_h_note: 'Notes',
+    vdot_grade_beginner: 'Beginner',
+    vdot_grade_recreational: 'Recreational',
+    vdot_grade_intermediate: 'Intermediate',
+    vdot_grade_advanced: 'Advanced',
+    vdot_grade_elite: 'Elite',
+    vdot_readout:
+      'Your VDOT is {v} ({grade}). Build easy volume first, then add quality — E base, T threshold, I VO₂max.',
+    detail_vdot_principle:
+      'VDOT estimates your “effective VO₂max” from a recent race, combining pace and sustainable duration into one number that turns fitness into personalised training paces (Daniels–Gilbert).',
+    detail_vdot_how:
+      'Enter one recent, all-out race result (the closer to your target distance, the better). You get five training paces (E/M/T/I/R) and equivalent times at other distances to plan workouts and set realistic goals.',
+    detail_vdot_stages:
+      'E aerobic base/recovery (most volume); M marathon pace; T lactate threshold (sustain ~20–40 min); I VO₂max intervals (3–5 min); R speed & form (short, fast). Easy→hard, volume high→low.',
+    detail_vdot_note:
+      'Estimated from a single result; day-form, weather and course all affect it, and cross-distance predictions get rougher the further out. Keep weekly quality (T/I/R) under ~8–10% of weekly mileage.',
     explain_hr:
       'Max HR is estimated with Tanaka (208−0.7×age) or your measured value, then Karvonen (heart-rate reserve) splits it into 5 zones, each for a different purpose. VO₂max here is estimated from the max/resting HR ratio (not measured).',
+    hr_readout:
+      'Max HR ~{max} bpm, resting {rest} bpm. Keep easy days in the E/M zones and only enter T/I on quality days; use HR as a ceiling — don’t chase pace in heat or when fatigued.',
+    detail_hr_principle:
+      'Max HR is estimated with Tanaka (208−0.7×age) or your measured value, then Karvonen heart-rate reserve = (max−rest)×intensity+rest splits it into five zones — more personal than plain 220−age.',
+    detail_hr_how:
+      'Enter age and morning resting HR (a measured max HR is more accurate). Keep easy days in E/M and only go to T/I on quality days; treat HR as a ceiling — same pace reads higher in heat or when tired.',
+    detail_hr_stages:
+      'E recovery/aerobic (RPE 2–3, easy to talk); M marathon (RPE 4–5); T threshold (RPE 6–7, hard but sustainable); I VO₂max (RPE 8–9, short sentences only); R top speed (RPE 10).',
+    detail_hr_note:
+      'Formula-estimated, not measured; individual variation is large — a lab or field max-HR test is most accurate. HR lags (use pace for short intervals); caffeine, dehydration and poor sleep all raise it.',
     explain_interval:
       'I trains VO₂max, T trains lactate threshold, R trains speed & economy. Paces come from your VDOT, and a single session’s quality volume is capped at min(10km, 8% of weekly mileage); structure = warm-up + main set + cool-down.',
     explain_methods:
@@ -974,6 +1343,16 @@ export const TRANSLATIONS: ITranslations = {
     acwr_zone_highrisk: '🚨 High risk',
     explain_acwr:
       'ACWR = this week’s mileage ÷ the recent 4-week average. Sweet spot ≈ 0.8–1.3; > 1.5 means a load spike with higher soft-tissue injury risk (Gabbett 2016); < 0.8 is usually undertraining or a return from a break. Use it to set next week’s mileage and avoid adding too much at once.',
+    acwr_readout:
+      'ACWR {acwr} ({zone}). Suggested next week: {min}–{max} km; try not to jump more than ~10% in a single week.',
+    detail_acwr_principle:
+      'ACWR = acute load (this week) ÷ chronic load (4-week average). It measures how fast recent training is rising relative to what your body has adapted to — rise too fast and soft tissue can’t keep up, raising injury risk (Gabbett 2016).',
+    detail_acwr_how:
+      'Enter the last 4 weeks of mileage (last box = this week). Staying in the sweet spot (~0.8–1.3) is safer; use the suggested next-week range to progress gradually, ideally under ~10% per week.',
+    detail_acwr_stages:
+      '<0.8 undertraining / returning (low load); 0.8–1.3 sweet spot (steady gains); 1.3–1.5 caution (watch fatigue & soreness); >1.5 high risk (load spike — back off).',
+    detail_acwr_note:
+      'Mileage is only one proxy for load; intensity, terrain, sleep and stress matter too. ACWR is a trend guide, not a guarantee — always combine it with how you feel and any pain signals.',
     env_title: '🌡️ Environmental Pace',
     hint_env_intro:
       'Enter temperature, humidity and a base pace for dew point, WBGT and today’s real target pace',
@@ -993,6 +1372,16 @@ export const TRANSLATIONS: ITranslations = {
     env_risk_extreme: '🔴 Extreme',
     explain_env:
       'Dew point and WBGT reflect how hard it is for your body to shed heat: in hot, humid air sweat evaporates poorly and pace must ease. This tool maps WBGT (ABM shade approximation) to a slowdown, and uses Minetti (2002) gradient energy cost for the grade factor. Taiwan summers often land in the High/Extreme band — slow to the suggested pace and hydrate more.',
+    env_readout:
+      'WBGT {wbgt}°C ({risk}): ease ~{pct}% off flat pace, target about {pace}, and drink every 15–20 min while seeking shade.',
+    detail_env_principle:
+      'You cool mainly by evaporating sweat. In hot, humid air (high dew point) sweat evaporates poorly, core temperature and heart rate climb, and the same pace feels harder. WBGT combines temperature and humidity into a heat-stress index — the higher it is, the more you must ease (ABM shade approximation).',
+    detail_env_how:
+      'Enter temperature, humidity and your flat target pace (grade optional). Ease to the suggested target pace instead of chasing your original pace; go by feel and heart rate, and hydrate early and regularly with electrolytes.',
+    detail_env_stages:
+      'WBGT <18 low (little effect); 18–23 moderate (ease slightly, mind hydration); 23–28 high (ease clearly, seek shade, fuel more); >28 extreme (ease a lot — consider rescheduling/shortening/cancelling).',
+    detail_env_note:
+      'A shade approximation: direct sun, no wind or asphalt make it harsher. Heat acclimatisation takes 10–14 days; be more conservative if unadapted. Stop immediately on heat-illness signs (dizziness, goosebumps, stopping sweating).',
     fuel_title: '🍫 Calories + Fueling Timeline',
     hint_fuel_intro:
       'Enter weight, distance and target finish time for kcal and a per-station plan',
@@ -1082,6 +1471,69 @@ export const TRANSLATIONS: ITranslations = {
     rec_cwi: 'Cold-water immersion for soreness (optional)',
     explain_rec:
       'Recovery days scale with distance, effort and age (≈ 1 day/mile as a conservative ceiling). In the first 24 h prioritise carbs + protein, rehydration and sleep. Evidence: refuel/rehydrate/sleep are strongest, then active recovery; cold-water immersion (CWI) helps perceived soreness (Mujika 2010; Halson 2013; Ihsan 2016).',
+    fuel_readout:
+      '~{kcal} kcal total. Over 60 min, fuel on the move: ~{carb} g/h carbs and {fluid} ml/h fluid, ~{total} g carbs across the race. Start early, little and often.',
+    detail_fuel_principle:
+      'Running burns about body-weight×1 kcal per km. Glycogen stores only last ~90–120 min at intensity, so beyond that you must take carbs on the move to delay “the wall.” The carb rate rises with duration and must be paired with fluid to maintain blood volume and cooling.',
+    detail_fuel_how:
+      'Enter weight, distance and goal finish time to get hourly carb/fluid rates and per-station amounts. Follow the timeline below — fuel early and little-and-often, don’t wait until hungry or thirsty; rehearse gut tolerance in training for long races.',
+    detail_fuel_stages:
+      '<60 min: usually none; 1–2 h: ~30 g/h; 2–2.5 h: ~60 g/h; >2.5 h: up to 90 g/h (needs multiple transportable sugars like glucose+fructose). Fluid ~400–800 ml/h, adjusted to sweat rate.',
+    detail_fuel_note:
+      'These are population estimates; gut tolerance varies a lot and high doses need progressive training. Over-drinking can cause hyponatremia; for heat see “Personalised Long-Run Fueling” and “Environmental Pace.”',
+    sweat_readout:
+      'Estimated sweat rate ~{rate} L/h: per hour drink ~{fluid} ml, sodium {sodium} mg, carbs {carb} g; aim to replace ~75% of losses — don’t overdo it.',
+    detail_sweat_principle:
+      'About 80% of running energy becomes heat, shed mainly by evaporating sweat (~580 kcal per litre evaporated). Faster pace and hotter, more humid air mean more heat and sweat. This tool estimates your sweat rate from heat production and conditions, then converts to fluid/sodium/carbs.',
+    detail_sweat_how:
+      'Enter weight, pace, distance, temperature and humidity. Use the hourly rates and per-station plan below; aim to replace ~75% of sweat loss (no more). Most accurate is weighing before/after: each 1 kg lost ≈ 1 L sweat.',
+    detail_sweat_stages:
+      'Fluid: replace ~75% of losses; sodium: sweat sodium ~1 g/L (higher for salty sweaters); carbs: beyond 60–90 min follow the fueling guidance. Little-and-often beats one big gulp.',
+    detail_sweat_note:
+      'Sweat rate and sweat sodium vary widely (estimates are a starting point). Lots of plain water + heavy sweating risks hyponatremia, so take sodium too; after ~2 weeks of heat acclimation both drop and need re-checking.',
+    cool_readout:
+      'WBGT {wbgt}°C ({risk}): ice slurry ~{slurry} 30–60 min pre-race; in heat add shade, cold drinks and an ice towel/cooling vest.',
+    detail_cool_principle:
+      'Heat performance is limited by rising core temperature. Pre-cooling lowers core temperature beforehand, widening the “heat sink” and delaying the critical-temperature point. An ice slurry cools from the inside and is effective and portable.',
+    detail_cool_how:
+      'Enter weight, temperature and humidity to get heat risk and a slurry dose. Take the slurry 30–60 min pre-race; the higher the WBGT, the more you add shade, cold drinks, an ice towel/cooling vest, and at the extreme reschedule or shorten.',
+    detail_cool_stages:
+      'Low: hydrate only; Moderate: slurry + shaded warm-up; High: add cold drinks, ice towel, cooling vest; Extreme: cold-water immersion to cool, and seriously weigh rescheduling/shortening/cancelling.',
+    detail_cool_note:
+      'Cooling fades after the start, so combine with in-race cooling (dousing, shade). A large slurry at once can cause brain-freeze or GI upset — rehearse in training. Stop immediately on any heat-illness signs.',
+    glyco_readout:
+      'Lift carbs to ~{load} g/kg/day pre-race, peaking near {peak} g, paired with a taper to top off glycogen; only needed for races over 90 min.',
+    detail_glyco_principle:
+      'Glycogen is the main fuel for hard efforts but stores are limited. Combining a taper with higher carbs for a few days pre-race “supercompensates” muscle and liver glycogen to ~1.5–2× normal, delaying the wall and steadying the back half (Burke 2011).',
+    detail_glyco_how:
+      'Enter weight, pick a protocol, and get daily carb grams. The bars show the daily intake; spread carbs across 4–6 meals from easy-to-digest sources and taper at the same time to bank glycogen. Only needed for races over 90 min.',
+    detail_glyco_stages:
+      'Modified Sherman (recommended): no depletion, 3 high-carb days + taper; Classic: deplete then load (harder, riskier); WA: a single-day compressed load (10–12 g/kg in one day).',
+    detail_glyco_note:
+      'High carbs bring water retention; a short-term 1–2 kg weight rise is normal. High-fibre, high-fat or late large meals can upset the gut — always test your pre-race meal in training first.',
+    taper_readout:
+      'Taper {weeks} weeks: step volume down to ~{pct}% (race week ~{km} km) while keeping intensity and frequency; typically worth ~1–3%.',
+    detail_taper_principle:
+      'A taper drops volume, not intensity: cutting total mileage lets accumulated fatigue fade and glycogen/muscle repair top off, while keeping a little high intensity preserves feel and neuromuscular sharpness. Done well it’s worth ~1–3% (Bosquet 2007).',
+    detail_taper_how:
+      'Enter peak weekly mileage and taper length (1–3 weeks). The bars show each week’s suggested mileage; step volume down but keep the intensity and frequency of sessions — just make each one shorter.',
+    detail_taper_stages:
+      'Step weekly volume down to ~40–60% of peak (lowest in race week); keep 1–2 short, sharp sessions per week (e.g. shortened threshold/intervals); finish with easy runs + a few strides 2–3 days out.',
+    detail_taper_note:
+      'The classic mistakes are “full rest” or cutting intensity too — both leave you flat and heavy-legged. Pair the taper with sleep and carbs; a slight weight rise and itchy-to-run legs are normal.',
+    rec_readout:
+      'Aim for ~{easy} easy days and resume quality around day {hard}; in the first 24 h, carbs + protein, rehydration and sleep matter most.',
+    rec_phase_window: 'Golden window',
+    rec_phase_easy: 'Easy recovery',
+    rec_phase_quality: 'Back to quality',
+    detail_rec_principle:
+      'Hard racing causes muscle micro-damage, glycogen depletion and systemic inflammation that need time to repair before high intensity again. Recovery days scale with distance, effort and age (≈ 1 day/mile as a conservative ceiling); rushing back to quality risks strains or overtraining.',
+    detail_rec_how:
+      'Enter distance, effort and age to get suggested easy days and “days before quality.” The phase strip below is the recovery timeline; follow it and use resting HR/HRV, sleep and soreness settling as your green light to add load.',
+    detail_rec_stages:
+      'First 24 h golden window: carbs + protein, rehydrate, sleep; then several days of full rest or easy active recovery; once past the suggested days, test the waters with one short quality session before returning to normal training.',
+    detail_rec_note:
+      'Evidence strength: refuel/rehydrate/sleep strongest, then active recovery; cold-water immersion (CWI) helps perceived soreness but may blunt long-term adaptation — fine post-race, sparing in normal training. See a clinician for abnormal pain.',
     gap_title: '⛰️ GPX Route GAP Analysis',
     hint_gap_intro:
       'Upload a race GPX and a flat-ground target pace for per-km grade-adjusted pace and climb',
@@ -1138,6 +1590,14 @@ export const TRANSLATIONS: ITranslations = {
       'Above baseline: usually good adaptation and fine for quality work; if paired with fatigue it may be saturation — watch how you feel.',
     explain_hrv:
       'A 7-day series of morning RMSSD builds a personal baseline (mean ± 1 SD). Today inside the band = proceed; clearly below = parasympathetic suppression, go easy/recovery; above = usually good adaptation but can be saturation, so check how you feel. A higher coefficient of variation (CV) means less stability — be conservative (Plews method).',
+    detail_hrv_principle:
+      'HRV (measured as morning RMSSD) reflects autonomic recovery. Taking several days’ RMSSD as a personal “normal band” (mean ± 1 SD), today’s position relative to that band reads recovery better than any single absolute value (Plews method).',
+    detail_hrv_how:
+      'Measure RMSSD each morning under the same conditions (same posture, time, before caffeine). Enter 3–7 comma-separated days with today last. Inside the band → proceed; clearly low → go easy/recovery; high → usually good adaptation, but watch for overload saturation.',
+    detail_hrv_stages:
+      'The shaded band is your normal range (baseline ± 1 SD); the line is daily RMSSD with the last point being today. Trend matters more than one day: a steady decline signals accumulating fatigue; flat or rising signals good recovery.',
+    detail_hrv_note:
+      'Reliable only with consistent measurement; alcohol, illness, dehydration and stress all affect it. A higher CV means less stability — be conservative. Treat any single day as a hint and align it with how you feel and your sleep.',
     cycle_title: '🌸 Menstrual-Cycle Adjustment',
     hint_cycle_intro: 'Enter cycle day and length for phase-based training micro-adjustments',
     cycle_day: 'Cycle day',
@@ -1174,8 +1634,27 @@ export const TRANSLATIONS: ITranslations = {
     alt_status_lowhours: '⚠️ Not enough exposure hours',
     explain_alt:
       'The effective "live-high" window is ~2000–3000 m; Hb mass rises with adequate exposure (~+1% per 100 effective hours, capped at 5% here) and VO₂max gains track Hb mass at ~0.6×. Race timing: common advice is to race in the first 1–2 days after descent or after ~2–3 weeks, avoiding days 5–10. Numbers are estimates and responders vary widely (Levine 1997; Wilber 2007; Chapman 2014).',
+    alt_readout:
+      'Hb mass +{hb}%, VO₂max +{vo2}% ({status}). Race in the first 1–2 days after descent or after ~2–3 weeks; avoid days 5–10.',
+    detail_cycle_principle:
+      'Estrogen and progesterone rise and fall across the cycle and may affect temperature, perceived effort and recovery. This tool gives a per-phase “starting point.” McNulty 2020’s review stresses that individual variation far exceeds the average group effect.',
+    detail_cycle_how:
+      'Enter cycle day and length to see the current phase and its training tweak. The strip below is the cycle timeline (current phase highlighted). Ultimately go by your own symptoms, feel and performance.',
+    detail_cycle_stages:
+      'Menstrual (symptoms vary — train if comfortable) → Follicular (energy rising, good for quality and volume) → Ovulation (often a peak — push performance) → Luteal (higher temp, more fatigue and heat intolerance — emphasise hydration and recovery).',
+    detail_cycle_note:
+      'These are starting points, not rules; evidence is mixed and individuals vary widely. Hormonal contraception changes the response. Adjust by symptoms and performance; see a clinician for abnormal bleeding or pain.',
+    detail_alt_principle:
+      'Low oxygen stimulates red-cell production (EPO); with enough exposure, total haemoglobin mass (Hb mass) rises, oxygen carrying improves and VO₂max increases. The key is sufficient hypoxic exposure hours — the curve below is the idea of Hb accruing with exposure.',
+    detail_alt_how:
+      'Enter altitude, days, daily live-high hours and protocol to estimate total exposure hours and Hb-mass/VO₂max gains. The effective live-high window is ~2000–3000 m; more daily hours and more days mean more benefit.',
+    detail_alt_stages:
+      'Common advice: race in the first 1–2 days after descent (residual adaptation, not yet decompensated) or after ~2–3 weeks; avoid days 5–10 (the dip while ventilation and acid-base re-adapt). Individuals vary — test your own response first.',
+    detail_alt_note:
+      'Numbers are estimates and responders vary widely (Levine 1997; Wilber 2007; Chapman 2014); non-responders are common. Early at altitude sleep and training quality drop — supplement iron and fluids; live-high/train-high risks overtraining, so ease intensity.',
     ref_title: '📚 Science & Training Principles',
-    ref_intro: 'The methodology behind these tools, with sources',
+    ref_intro:
+      'The methodology behind these tools, with sources. Tap “Learn more” under each tool card to expand its principle, how-to, stages and notes.',
     ref_daniels:
       'Daniels VDOT formula: Jack Daniels, "Running Formula" — VO₂=−4.60+0.182258v+0.000104v²; widely adopted by RQ, VDOT Pro, Runalyze and others.',
     ref_seiler:

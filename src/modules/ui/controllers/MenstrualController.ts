@@ -6,6 +6,16 @@
 
 import MenstrualCalculator from '../../core/MenstrualCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { phaseStrip } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
+
+/** Typical phase order + relative span (days of a ~28-day cycle) for the strip. */
+const CYCLE_PHASES: { key: string; weight: number }[] = [
+  { key: 'menstrual', weight: 5 },
+  { key: 'follicular', weight: 8 },
+  { key: 'ovulation', weight: 2 },
+  { key: 'luteal', weight: 13 }
+];
 
 export class MenstrualController {
   static initialize(): void {
@@ -35,13 +45,26 @@ export class MenstrualController {
       phaseEl.textContent = '--';
       phaseEl.className = '';
       if (adviceEl) adviceEl.textContent = '';
+      renderInsight('cycle', { ok: false });
       return;
     }
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     phaseEl.textContent = t[`menstrual_phase_${phase}`] || phase;
     phaseEl.className = 'risk-badge risk-moderate';
     if (adviceEl) adviceEl.textContent = t[`menstrual_advice_${phase}`] || '';
+
+    // Cycle strip with the current phase highlighted.
+    renderInsight('cycle', {
+      ok: true,
+      chartHtml: phaseStrip(
+        CYCLE_PHASES.map((p) => ({
+          label: t[`menstrual_phase_${p.key}`] || p.key,
+          weight: p.weight,
+          cls: p.key === phase ? 'z5' : 'z2'
+        }))
+      )
+    });
   }
 }
 

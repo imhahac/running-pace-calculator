@@ -7,6 +7,8 @@
 import TranslationManager from '../../state/TranslationManager.js';
 import ModeController from './ModeController.js';
 import CalcController from './CalcController.js';
+import VdotController from './VdotController.js';
+import TriathlonController from './TriathlonController.js';
 import TrainingController from './TrainingController.js';
 import RaceController from './RaceController.js';
 import HeartRateController from './HeartRateController.js';
@@ -28,6 +30,7 @@ import HrvController from './HrvController.js';
 import MenstrualController from './MenstrualController.js';
 import AltitudeController from './AltitudeController.js';
 import GapController from './GapController.js';
+import VersionController from './VersionController.js';
 
 /**
  * Controllers that build language-dependent content dynamically (innerHTML /
@@ -35,6 +38,8 @@ import GapController from './GapController.js';
  * switch so already-rendered output is re-translated.
  */
 const DYNAMIC_VIEWS: { calculate(): void }[] = [
+  VdotController,
+  TriathlonController,
   HeartRateController,
   IntervalController,
   RacePlanController,
@@ -52,7 +57,8 @@ const DYNAMIC_VIEWS: { calculate(): void }[] = [
   RunningEconomyController,
   HrvController,
   MenstrualController,
-  AltitudeController
+  AltitudeController,
+  VersionController
 ];
 
 export class LanguageController {
@@ -84,9 +90,14 @@ export class LanguageController {
     RaceController.fetchAndPopulateRaces();
     TrainingController.populateSettingsPanel();
     CalcController.refreshTrainingCycle();
+    // CalcController.refreshZones() is called explicitly (not via DYNAMIC_VIEWS)
+    // because CalcController.calculate(sourceId) takes an argument and cannot
+    // fit the no-arg `{ calculate(): void }` contract.
+    CalcController.refreshZones();
 
     if (refreshDynamic) {
-      // Re-translate dynamically rendered science/environment tool output.
+      // Re-translate JS-rendered tool output. GapController.render() is listed
+      // separately (its public method is render(), not calculate()).
       DYNAMIC_VIEWS.forEach((view) => view.calculate());
       GapController.render();
     }

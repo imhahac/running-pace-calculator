@@ -55,13 +55,14 @@
 - **Magic-link 登入** — 免密碼，用 Email 魔術連結（透過 [SendGrid](https://sendgrid.com)；驗證單一寄件人即可、免網域）。
 - **個人雲端同步** — 登入後各工具輸入與主題/語言偏好存到你的後端、跨裝置同步。
 
-部署與所有設定細節見 **[worker/README.md](worker/README.md)**。可手動 `wrangler deploy`，或用 **GitHub Actions 自動部署**（[.github/workflows/deploy-worker.yml](.github/workflows/deploy-worker.yml)，推送 `worker/**` 變動即觸發）。CI 每次都會跑單元測試＋`--dry-run` 打包驗證；**待下列設定齊全（真實 KV id ＋ 兩個 secrets）才會實際部署**，否則略過並標註警告（不會讓 CI 失敗）。一次性準備：
+**部署用 GitHub Actions、設定全走 GH Secrets/Variables（金鑰不寫進 repo）**。完整逐步教學(含建 KV、CF token 權限、SendGrid 單一寄件人)見 **[worker/README.md](worker/README.md)**。摘要——在 repo **Settings → Secrets and variables → Actions** 設定:
 
-1. 在 [worker/wrangler.toml](worker/wrangler.toml) 填入真正的 **KV namespace id** 與 `APP_URL`／`ALLOWED_ORIGIN`（裸來源）／`FROM_EMAIL`／`ADMIN_EMAILS`（非機密，需 commit）。
-2. GitHub repo **Settings → Secrets and variables → Actions** 新增 `CLOUDFLARE_API_TOKEN`（Workers 編輯權限）與 `CLOUDFLARE_ACCOUNT_ID`。
-3. `SENDGRID_API_KEY` 設定**一次**即可（`cd worker && npx wrangler secret put SENDGRID_API_KEY`）—— Worker secret 跨部署保留。
+- **Variables**:`KV_NAMESPACE_ID`、`APP_URL`、`ALLOWED_ORIGIN`(裸來源)、`FROM_EMAIL`、`ADMIN_EMAILS`(逗號分隔、勿含空格)。
+- **Secrets**:`CLOUDFLARE_API_TOKEN`(Workers 編輯權限)、`CLOUDFLARE_ACCOUNT_ID`、`SENDGRID_API_KEY`。
 
-> 🔐 需自備 Cloudflare 帳號、KV namespace 與 SendGrid API key（驗證單一寄件人信箱、不必擁有網域）。賽事清單由管理員以 `PUT /api/races` 維護（或沿用下方 GAS 試算表手動輸入）。
+推送 `worker/**` 變動或手動觸發 [.github/workflows/deploy-worker.yml](.github/workflows/deploy-worker.yml):每次都跑單元測試＋`--dry-run` 打包驗證;**待上述變數/密鑰齊全才實際部署**(CI 自動把 KV id 寫入設定、用 `--var` 帶入參數、再上傳 SendGrid 金鑰),否則略過並標警告(不讓 CI 失敗)。
+
+> 🔐 需自備 Cloudflare 帳號、KV namespace 與 SendGrid API key(驗證單一寄件人信箱、不必擁有網域)。所有真實值都存在 GitHub,repo 內 [worker/wrangler.toml](worker/wrangler.toml) 只留佔位與本機開發預設。賽事清單由管理員以 `PUT /api/races` 維護(或沿用下方 GAS 試算表手動輸入)。
 
 ### ② Google Apps Script（備選 / 手動為主）
 
@@ -130,7 +131,7 @@ eslint.config.js / .prettierrc / .c8rc.json   # 品質工具設定
 ---
 
 ## 🗺️ 後續規劃 (Roadmap)
-即時語言重譯體驗優化、賽事來源端點重對接（待可登入環境取得內部 API）、更多個體化監控整合。
+即時語言重譯體驗優化、賽事來源端點重對接（兩來源已改 JS/SPA＋登入牆，匿名爬取失效；待在登入環境擷取真實 API 端點後重接——回報範本見 [docs/gas-crawler-script.js](docs/gas-crawler-script.js) 最上方 `CONFIG` 註解）、更多個體化監控整合。
 
 ---
 

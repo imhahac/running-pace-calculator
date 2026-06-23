@@ -27,39 +27,47 @@ Auth is a **Bearer session token** (`Authorization: Bearer <sessionId>`) stored 
 - Magic tokens are single-use, 256-bit, 15-min TTL; sessions 30 days; one magic-link request per email per minute. CORS is locked to `ALLOWED_ORIGIN` (a **bare origin** — the Worker normalises it, but set it without a path).
 - `DEBUG_AUTH="1"` makes `/api/auth/request` return whether the email actually sent (handy while configuring SendGrid); leave it unset in production so address existence isn't leaked.
 
-## Setup
+## Configure & deploy (GitHub Actions — recommended)
+
+All configuration lives in **GitHub**, not in the repo — no real ids or keys are committed. Do this once:
+
+**1. Create the KV namespace**
 
 ```bash
 cd worker
 npm install
 npx wrangler login
-
-# 1) Create the KV namespace, paste the id into wrangler.toml
-npx wrangler kv namespace create KV
-
-# 2) Set the SendGrid secret (free tier; verify a Single Sender email first — no domain needed)
-npx wrangler secret put SENDGRID_API_KEY
-
-# 3) Edit wrangler.toml vars: APP_URL, ALLOWED_ORIGIN, FROM_EMAIL, ADMIN_EMAILS
-
-# 4) Deploy
-npm run deploy
+npx wrangler kv namespace create KV   # copy the returned id
 ```
 
-Local dev: copy `.dev.vars.example` → `.dev.vars` (holds `SENDGRID_API_KEY`), then `npm run dev`.
-Unit tests for the pure helpers: `npm test` (`node --test`).
+**2. Get Cloudflare credentials**
 
-## Deploy via GitHub Actions
+- **API token**: dashboard → **My Profile → API Tokens → Create Token** → use the **"Edit Cloudflare Workers"** template (grants Account → _Workers Scripts: Edit_ and _Workers KV Storage: Edit_).
+- **Account ID**: **Workers & Pages** → right sidebar.
 
-[`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) runs on every push to `main` that touches `worker/**` (or via manual *Run workflow*). It always runs the unit tests and a `wrangler deploy --dry-run` bundle check (no account needed), then **deploys only once the Worker is fully configured** — a real KV id in `wrangler.toml` **and** the two repo secrets below. Until then it skips the deploy with a warning instead of failing the build.
+**3. SendGrid (magic-link email — no domain needed)**
 
-One-time setup:
+- **Settings → Sender Authentication → Single Sender Verification** → verify an email you own; that address is your `FROM_EMAIL`.
+- **Settings → API Keys → Create API Key** with the _Mail Send_ permission.
 
-1. Put the **real KV namespace id** (and `APP_URL` / `ALLOWED_ORIGIN` / `FROM_EMAIL` / `ADMIN_EMAILS`) into `wrangler.toml` and commit it (these are not secrets).
-2. Add repo **Actions secrets**: `CLOUDFLARE_API_TOKEN` (Workers-edit scope) and `CLOUDFLARE_ACCOUNT_ID`.
-3. Set `SENDGRID_API_KEY` **once** (`npx wrangler secret put SENDGRID_API_KEY` or the dashboard) — Worker secrets persist across deploys. To manage it from CI instead, enable the commented `secrets:`/`env:` block in the workflow and add `SENDGRID_API_KEY` to repo secrets.
+**4. Add the config to GitHub** → repo **Settings → Secrets and variables → Actions**:
 
-After that, pushing changes under `worker/` auto-deploys.
+| Name                    | Type     | Example                                            | Purpose                                          |
+| ----------------------- | -------- | -------------------------------------------------- | ------------------------------------------------ |
+| `KV_NAMESPACE_ID`       | Variable | `a1b2c3…` (from step 1)                            | Binds the KV store (CI writes it into wrangler.toml) |
+| `APP_URL`               | Variable | `https://imhahac.github.io/running-pace-calculator/` | Where the magic link points back                 |
+| `ALLOWED_ORIGIN`        | Variable | `https://imhahac.github.io`                        | CORS origin (bare, no path; `*` only for testing) |
+| `FROM_EMAIL`            | Variable | the verified Single Sender                         | Magic-link "from" address                        |
+| `ADMIN_EMAILS`          | Variable | `you@example.com` (comma-separated, **no spaces**) | Who may `PUT /api/races`                          |
+| `CLOUDFLARE_API_TOKEN`  | Secret   | —                                                  | Deploy auth                                       |
+| `CLOUDFLARE_ACCOUNT_ID` | Secret   | —                                                  | Deploy target                                     |
+| `SENDGRID_API_KEY`      | Secret   | `SG.…`                                             | Sends the magic-link email                        |
+
+**5. Deploy** — push any change under `worker/**` (or run the workflow manually). [`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) always runs the unit tests + a `wrangler deploy --dry-run` bundle check (no account needed); once the variable + secrets above exist it injects the KV id, deploys with the vars (`--var`), then uploads `SENDGRID_API_KEY`. If anything is missing it **skips the deploy with a warning** — it never fails the build.
+
+### Local development / manual deploy
+
+`wrangler.toml` keeps harmless dev defaults for `[vars]` plus a placeholder KV id (local `wrangler dev` needs no real id). For local secrets, copy `.dev.vars.example` → `.dev.vars` (holds `SENDGRID_API_KEY`), then `npm run dev`. To deploy by hand instead of via CI: put the real KV id in `wrangler.toml`, `npx wrangler secret put SENDGRID_API_KEY`, then `npm run deploy`. Pure-helper unit tests: `npm test`.
 
 ## Wire the frontend
 

@@ -6,6 +6,8 @@
 
 import HrvCalculator from '../../core/HrvCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { sparkline } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import type { THrvStatus } from '../../core/HrvCalculator.js';
 
 const STATUS_RISK: Record<THrvStatus, string> = {
@@ -42,10 +44,11 @@ export class HrvController {
       statusEl.textContent = '--';
       statusEl.className = '';
       if (adviceEl) adviceEl.textContent = '';
+      renderInsight('hrv', { ok: false });
       return;
     }
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     set('hrv-baseline', String(r.baseline));
     set('hrv-today', String(r.today));
     set('hrv-band', `${r.lower}–${r.upper}`);
@@ -53,6 +56,12 @@ export class HrvController {
     statusEl.textContent = t[`hrv_status_${r.status}`] || r.status;
     statusEl.className = `risk-badge risk-${STATUS_RISK[r.status]}`;
     if (adviceEl) adviceEl.textContent = t[`hrv_advice_${r.status}`] || '';
+
+    // Daily RMSSD trend with the personal normal band (baseline ± 1 SD).
+    renderInsight('hrv', {
+      ok: true,
+      chartHtml: sparkline({ points: rmssd, band: { lo: r.lower, hi: r.upper } })
+    });
   }
 }
 

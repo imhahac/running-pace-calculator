@@ -8,6 +8,8 @@
 import CadenceCalculator from '../../core/CadenceCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { gauge } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 
 const OUTPUT_IDS = [
   'cadence-band',
@@ -44,16 +46,18 @@ export class CadenceController {
 
     if (paceSec === null || paceSec <= 0) {
       OUTPUT_IDS.forEach((id) => set(id, '--'));
+      renderInsight('cadence', { ok: false });
       return;
     }
 
     const r = CadenceCalculator.analyze(paceSec, current);
     if (!r) {
       OUTPUT_IDS.forEach((id) => set(id, '--'));
+      renderInsight('cadence', { ok: false });
       return;
     }
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     set('cadence-band', `${r.recommendedLo}–${r.recommendedHi} spm`);
     set('cadence-stride', r.strideLengthM !== null ? `${r.strideLengthM} m` : '--');
     set('cadence-plus5', r.plus5 !== null ? `${r.plus5} spm` : '--');
@@ -66,6 +70,30 @@ export class CadenceController {
           ? t.cadence_advice_over || ''
           : t.cadence_advice_ok || ''
     );
+
+    // Gauge: where your current cadence sits vs the recommended band.
+    if (current !== undefined) {
+      const lo = r.recommendedLo;
+      const hi = r.recommendedHi;
+      const min = Math.min(lo - 15, current - 5);
+      const max = Math.max(hi + 15, current + 5);
+      renderInsight('cadence', {
+        ok: true,
+        chartHtml: gauge({
+          value: current,
+          min,
+          max,
+          valueLabel: `${current} spm`,
+          bands: [
+            { upTo: lo, cls: 'warn' },
+            { upTo: hi, cls: 'good' },
+            { upTo: max, cls: 'warn' }
+          ]
+        })
+      });
+    } else {
+      renderInsight('cadence', { ok: false });
+    }
   }
 }
 

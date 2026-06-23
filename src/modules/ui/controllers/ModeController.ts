@@ -101,7 +101,7 @@ export class ModeController {
     if (!this.dom.venueSelect) return;
 
     this.dom.venueSelect.innerHTML = '';
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const state = StateManager.getState();
 
     const venueMap: Record<string, string> = {

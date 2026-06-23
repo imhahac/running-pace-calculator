@@ -96,6 +96,21 @@ export class VdotCalculator {
   }
 
   /**
+   * Coarse fitness band for a VDOT, returned as an i18n key suffix. Thresholds
+   * reflect common amateur→elite ranges (Daniels): <38 beginner, 38–47
+   * recreational, 48–57 intermediate, 58–65 advanced, ≥66 elite.
+   */
+  static gradeFor(
+    vdot: number
+  ): 'beginner' | 'recreational' | 'intermediate' | 'advanced' | 'elite' {
+    if (vdot < 38) return 'beginner';
+    if (vdot < 48) return 'recreational';
+    if (vdot < 58) return 'intermediate';
+    if (vdot < 66) return 'advanced';
+    return 'elite';
+  }
+
+  /**
    * Equivalent race time (seconds) for a target distance at a given VDOT.
    * Binary search on time (VDOT decreases monotonically as time grows).
    */

@@ -9,6 +9,8 @@ import IntervalBuilder from '../../core/IntervalBuilder.js';
 import VdotCalculator from '../../core/VdotCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { phaseStrip } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 
 export class IntervalController {
   static initialize(): void {
@@ -30,7 +32,7 @@ export class IntervalController {
     const noteEl = document.getElementById('interval-note');
     if (!resultEl || !noteEl) return;
 
-    const t = TranslationManager.getAll();
+    const t = TranslationManager.getDict();
     const distEl = document.getElementById('vdot-dist-select') as HTMLSelectElement | null;
     const timeEl = document.getElementById('vdot-time-input') as HTMLInputElement | null;
     const weeklyEl = document.getElementById('interval-weekly-input') as HTMLInputElement | null;
@@ -41,6 +43,7 @@ export class IntervalController {
     if (seconds === null || seconds <= 0 || !(distance > 0)) {
       resultEl.innerHTML = '';
       noteEl.textContent = t.interval_need_vdot || '';
+      renderInsight('interval', { ok: false });
       return;
     }
 
@@ -54,6 +57,7 @@ export class IntervalController {
     if (!s) {
       resultEl.innerHTML = '';
       noteEl.textContent = t.interval_need_vdot || '';
+      renderInsight('interval', { ok: false });
       return;
     }
 
@@ -75,6 +79,16 @@ export class IntervalController {
     noteEl.textContent = s.cappedByWeekly
       ? `${totalLabel} · ${t.interval_capped || ''}`
       : totalLabel;
+
+    // Session timeline: warm-up → main set → cool-down, sized by distance.
+    renderInsight('interval', {
+      ok: true,
+      chartHtml: phaseStrip([
+        { label: 'WU', weight: s.warmupKm, caption: `${s.warmupKm}km` },
+        { label: s.type, weight: s.mainKm, caption: `${s.mainKm.toFixed(1)}km`, cls: 'z5' },
+        { label: 'CD', weight: s.cooldownKm, caption: `${s.cooldownKm}km` }
+      ])
+    });
   }
 }
 

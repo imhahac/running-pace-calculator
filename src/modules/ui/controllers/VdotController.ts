@@ -6,6 +6,9 @@
 
 import VdotCalculator from '../../core/VdotCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
+import TranslationManager from '../../state/TranslationManager.js';
+import { zoneBar } from '../viz/Charts.js';
+import { renderInsight } from '../viz/ToolInsight.js';
 import type { IVdotPaces } from '../../../types/index';
 
 const EQUIV_DISTANCES: { id: string; meters: number }[] = [
@@ -59,6 +62,29 @@ export class VdotController {
         el.textContent = t > 0 ? TimeFormatter.format(t) : '--';
       }
     });
+
+    this.renderVdotInsight(vdot, paces);
+  }
+
+  /** Zone bar of the 5 paces + a plain-language interpretation of the VDOT. */
+  private static renderVdotInsight(vdot: number, paces: IVdotPaces): void {
+    const t = (k: string): string => TranslationManager.get(k);
+    const pace = (s: number): string => (s > 0 ? TimeFormatter.format(s) : '--');
+    const grade = t(`vdot_grade_${VdotCalculator.gradeFor(vdot)}`);
+    renderInsight('vdot', {
+      ok: true,
+      chartHtml: zoneBar([
+        { label: 'E', value: pace(paces.easy), caption: t('zone_easy_desc') },
+        { label: 'M', value: pace(paces.marathon), caption: t('zone_marathon_desc') },
+        { label: 'T', value: pace(paces.threshold), caption: t('zone_threshold_desc') },
+        { label: 'I', value: pace(paces.interval), caption: t('zone_interval_desc') },
+        { label: 'R', value: pace(paces.repetition), caption: t('zone_repetition_desc') }
+      ]),
+      readoutText: TranslationManager.format('vdot_readout', {
+        v: vdot.toFixed(1),
+        grade
+      })
+    });
   }
 
   private static setPace(id: string, seconds: number): void {
@@ -77,6 +103,7 @@ export class VdotController {
       const el = document.getElementById(id);
       if (el) el.textContent = '--';
     });
+    renderInsight('vdot', { ok: false });
   }
 }
 

@@ -51,7 +51,31 @@ export const TOOL_INPUT_IDS = [
   'alt-altitude-input',
   'alt-days-input',
   'alt-hours-input',
-  'alt-protocol-select'
+  'alt-protocol-select',
+  // Assessment / workout / training-cycle tool inputs (pace_* and tri-* are
+  // owned by StateManager and intentionally excluded to avoid restore clashes).
+  'hr-age-input',
+  'hr-rest-input',
+  'hr-max-input',
+  'hr-formula-select',
+  'vdot-dist-select',
+  'vdot-time-input',
+  'pred-dist-select',
+  'pred-time-input',
+  'raceplan-dist-select',
+  'raceplan-time-input',
+  'raceplan-strategy-select',
+  'interval-weekly-input',
+  'interval-type-select',
+  'methods-time-input',
+  'methods-select',
+  'training-target-date',
+  'training-plan-distance',
+  'training-difficulty',
+  'training-school',
+  'training-weeks',
+  'training-start-vol',
+  'training-peak-vol'
 ];
 
 function getStore(): Storage | null {

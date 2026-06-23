@@ -50,6 +50,17 @@ try {
   // CSS is optional for hashing purposes.
 }
 const hash = createHash('sha256').update(js).update(css).digest('hex').slice(0, 10);
-await writeFile(path.join(root, 'assets/js/build-info.js'), `self.__BUILD_HASH__ = '${hash}';\n`);
 
-console.log(`Built assets/js/main.js (${(js.length / 1024).toFixed(1)} KB) — build hash ${hash}`);
+// Expose both the human-readable version (from package.json — single source of
+// truth) and the content hash. Set on `self` so it works in the service worker
+// (importScripts) AND in the page (self === window for a classic script).
+const pkg = JSON.parse(await readFile(path.join(root, 'package.json'), 'utf8'));
+const version = pkg.version || '0.0.0';
+await writeFile(
+  path.join(root, 'assets/js/build-info.js'),
+  `self.__BUILD_HASH__ = '${hash}';\nself.__APP_VERSION__ = '${version}';\n`
+);
+
+console.log(
+  `Built assets/js/main.js (${(js.length / 1024).toFixed(1)} KB) — v${version}, build hash ${hash}`
+);
