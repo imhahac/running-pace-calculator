@@ -103,7 +103,9 @@
             <div class="tab-item active" id="tabbtn-pace" data-tab="tab-pace" tabindex="0" role="tab" aria-selected="true" aria-controls="tab-pace">🏃 <span data-i18n="tab_pace">配速與分析</span></div>
             <div class="tab-item" id="tabbtn-triathlon" data-tab="tab-triathlon" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-triathlon">🏊‍♂️ <span data-i18n="tab_triathlon">鐵人三項</span></div>
             <div class="tab-item" id="tabbtn-training" data-tab="tab-training" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-training">📅 <span data-i18n="tab_training">課表與賽事</span></div>
-            <div class="tab-item" id="tabbtn-science" data-tab="tab-science" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-science">🧪 <span data-i18n="tab_science">科學訓練</span></div>
+            <div class="tab-item" id="tabbtn-assessment" data-tab="tab-assessment" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-assessment">🧪 <span data-i18n="tab_assessment">科學評估</span></div>
+            <div class="tab-item" id="tabbtn-workout" data-tab="tab-workout" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-workout">🏗️ <span data-i18n="tab_workout">課表設計</span></div>
+            <div class="tab-item" id="tabbtn-monitoring" data-tab="tab-monitoring" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-monitoring">📈 <span data-i18n="tab_monitoring">監控與適應</span></div>
             <div class="tab-item" id="tabbtn-environment" data-tab="tab-environment" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-environment">🌡️ <span data-i18n="tab_environment">環境與補給</span></div>
             <div class="tab-item" id="tabbtn-settings" data-tab="tab-settings" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-settings">⚙️ <span data-i18n="tab_settings">系統設定</span></div>
         </nav>
@@ -532,7 +534,7 @@
             </div>
         </div> <!-- End of tab-training -->
 
-        <div class="tab-pane" id="tab-science" role="tabpanel" aria-labelledby="tabbtn-science">
+        <div class="tab-pane" id="tab-assessment" role="tabpanel" aria-labelledby="tabbtn-assessment">
             <!-- VDOT Calculator -->
             <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
                 <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="vdot_title">📊 VDOT 訓練配速</span></h3>
@@ -596,6 +598,43 @@
                 <div class="explain" data-i18n="explain_hr">先用 Tanaka 公式（208−0.7×年齡）或實測值估最大心率，再以 Karvonen（心率儲備）分成五區，各區對應不同訓練目的。VO₂max 為由最大/靜息心率比值推估（非實測）。</div>
             </div>
 
+            <!-- Running Economy + Body Composition -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="re_title">🏋️ 跑步經濟性 + 體組成</span></h3>
+                <div class="helper-text" data-i18n="hint_re_intro" style="margin-bottom: 8px;">由 5K 成績估 VO₂max、判讀體脂級距，給三層優化策略</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="re-5k-input" data-i18n="re_5k">5K 成績 (m:ss)</label>
+                    <input type="text" id="re-5k-input" placeholder="22:00" style="width: 8ch;">
+                    <label for="re-sex-select" data-i18n="re_sex">生理性別</label>
+                    <select id="re-sex-select">
+                        <option value="male" data-i18n="re_sex_male">男性</option>
+                        <option value="female" data-i18n="re_sex_female">女性</option>
+                    </select>
+                    <label for="re-bf-input" data-i18n="re_bf">體脂率 (%)</label>
+                    <input type="number" id="re-bf-input" placeholder="15" min="2" max="60" style="width: 8ch;">
+                </div>
+                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
+                    <span data-i18n="re_vo2max_label">估計 VO₂max</span>: <span id="re-vo2max" class="highlight-text mono-text">--</span>&emsp;<span data-i18n="re_band_label">體脂級距</span>: <span id="re-band"></span>
+                </div>
+                <ul id="re-strategies" class="strategy-list" style="margin-top: 8px;"></ul>
+                <div class="explain" data-i18n="explain_re">由 5K 成績以 Daniels 引擎推估 VO₂max（即 VDOT）。體脂級距採 ACE 常用標準（男/女不同）。提升跑步經濟性三層：肌力訓練（重訓改善 RE 約 2–8%，Beattie 2017）、增強式（跳躍/彈振強化肌腱剛性）、體組成（在健康範圍內降低非功能性體重以改善功率體重比）。</div>
+            </div>
+
+            <!-- Science & Principles Reference -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="ref_title">📚 科學實證與訓練原則</span></h3>
+                <div class="helper-text" data-i18n="ref_intro" style="margin-bottom: 8px;">本站工具方法論的依據與引用來源</div>
+                <div class="explain" data-i18n="ref_daniels">Daniels VDOT 公式：Jack Daniels《Running Formula》— VO₂=−4.60+0.182258v+0.000104v²；被 RQ、VDOT Pro、Runalyze 等平台廣泛採用。</div>
+                <div class="explain" data-i18n="ref_seiler">Seiler 80/20 極化訓練：菁英耐力選手約 80% 訓練在輕鬆區、20% 高強度；極化分布常勝過大量中強度（Seiler 2006/2013）。</div>
+                <div class="explain" data-i18n="ref_stellingwerff">Stellingwerff 碳水補給：運動 &gt;90 分鐘需 60–90 g/h 碳水（多種可轉運醣類）；近年超馬探索更高上限，需訓練腸道耐受（Stellingwerff & Cox 2014）。</div>
+                <div class="explain" data-i18n="ref_periard">熱適應：10–14 天熱適應血漿容量 +10–12%、核心體溫下降，約 70–80% 效益在前 4–7 天取得（Périard 2015）。</div>
+                <div class="explain" data-i18n="ref_principles">訓練原則：80/20 極化、每週里程增幅 ≤ 10%、硬日/輕鬆日交替、超過 60 分鐘運動每小時補碳水 30–60 g。</div>
+                <div class="explain" data-i18n="ref_resources">延伸資源：RQ（訓練平台 + VDOT 分析）、Strava（GPS + 社群）；書籍：Daniels《Running Formula》、Fitzgerald《80/20 Running》。工具內各頁標註引用來源，可追 PubMed/PMC/原著。</div>
+                <div class="explain" data-i18n="ref_accuracy">準確度與信任：標示「公式」者為教科書精確公式（VDOT、Tanaka/Gellish 最大心率、Karvonen、Minetti 坡度、Riegel、碳水 30–90 g/h、冰沙 7.5 g/kg、Mujika 減量），數值已用單元測試鎖定；標示「估算」者（高溫減速、汗率、步頻區間、恢復天數、海拔增益）為依文獻建立的合理模型，個體差異大，請當作起點而非保證。海拔/HRV/月經週期等尤其因人而異。</div>
+            </div>
+        </div> <!-- End of tab-assessment -->
+
+        <div class="tab-pane" id="tab-workout" role="tabpanel" aria-labelledby="tabbtn-workout">
             <!-- Interval Workout Generator -->
             <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
                 <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="interval_title">⚡ 間歇課表產生器</span></h3>
@@ -633,6 +672,20 @@
                 <div class="explain" data-i18n="explain_methods">Yasso 800：以 800m 反覆預估全馬。挪威 4×4：4×4 分鐘高強度練 VO₂max。Hansons：累積疲勞、長跑不過量。挪威雙閾值：同日兩次閾值、控制強度。</div>
             </div>
 
+            <!-- Strides -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="strides_title">🏃‍♂️💨 Strides 加速段</span></h3>
+                <div class="helper-text" data-i18n="hint_strides_intro" style="margin-bottom: 8px;">選擇進度週，產生加速段課表與 12 週漸進</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="strides-week-input" data-i18n="strides_week_input">進度週 (1–12)</label>
+                    <input type="number" id="strides-week-input" placeholder="1" min="1" max="12" value="1" style="width: 8ch;">
+                </div>
+                <div id="strides-session" class="highlight-text" style="margin-top: 10px;"></div>
+                <div class="helper-text" data-i18n="strides_progression_label" style="margin-top: 8px;">12 週漸進</div>
+                <div id="strides-progression" class="vdot-grid" style="margin-top: 4px;"></div>
+                <div class="explain" data-i18n="explain_strides">Strides＝約 15–30 秒「可控的快」（非衝刺），組間完全恢復，一週插入 2–3 次（輕鬆跑後或質量課表前）。改善神經肌肉協調與跑步經濟性（Daniels & Gilbert 1979；Blagrove 2018）。本表為 12 週漸進：4×15s → 8×30s。</div>
+            </div>
+
             <!-- Cadence Analysis -->
             <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
                 <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="cadence_title">👟 步頻分析</span></h3>
@@ -652,21 +705,9 @@
                 <div id="cadence-advice" class="helper-text" style="margin-top: 6px;"></div>
                 <div class="explain" data-i18n="explain_cadence">180 SPM 是迷思：合理步頻隨速度變化、因人而異。提高步頻 5–10% 可縮短跨步、降低膝與跟腱的單步衝擊（Heiderscheit 2011）。步幅過大（步頻偏低）常是過度跨步的訊號。</div>
             </div>
+        </div> <!-- End of tab-workout -->
 
-            <!-- Strides -->
-            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
-                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="strides_title">🏃‍♂️💨 Strides 加速段</span></h3>
-                <div class="helper-text" data-i18n="hint_strides_intro" style="margin-bottom: 8px;">選擇進度週，產生加速段課表與 12 週漸進</div>
-                <div class="settings-grid" style="width: 100%;">
-                    <label for="strides-week-input" data-i18n="strides_week_input">進度週 (1–12)</label>
-                    <input type="number" id="strides-week-input" placeholder="1" min="1" max="12" value="1" style="width: 8ch;">
-                </div>
-                <div id="strides-session" class="highlight-text" style="margin-top: 10px;"></div>
-                <div class="helper-text" data-i18n="strides_progression_label" style="margin-top: 8px;">12 週漸進</div>
-                <div id="strides-progression" class="vdot-grid" style="margin-top: 4px;"></div>
-                <div class="explain" data-i18n="explain_strides">Strides＝約 15–30 秒「可控的快」（非衝刺），組間完全恢復，一週插入 2–3 次（輕鬆跑後或質量課表前）。改善神經肌肉協調與跑步經濟性（Daniels & Gilbert 1979；Blagrove 2018）。本表為 12 週漸進：4×15s → 8×30s。</div>
-            </div>
-
+        <div class="tab-pane" id="tab-monitoring" role="tabpanel" aria-labelledby="tabbtn-monitoring">
             <!-- Injury Risk (ACWR) -->
             <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
                 <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="acwr_title">🩹 傷害風險 (ACWR)</span></h3>
@@ -690,28 +731,6 @@
                     <span class="zone-badge">→</span><span data-i18n="acwr_rec_label">下週建議里程</span><span id="acwr-rec" class="mono-text vdot-pace">--</span>
                 </div>
                 <div class="explain" data-i18n="explain_acwr">ACWR＝本週里程÷近 4 週平均。甜蜜區約 0.8–1.3；&gt;1.5 代表負荷暴增，軟組織傷害風險上升（Gabbett 2016）；&lt;0.8 多為訓練不足或剛回歸。據此調整下週里程，避免一次加太多。</div>
-            </div>
-
-            <!-- Running Economy + Body Composition -->
-            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
-                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="re_title">🏋️ 跑步經濟性 + 體組成</span></h3>
-                <div class="helper-text" data-i18n="hint_re_intro" style="margin-bottom: 8px;">由 5K 成績估 VO₂max、判讀體脂級距，給三層優化策略</div>
-                <div class="settings-grid" style="width: 100%;">
-                    <label for="re-5k-input" data-i18n="re_5k">5K 成績 (m:ss)</label>
-                    <input type="text" id="re-5k-input" placeholder="22:00" style="width: 8ch;">
-                    <label for="re-sex-select" data-i18n="re_sex">生理性別</label>
-                    <select id="re-sex-select">
-                        <option value="male" data-i18n="re_sex_male">男性</option>
-                        <option value="female" data-i18n="re_sex_female">女性</option>
-                    </select>
-                    <label for="re-bf-input" data-i18n="re_bf">體脂率 (%)</label>
-                    <input type="number" id="re-bf-input" placeholder="15" min="2" max="60" style="width: 8ch;">
-                </div>
-                <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
-                    <span data-i18n="re_vo2max_label">估計 VO₂max</span>: <span id="re-vo2max" class="highlight-text mono-text">--</span>&emsp;<span data-i18n="re_band_label">體脂級距</span>: <span id="re-band"></span>
-                </div>
-                <ul id="re-strategies" class="strategy-list" style="margin-top: 8px;"></ul>
-                <div class="explain" data-i18n="explain_re">由 5K 成績以 Daniels 引擎推估 VO₂max（即 VDOT）。體脂級距採 ACE 常用標準（男/女不同）。提升跑步經濟性三層：肌力訓練（重訓改善 RE 約 2–8%，Beattie 2017）、增強式（跳躍/彈振強化肌腱剛性）、體組成（在健康範圍內降低非功能性體重以改善功率體重比）。</div>
             </div>
 
             <!-- HRV-guided Training -->
@@ -780,20 +799,7 @@
                 </div>
                 <div class="explain" data-i18n="explain_alt">有效「高住」窗約 2000–3000m；Hb mass 隨足量曝露時數上升（約每 100 有效小時 +1%，本工具上限 5%），VO₂max 增益約為 Hb 的 0.6 倍。賽事時機：常見建議下山後 1–2 天或 2–3 週後出賽、避開第 5–10 天。數字為估計、反應者差異大（Levine 1997；Wilber 2007；Chapman 2014）。</div>
             </div>
-
-            <!-- Science & Principles Reference -->
-            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
-                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="ref_title">📚 科學實證與訓練原則</span></h3>
-                <div class="helper-text" data-i18n="ref_intro" style="margin-bottom: 8px;">本站工具方法論的依據與引用來源</div>
-                <div class="explain" data-i18n="ref_daniels">Daniels VDOT 公式：Jack Daniels《Running Formula》— VO₂=−4.60+0.182258v+0.000104v²；被 RQ、VDOT Pro、Runalyze 等平台廣泛採用。</div>
-                <div class="explain" data-i18n="ref_seiler">Seiler 80/20 極化訓練：菁英耐力選手約 80% 訓練在輕鬆區、20% 高強度；極化分布常勝過大量中強度（Seiler 2006/2013）。</div>
-                <div class="explain" data-i18n="ref_stellingwerff">Stellingwerff 碳水補給：運動 &gt;90 分鐘需 60–90 g/h 碳水（多種可轉運醣類）；近年超馬探索更高上限，需訓練腸道耐受（Stellingwerff & Cox 2014）。</div>
-                <div class="explain" data-i18n="ref_periard">熱適應：10–14 天熱適應血漿容量 +10–12%、核心體溫下降，約 70–80% 效益在前 4–7 天取得（Périard 2015）。</div>
-                <div class="explain" data-i18n="ref_principles">訓練原則：80/20 極化、每週里程增幅 ≤ 10%、硬日/輕鬆日交替、超過 60 分鐘運動每小時補碳水 30–60 g。</div>
-                <div class="explain" data-i18n="ref_resources">延伸資源：RQ（訓練平台 + VDOT 分析）、Strava（GPS + 社群）；書籍：Daniels《Running Formula》、Fitzgerald《80/20 Running》。工具內各頁標註引用來源，可追 PubMed/PMC/原著。</div>
-                <div class="explain" data-i18n="ref_accuracy">準確度與信任：標示「公式」者為教科書精確公式（VDOT、Tanaka/Gellish 最大心率、Karvonen、Minetti 坡度、Riegel、碳水 30–90 g/h、冰沙 7.5 g/kg、Mujika 減量），數值已用單元測試鎖定；標示「估算」者（高溫減速、汗率、步頻區間、恢復天數、海拔增益）為依文獻建立的合理模型，個體差異大，請當作起點而非保證。海拔/HRV/月經週期等尤其因人而異。</div>
-            </div>
-        </div> <!-- End of tab-science -->
+        </div> <!-- End of tab-monitoring -->
 
         <div class="tab-pane" id="tab-environment" role="tabpanel" aria-labelledby="tabbtn-environment">
             <!-- Environmental Pace Adjustment -->

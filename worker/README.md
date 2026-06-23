@@ -3,7 +3,7 @@
 A single Worker that provides:
 
 - **Race API** — `GET /api/races` (public, from KV), `PUT /api/races` (admin) — replaces the fragile GAS scraper with a stable backend you own.
-- **Magic-link auth** — passwordless email login via [Resend](https://resend.com).
+- **Magic-link auth** — passwordless email login via [SendGrid](https://sendgrid.com).
 - **Per-user cloud sync** — `GET/PUT /api/data` stores each user's tool inputs + preferences, synced across devices.
 
 > ⚠️ Scraping the JS/SPA + login-walled race sites is still hard (same as the GAS note). The reliable path is admin curation via `PUT /api/races`; the daily cron only logs what the sources currently return so it can be tuned.
@@ -25,7 +25,7 @@ Auth is a **Bearer session token** (`Authorization: Bearer <sessionId>`) stored 
 **Security notes / tradeoffs:**
 - The session token lives in `localStorage` (readable by JS) — the standard SPA tradeoff. Acceptable here (data is only training inputs + your email); for higher sensitivity, move to an HttpOnly cookie + `SameSite`/CORS-credentials flow.
 - Magic tokens are single-use, 256-bit, 15-min TTL; sessions 30 days; one magic-link request per email per minute. CORS is locked to `ALLOWED_ORIGIN` (a **bare origin** — the Worker normalises it, but set it without a path).
-- `DEBUG_AUTH="1"` makes `/api/auth/request` return whether the email actually sent (handy while configuring Resend); leave it unset in production so address existence isn't leaked.
+- `DEBUG_AUTH="1"` makes `/api/auth/request` return whether the email actually sent (handy while configuring SendGrid); leave it unset in production so address existence isn't leaked.
 
 ## Setup
 
@@ -37,8 +37,8 @@ npx wrangler login
 # 1) Create the KV namespace, paste the id into wrangler.toml
 npx wrangler kv namespace create KV
 
-# 2) Set the Resend secret (free tier; verify a sender domain first)
-npx wrangler secret put RESEND_API_KEY
+# 2) Set the SendGrid secret (free tier; verify a Single Sender email first — no domain needed)
+npx wrangler secret put SENDGRID_API_KEY
 
 # 3) Edit wrangler.toml vars: APP_URL, ALLOWED_ORIGIN, FROM_EMAIL, ADMIN_EMAILS
 
@@ -46,18 +46,18 @@ npx wrangler secret put RESEND_API_KEY
 npm run deploy
 ```
 
-Local dev: copy `.dev.vars.example` → `.dev.vars` (holds `RESEND_API_KEY`), then `npm run dev`.
+Local dev: copy `.dev.vars.example` → `.dev.vars` (holds `SENDGRID_API_KEY`), then `npm run dev`.
 Unit tests for the pure helpers: `npm test` (`node --test`).
 
 ## Deploy via GitHub Actions
 
-[`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) runs the worker unit tests and `wrangler deploy` on every push to `main` that touches `worker/**` (or via manual *Run workflow*).
+[`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) runs on every push to `main` that touches `worker/**` (or via manual *Run workflow*). It always runs the unit tests and a `wrangler deploy --dry-run` bundle check (no account needed), then **deploys only once the Worker is fully configured** — a real KV id in `wrangler.toml` **and** the two repo secrets below. Until then it skips the deploy with a warning instead of failing the build.
 
 One-time setup:
 
 1. Put the **real KV namespace id** (and `APP_URL` / `ALLOWED_ORIGIN` / `FROM_EMAIL` / `ADMIN_EMAILS`) into `wrangler.toml` and commit it (these are not secrets).
 2. Add repo **Actions secrets**: `CLOUDFLARE_API_TOKEN` (Workers-edit scope) and `CLOUDFLARE_ACCOUNT_ID`.
-3. Set `RESEND_API_KEY` **once** (`npx wrangler secret put RESEND_API_KEY` or the dashboard) — Worker secrets persist across deploys. To manage it from CI instead, enable the commented `secrets:`/`env:` block in the workflow and add `RESEND_API_KEY` to repo secrets.
+3. Set `SENDGRID_API_KEY` **once** (`npx wrangler secret put SENDGRID_API_KEY` or the dashboard) — Worker secrets persist across deploys. To manage it from CI instead, enable the commented `secrets:`/`env:` block in the workflow and add `SENDGRID_API_KEY` to repo secrets.
 
 After that, pushing changes under `worker/` auto-deploys.
 

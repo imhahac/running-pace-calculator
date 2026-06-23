@@ -6,160 +6,202 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>訓練週期報表</title>
   <link rel="stylesheet" href="assets/css/main.css">
+  <style>
+    /* Report-only tweaks; the rest is inherited from main.css. */
+    #training-plan-table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    #training-plan-table th,
+    #training-plan-table td { padding: 5px 7px; text-align: left; vertical-align: top; }
+    #training-plan-table thead th { border-bottom: 2px solid var(--border-color); }
+    .report-week-head td {
+      font-weight: bold;
+      background: var(--bg-secondary);
+      border-top: 1px solid var(--border-color);
+      padding-top: 8px;
+    }
+    .report-day td { border-bottom: 1px solid var(--border-color); }
+    .report-empty { padding: 24px 8px; line-height: 1.6; }
+    .report-tight #training-plan-table { font-size: 0.78rem; }
+    .report-ultra #training-plan-table { font-size: 0.7rem; }
+    @media print { .action-row { display: none; } }
+  </style>
 </head>
 
 <body>
   <div class="main-wrapper" id="report-root">
     <header>
-      <h1 class="box title" style="font-size:1.4rem;">訓練週期報表</h1>
+      <h1 class="box title" id="report-title" style="font-size:1.4rem;">訓練週期報表</h1>
       <div class="helper-text" id="report-meta">--</div>
       <hr>
     </header>
 
     <div class="box input-group" style="flex-direction:column; align-items:flex-start;">
-      <table id="training-plan-table" style="width:100%; border-collapse:collapse; font-size:0.85rem;">
-        <thead>
-          <tr>
-            <th>週</th>
-            <th>訓練重點</th>
-            <th>Easy</th>
-            <th>Tempo</th>
-            <th>Interval</th>
-            <th>Long</th>
-            <th>里程(km)</th>
-            <th>主課表</th>
-            <th>恢復週</th>
-          </tr>
-        </thead>
+      <div id="report-empty" class="report-empty helper-text" style="display:none;"></div>
+      <table id="training-plan-table">
+        <thead id="training-plan-head"></thead>
         <tbody id="training-plan-body"></tbody>
       </table>
     </div>
 
     <div class="action-row" style="margin-top: 10px;">
-      <button class="action-btn" onclick="window.print()">📄 列印 / 匯出 PDF</button>
-      <a href="index.html" class="diag-link">回到主頁</a>
+      <button class="action-btn" id="report-print-btn" onclick="window.print()">📄 列印 / 匯出 PDF</button>
+      <a href="index.html" class="diag-link" id="report-back-link">← 回到主頁</a>
     </div>
   </div>
 
-  <script type="module">
-    import Calculator from './assets/js/modules/Calculator.js';
-    import TranslationManager from './assets/js/modules/TranslationManager.js';
-    import TimeFormatter from './assets/js/modules/TimeFormatter.js';
-    import ShareManager from './assets/js/modules/ShareManager.js';
+  <script>
+    // Self-contained: no module imports. The app stashes the already-generated,
+    // already-localized plan in localStorage before opening this page.
+    (function () {
+      var STORAGE_KEY = 'rpc_training_report';
 
-    const FULL_MARATHON_METERS = 42195;
-    const HALF_MARATHON_METERS = 21097.5;
-
-    function getPaceSecondsPerKm(payload) {
-      const state = payload?.state || {};
-      const inputs = payload?.inputs || {};
-      const mode = state.mode || 'pace';
-
-      if (mode === 'pace') {
-        const min = parseFloat(inputs.pace_input || '0') || 0;
-        const sec = parseFloat(inputs.pace_input2 || '0') || 0;
-        return min * 60 + sec;
-      }
-
-      if (mode === 'track') {
-        const lane = Number(state.lane || 400);
-        const lapSec = parseFloat(inputs.track_input || '0') || 0;
-        if (lapSec <= 0) return 0;
-        return (lapSec * 1000) / lane;
-      }
-
-      if (mode === 'treadmill') {
-        const speed = parseFloat(inputs.treadmill_input || '0') || 0;
-        if (speed <= 0) return 0;
-        const kmh = state.treadmillUnit === 'mile' ? speed * 1.609344 : speed;
-        return 3600 / kmh;
-      }
-
-      if (mode === 'finish_time') {
-        const finish = TimeFormatter.parse(inputs.finish_time_input || '');
-        const dist = Number(state.distance || 0);
-        if (!finish || !dist) return 0;
-        return (finish / dist) * 1000;
-      }
-
-      return 0;
-    }
-
-    function applyA4CompactMode(rowCount) {
-      const root = document.getElementById('report-root');
-      if (!root) return;
-
-      root.classList.remove('report-tight', 'report-ultra');
-      if (rowCount >= 16) {
-        root.classList.add('report-ultra');
-      } else if (rowCount >= 12) {
-        root.classList.add('report-tight');
-      }
-    }
-
-    function getPlanLabel(distanceMeters) {
-      if (distanceMeters >= FULL_MARATHON_METERS) return TranslationManager.get('plan_full');
-      if (distanceMeters >= HALF_MARATHON_METERS) return TranslationManager.get('plan_half');
-      return TranslationManager.get('plan_10k');
-    }
-
-    const payload = ShareManager.readPayloadFromURL();
-    const body = document.getElementById('training-plan-body');
-    const meta = document.getElementById('report-meta');
-
-    if (!payload) {
-      meta.textContent = '缺少報表資料';
-    } else {
-      if (payload?.state?.lang === 'en') {
-        TranslationManager.setLanguage('en');
-      }
-
-      const focusMap = {
-        base: TranslationManager.getTrainingFocusLabel('base'),
-        build: TranslationManager.getTrainingFocusLabel('build'),
-        peak: TranslationManager.getTrainingFocusLabel('peak'),
-        taper: TranslationManager.getTrainingFocusLabel('taper'),
-        race: TranslationManager.getTrainingFocusLabel('race')
-      };
-      const workoutMap = {
-        easy: TranslationManager.getWorkoutLabel('easy'),
-        tempo: TranslationManager.getWorkoutLabel('tempo'),
-        interval: TranslationManager.getWorkoutLabel('interval'),
-        race: TranslationManager.getWorkoutLabel('race')
+      var L = {
+        zh: {
+          docLang: 'zh-TW',
+          title: '訓練週期報表',
+          metaDate: '目標賽事日期',
+          metaWeeks: '週',
+          colDay: '星期',
+          colWorkout: '課表',
+          colDuration: '時長 / 距離',
+          colPace: '配速 / 強度',
+          mileage: '里程',
+          recovery: '恢復週',
+          empty: '尚無訓練計畫 — 請先到「課表與賽事」分頁設定目標賽事日期並輸入配速、產生課表後，再開啟報表。',
+          print: '📄 列印 / 匯出 PDF',
+          back: '← 回到主頁'
+        },
+        en: {
+          docLang: 'en',
+          title: 'Training Cycle Report',
+          metaDate: 'Target race date',
+          metaWeeks: 'weeks',
+          colDay: 'Day',
+          colWorkout: 'Workout',
+          colDuration: 'Duration / Distance',
+          colPace: 'Pace / Intensity',
+          mileage: 'Mileage',
+          recovery: 'Recovery',
+          empty: 'No training plan yet — open the “Training Plans & Races” tab, set a target race date and pace to generate a plan, then open the report.',
+          print: '📄 Print / Save PDF',
+          back: '← Back to app'
+        }
       };
 
-      const paceSecondsPerKm = getPaceSecondsPerKm(payload);
-      const targetDate = payload.trainingTargetDate || '';
-      const planDistance = Number(payload.trainingPlanDistance || FULL_MARATHON_METERS);
-      const plans = Calculator.generateTrainingCycle(paceSecondsPerKm, targetDate, focusMap, workoutMap, planDistance);
-      const estimate = paceSecondsPerKm > 0 ? TimeFormatter.format(paceSecondsPerKm * (planDistance / 1000)) : '--';
+      var ICONS = {
+        rest: '🛌', swim: '🏊', bike: '🚴', long: '⛰️', interval: '⚡',
+        easy: '🏃', tempo: '🏃', race: '🏁'
+      };
 
-      meta.textContent = `${TranslationManager.get('label_target_race_date')}: ${targetDate || '--'} / ${TranslationManager.get('training_context_prefix')}: ${getPlanLabel(planDistance)} ${estimate} / 週期: ${plans.length} 週`;
+      function readData() {
+        try {
+          var raw = localStorage.getItem(STORAGE_KEY);
+          if (!raw) return null;
+          return JSON.parse(raw);
+        } catch (e) {
+          return null;
+        }
+      }
 
-      body.innerHTML = '';
-      plans.forEach((row) => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td>${row.weekLabel}</td>
-          <td>${row.focus}</td>
-          <td>${row.easyPace}</td>
-          <td>${row.tempoPace}</td>
-          <td>${row.intervalPace}</td>
-          <td>${row.longRunPace}</td>
-          <td>${row.totalMileageKm}</td>
-          <td>${row.keyWorkout}</td>
-          <td>${row.isRecoveryWeek ? '✓' : '-'}</td>
-        `;
-        body.appendChild(tr);
+      function paceText(day) {
+        if (day.stages && day.stages.length) {
+          return day.stages.map(function (s) {
+            return s.label + ' ' + s.action + (s.pace ? ' @ ' + s.pace : '');
+          }).join(' · ');
+        }
+        return day.paceOrIntensity && day.paceOrIntensity !== '-' ? day.paceOrIntensity : '';
+      }
+
+      function cell(tag, text, attrs) {
+        var el = document.createElement(tag);
+        el.textContent = text == null ? '' : String(text);
+        if (attrs) {
+          Object.keys(attrs).forEach(function (k) { el.setAttribute(k, attrs[k]); });
+        }
+        return el;
+      }
+
+      function applyA4CompactMode(rowCount) {
+        var root = document.getElementById('report-root');
+        if (!root) return;
+        root.classList.remove('report-tight', 'report-ultra');
+        if (rowCount >= 16) root.classList.add('report-ultra');
+        else if (rowCount >= 12) root.classList.add('report-tight');
+      }
+
+      var data = readData();
+      var lang = (data && data.meta && data.meta.lang === 'en') ? 'en' : 'zh';
+      var t = L[lang];
+
+      document.documentElement.setAttribute('lang', t.docLang);
+      document.title = t.title;
+      document.getElementById('report-title').textContent = t.title;
+      document.getElementById('report-print-btn').textContent = t.print;
+      document.getElementById('report-back-link').textContent = t.back;
+
+      var meta = document.getElementById('report-meta');
+      var emptyEl = document.getElementById('report-empty');
+      var table = document.getElementById('training-plan-table');
+      var head = document.getElementById('training-plan-head');
+      var body = document.getElementById('training-plan-body');
+
+      var plan = (data && Array.isArray(data.plan)) ? data.plan : [];
+
+      if (!plan.length) {
+        meta.textContent = '--';
+        table.style.display = 'none';
+        emptyEl.style.display = 'block';
+        emptyEl.textContent = t.empty;
+        return;
+      }
+
+      // A plan exists: show the table, keep the empty-state hidden.
+      emptyEl.style.display = 'none';
+      table.style.display = '';
+
+      // Meta line.
+      var m = data.meta || {};
+      var parts = [];
+      if (m.targetDate) parts.push(t.metaDate + ': ' + m.targetDate);
+      if (m.planLabel) parts.push(m.planLabel + (m.estimate && m.estimate !== '--' ? ' ' + m.estimate : ''));
+      parts.push(plan.length + ' ' + t.metaWeeks);
+      meta.textContent = parts.join(' / ');
+
+      // Header.
+      var thead = document.createElement('tr');
+      [t.colDay, t.colWorkout, t.colDuration, t.colPace].forEach(function (h) {
+        thead.appendChild(cell('th', h));
+      });
+      head.appendChild(thead);
+
+      // Body: a header row per week, then one row per day.
+      var dayRowCount = 0;
+      plan.forEach(function (week) {
+        var headRow = document.createElement('tr');
+        headRow.className = 'report-week-head';
+        var label = (week.weekLabel || '') + ': ' + (week.focus || '') +
+          '  ·  ' + t.mileage + ' ' + (week.totalMileageKm != null ? week.totalMileageKm : '') +
+          (week.isRecoveryWeek ? '  ·  🌿 ' + t.recovery : '');
+        headRow.appendChild(cell('td', label, { colspan: '4' }));
+        body.appendChild(headRow);
+
+        (week.days || []).forEach(function (day) {
+          dayRowCount += 1;
+          var tr = document.createElement('tr');
+          tr.className = 'report-day';
+          var icon = ICONS[day.workoutType] || '🏃';
+          tr.appendChild(cell('td', day.dayOfWeek));
+          tr.appendChild(cell('td', icon + ' ' + (day.description || '')));
+          tr.appendChild(cell('td', day.durationOrDistance || ''));
+          tr.appendChild(cell('td', paceText(day)));
+          body.appendChild(tr);
+        });
       });
 
-      applyA4CompactMode(plans.length);
-    }
-
-    window.addEventListener('beforeprint', () => {
-      const rowCount = document.querySelectorAll('#training-plan-body tr').length;
-      applyA4CompactMode(rowCount);
-    });
+      applyA4CompactMode(dayRowCount);
+      window.addEventListener('beforeprint', function () {
+        applyA4CompactMode(document.querySelectorAll('#training-plan-body .report-day').length);
+      });
+    })();
   </script>
 </body>
 

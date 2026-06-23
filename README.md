@@ -1,121 +1,87 @@
 # 配速計算機 (Running Pace Calculator) 🏃‍♂️💨
 
-專為跑者與鐵人設計的**配速換算與訓練規劃** PWA。田徑場分段、跑步機換算、完賽預測、科學化訓練週期、三鐵配速、賽事倒數與路線地圖，全部離線可用。
+專為跑者與鐵人打造的**配速換算 × 科學化訓練**離線 PWA。從田徑場分段、跑步機換算、完賽預測，到 VDOT、心率區間、間歇課表、環境配速、補給/恢復、GPX 坡度修正與賽事倒數地圖 —— 全部離線可用、中英雙語、深淺主題。
 
 🌐 **線上使用**：<https://imhahac.github.io/running-pace-calculator/>
 
-> 介面採「任意欄位輸入、即刻換算」設計，並在每個模式與分頁內附**使用提示**；點右上角 ⓘ 可展開時間格式說明。
+> 介面採「任意欄位輸入、即刻換算」設計；每張工具卡片都附**常駐說明與研究引用**，點右上角 ⓘ 可展開時間格式說明。
 
 ---
 
 ## 🚀 如何使用
 
-頂部有四個分頁：**🏃 配速與分析 / 🏊‍♂️ 鐵人三項 / 📅 課表與賽事 / ⚙️ 系統設定**。
+頂部分頁（窄螢幕自動換行／可橫向捲動）：
 
-### 🏃 配速與分析
-此分頁有四種計算模式，任一欄位輸入後其他欄位即時連動換算：
-
-| 模式 | 輸入 | 得到 |
-|------|------|------|
-| **配速 (Pace)** | 每公里配速 `分:秒`（例：`4:30`） | 時速、各距離分段、完賽時間 |
-| **田徑場 (Track)** | 選場地（400m／300m）＋道次，輸入單圈秒數 | 依道次距離修正的 100m–2000m 分段 |
-| **跑步機 (Treadmill)** | 跑步機時速（km/h 或 mph） | 對應的路跑配速 |
-| **完賽時間 (Finish)** | 選距離（5K/10K/半馬/全馬…）＋目標完賽時間 | 反推所需配速與分段 |
-
-往下捲動還有：**分段表**（田徑場／路跑每 2.5k 可切換）、**訓練配速區間**（Easy / Marathon / Threshold / Interval / Repetition）、**完賽成績預測**（Riegel's Formula，由 5K/10K 成績推算半馬、全馬）。
-
-- 配速、跑步機單位可用各欄位旁的按鈕切換 **km ↔ mile**。
-
-### 🏊‍♂️ 鐵人三項
-選擇距離（51.5 / 113 / 226），輸入**目標總時間**自動反推游／騎／跑分段配速，或直接輸入各段配速與 T1/T2 轉換時間，得到總完賽時間。
-
-### 📅 課表與賽事
-輸入**目標賽事日期**並提供一個配速，自動產生賽前**週期化訓練菜單**（每週重點、總里程、主課表前中後段、恢復週標記）。串接賽事 API 後，可從下拉選單挑賽事、自動帶入日期並顯示**倒數計時**與 Strava／GPX 路線地圖。
-
-### ⚙️ 系統設定
-切換**語言（繁中／English）**、配速／跑步機單位、分段顯示偏好、預設場地與道次，並可填入自建的**賽事 API (GAS) URL**。
+| 分頁 | 內容 |
+|------|------|
+| 🏃 **配速與分析** | 四種輸入模式（配速 `m:ss`／田徑場道次單圈／跑步機時速／完賽時間反推）即時連動；分段表、E/M/T/I/R 訓練區間、Riegel 完賽預測。km ↔ mile 一鍵切換。 |
+| 🏊‍♂️ **鐵人三項** | 選距離（51.5／113／226），輸入總時間反推游／騎／跑分段，或輸入各段配速＋T1/T2 得總時間。 |
+| 📅 **課表與賽事** | 賽前**週期化訓練菜單**（分期、里程、每日課表、恢復週、CSV 匯出）、比賽配速規劃（平均／負分段／正分段）、**GPX 路線 GAP 分析**（Minetti 坡度修正）；串接賽事後端後可選賽事、看**倒數**與 Strava／GPX 地圖。 |
+| 🧪 **科學評估** | VDOT 訓練配速、心率區間（Tanaka／Gellish／Karvonen ＋ VO₂max）、跑步經濟性＋體組成、科學原則與引用。 |
+| 🏗️ **課表設計** | 間歇課表產生器、名師訓練法（Yasso／挪威 4×4／Hansons／雙閾值）、Strides 加速段、步頻分析。 |
+| 📈 **監控與適應** | 傷害風險 ACWR、HRV 訓練調整、月經週期調整、海拔訓練規劃。 |
+| 🌡️ **環境與補給** | 環境配速調整（露點／WBGT）、卡路里＋補給時間軸、長跑汗率補給、賽前降溫、肝醣超補、Taper 倒數、賽後恢復。 |
+| ⚙️ **系統設定** | 語言、單位、分段顯示、預設場地；**賽事後端 URL**；Email 登入雲端同步。 |
 
 ### 🔗 分享與匯出
-- **分享連結**：把目前參數壓成短碼網址，可直接傳給教練／跑友。
-- **匯出 PDF／PNG**：一鍵輸出主畫面或訓練報表版型。
+- **分享連結**：把目前參數（含各工具輸入）壓成短碼網址，收件者開啟即還原。
+- **訓練報表**：「📑 開啟訓練報表」把已產生的週期課表開成可列印／匯出 PDF 的報表頁。
+- **匯出 PNG**：一鍵輸出主畫面。
 
 > ⏱️ **時間格式**：`m:ss`（分:秒）或 `h:mm:ss`（時:分:秒）。
 
 ---
 
 ## ✨ 功能總覽
-即時配速換算（km/mile）、田徑場分道修正、跑步機換算、完賽時間與 Riegel 預測、三鐵配速、科學化訓練區間與週期課表、賽事整合與倒數、Leaflet 路線地圖、短碼分享、PDF/PNG 匯出、中英雙語、深淺色主題、Service Worker 離線。
+即時配速換算（km/mile）、田徑場分道修正、跑步機換算、完賽時間與 Riegel 預測、三鐵配速、VDOT、心率五區、間歇／名師課表、Strides、步頻、週期化課表與 CSV、GPX 坡度修正配速、環境配速（露點/WBGT）、補給時間軸／汗率／肝醣／降溫／Taper／恢復、ACWR／HRV／月經週期／海拔監控、賽事倒數與 Leaflet 路線地圖、短碼分享、雲端同步、PDF/PNG 匯出、中英雙語、深淺主題、Service Worker 離線。
 
 ---
 
 ## 📱 安裝 (PWA)
-- **iPhone (iOS)**：Safari 開啟 → 「分享」→「加入主畫面」。
+- **iPhone (iOS)**：Safari 開啟 →「分享」→「加入主畫面」。
 - **Android**：Chrome 開啟 → 選單 →「安裝應用程式」。
 
 ---
 
-## 📅 賽事 API (GAS) 設定與自動爬蟲
+## ☁️ 賽事資料來源
 
-本專案可用 Google 試算表作為免費賽事資料庫，並附**自動爬蟲**從「運動筆記」「馬拉松世界」抓取賽事。
+賽事清單需要一個後端提供。**建議用 Cloudflare Worker**（穩定、由你掌控）；舊的 GAS 方案仍可用，但自動爬蟲已失效（見下）。在 **⚙️ 系統設定** 填入後端 URL 後，賽事改由該後端取得，並出現 Email 登入框。
 
-**步驟 1：建立試算表** — 第一列欄位（順序與大小寫須一致）：
-`Date`(YYYY-MM-DD) / `Name` / `Location` / `RegistrationLink` / `StravaFull` / `StravaHalf`。
+### ① Cloudflare Worker（推薦）
 
-**步驟 2：貼入 Apps Script** — 試算表 → 擴充功能 → Apps Script：
-- `Code.gs` 貼入 [docs/gas-api-script.js](docs/gas-api-script.js) 全部內容。
-- 新增 `Crawler.gs`，貼入 [docs/gas-crawler-script.js](docs/gas-crawler-script.js) 全部內容。
+`worker/` 是一個 Worker，一站包辦：
 
-**步驟 3：部署為 Web 應用程式** — 部署 → 新增部署 → 類型「Web App」：執行身分「我」、存取權「所有人」，複製產生的 **Web App URL**。
+- **賽事 API** — `GET /api/races`（公開、由 KV 提供）、`PUT /api/races`（管理員維護清單）。
+- **Magic-link 登入** — 免密碼，用 Email 魔術連結（透過 [SendGrid](https://sendgrid.com)；驗證單一寄件人即可、免網域）。
+- **個人雲端同步** — 登入後各工具輸入與主題/語言偏好存到你的後端、跨裝置同步。
 
-**步驟 4：同步與使用** — 重新整理試算表，使用上方「🏃‍♂️ 賽事助手」選單一鍵爬取賽事；在計算機的 **⚙️ 系統設定** 把 Web App URL 填入「賽事 API (GAS)」並套用；切到 **📅 課表與賽事** 即可選賽事、看倒數與路線。
+部署與所有設定細節見 **[worker/README.md](worker/README.md)**。可手動 `wrangler deploy`，或用 **GitHub Actions 自動部署**（[.github/workflows/deploy-worker.yml](.github/workflows/deploy-worker.yml)，推送 `worker/**` 變動即觸發）。CI 每次都會跑單元測試＋`--dry-run` 打包驗證；**待下列設定齊全（真實 KV id ＋ 兩個 secrets）才會實際部署**，否則略過並標註警告（不會讓 CI 失敗）。一次性準備：
 
-> ⚠️ **關於自動爬蟲（2026 起）：** 「運動筆記」與「馬拉松世界」的賽事清單已改為 JS/AJAX 動態載入（運動筆記另加登入牆），靜態 HTML 已不含賽事列。爬蟲已改為**改打 AJAX/JSON 端點並在失敗時明確告警**（不再靜默回報「無須更新」）；若某來源仍抓不到，同步視窗會顯示警告，請打開 Apps Script 的**「執行紀錄」**查看記錄的 HTTP 狀態／內容樣本／首筆 JSON 欄位，據此調整 `gas-crawler-script.js` 最上方的 `CONFIG`。
->
-> 📝 **最可靠的來源是手動輸入**：直接在試算表新增列即可，前端 API（`doGet`）會照常讀取、無須依賴爬蟲。
+1. 在 [worker/wrangler.toml](worker/wrangler.toml) 填入真正的 **KV namespace id** 與 `APP_URL`／`ALLOWED_ORIGIN`（裸來源）／`FROM_EMAIL`／`ADMIN_EMAILS`（非機密，需 commit）。
+2. GitHub repo **Settings → Secrets and variables → Actions** 新增 `CLOUDFLARE_API_TOKEN`（Workers 編輯權限）與 `CLOUDFLARE_ACCOUNT_ID`。
+3. `SENDGRID_API_KEY` 設定**一次**即可（`cd worker && npx wrangler secret put SENDGRID_API_KEY`）—— Worker secret 跨部署保留。
 
----
+> 🔐 需自備 Cloudflare 帳號、KV namespace 與 SendGrid API key（驗證單一寄件人信箱、不必擁有網域）。賽事清單由管理員以 `PUT /api/races` 維護（或沿用下方 GAS 試算表手動輸入）。
 
-## ☁️ Cloudflare Worker 後端（推薦，取代 GAS）+ 帳號雲端同步
+### ② Google Apps Script（備選 / 手動為主）
 
-`worker/` 提供一個 Cloudflare Worker，一站包辦：
+也可用 Google 試算表當免費賽事資料庫：把 [docs/gas-api-script.js](docs/gas-api-script.js) 貼進試算表的 Apps Script、部署為 Web App，URL 填入 **⚙️ 系統設定** 的「賽事 API (GAS)」。試算表第一列欄位：`Date`(YYYY-MM-DD) / `Name` / `Location` / `RegistrationLink` / `StravaFull` / `StravaHalf`。直接在試算表新增列即可維護賽事。
 
-- **賽事 API** — `GET /api/races`（公開、由 KV 提供）、`PUT /api/races`（管理員）；比 GAS 穩定、由你掌控。
-- **Magic-link 登入** — 免密碼，用 Email 魔術連結（透過 [Resend](https://resend.com)）。
-- **個人雲端同步** — 登入後，各科學/環境工具輸入與主題/語言偏好存到你的後端、跨裝置同步。
-
-部署與設定見 [worker/README.md](worker/README.md)。完成後在 **⚙️ 系統設定** 填入「**後端 URL (Worker)**」即可：賽事改由 `${後端}/api/races` 取得（未填則回退舊的 GAS URL），並出現 Email 登入框。
-
-### 用 GitHub Actions 自動部署（[.github/workflows/deploy-worker.yml](.github/workflows/deploy-worker.yml)）
-
-推送到 `main`（且 `worker/**` 有變動）或手動 `workflow_dispatch` 時，會跑 worker 單元測試並 `wrangler deploy`。**一次性準備：**
-
-1. 在 [worker/wrangler.toml](worker/wrangler.toml) 填入真正的 **KV namespace id**（非機密，需 commit）與 `APP_URL`／`ALLOWED_ORIGIN`（裸來源）／`FROM_EMAIL`／`ADMIN_EMAILS`。
-2. 在 GitHub repo **Settings → Secrets and variables → Actions** 新增：
-   - `CLOUDFLARE_API_TOKEN`（具 Workers 編輯權限）
-   - `CLOUDFLARE_ACCOUNT_ID`
-3. **Resend 金鑰**：Worker secret 會跨部署保留，故設定**一次**即可——`cd worker && npx wrangler secret put RESEND_API_KEY`（或 CF 儀表板）。若想改由 CI 管理，取消 workflow 內 `secrets:`/`env:` 註解並把 `RESEND_API_KEY` 加進 repo secrets。
-
-> 🔐 需要你自備 Cloudflare 帳號、KV namespace 與 Resend API key（Cloudflare 免費 MailChannels 寄信已於 2024 年終止）。我無法在此實際部署/驗證；上述程式、workflow 與設定範本皆已備妥。
-
-> 🔗 **分享連結**也會帶上各工具的輸入，收件者開啟即還原；登入則用於跨裝置長期同步。
+> ⚠️ **自動爬蟲已失效（2026 起）：** 「運動筆記」「馬拉松世界」皆改為 JS/SPA 動態載入（運動筆記另加登入牆），匿名抓取已無法取得賽事；[docs/gas-crawler-script.js](docs/gas-crawler-script.js) 在抓取 0 筆時會**明確告警**而非靜默。**最可靠的方式是手動輸入**（試算表新增列，或 Worker `PUT /api/races`）。
 
 ---
 
 ## 🛠️ 開發指南
 
 ### 環境需求
-Node.js 24、npm。
-
-```bash
-npm install
-```
+Node.js 24、npm。`npm install`。
 
 ### 常用指令
 ```bash
 npm run build         # 型別檢查(tsc --noEmit) → esbuild 打包+壓縮成單一 assets/js/main.js
 npm run watch         # tsc 監看模式（開發用）
 npm run typecheck     # 僅型別檢查
-npm run lint          # ESLint
+npm run lint          # ESLint（--max-warnings 0）
 npm run lint:fix      # ESLint 自動修正
 npm run format        # Prettier 格式化
 npm run format:check  # 檢查格式（CI 用）
@@ -125,36 +91,46 @@ npm run test:cov      # 測試 + c8 覆蓋率閘門
 
 ### 專案結構
 ```text
-.github/workflows/pipeline.yml   # CI/CD：品質閘門 → 部署 GitHub Pages
-scripts/build.mjs                # esbuild 打包腳本（產生 main.js 與 build-info.js 雜湊）
+.github/workflows/
+├── pipeline.yml         # 主站 CI/CD：品質閘門 → 部署 GitHub Pages
+└── deploy-worker.yml    # 推送 worker/** 時測試並部署 Cloudflare Worker
+scripts/build.mjs        # esbuild 打包（產生 main.js 與 build-info.js 內容雜湊）
+index.html               # 主頁（8 個功能分頁）
+training-report.html     # 可列印訓練報表（自包含，讀 localStorage 的計畫）
+diagnostics.html         # 離線/診斷頁
 src/
-├── main.ts                      # 應用進入點
-├── types/index.ts               # 全域型別
-├── constants/index.ts           # 常數、翻譯詞條、訓練計畫參數
+├── main.ts              # 進入點
+├── types/index.ts       # 全域型別
+├── constants/index.ts   # 常數、雙語翻譯詞條（zh/en key 對齊）、訓練計畫參數
 └── modules/
-    ├── core/                    # 純計算：Calculator, TrainingPlanBuilder, Converter, TimeFormatter, TriathlonCalculator
-    ├── state/                   # 狀態與持久化：StateManager, StorageManager, TranslationManager, ShareManager…
-    └── ui/                      # UIController 與 13 個專責 controller、TrainingCycleManager…
-tests/                           # 單元測試（node:test）
+    ├── core/            # 25 個純計算模組：Calculator, VdotCalculator, HeartRateCalculator,
+    │                    #   Environmental/Acwr/Cadence/Strides/Fueling/SweatRate/Glycogen/
+    │                    #   Cooling/Recovery/Taper/Gap/RunningEconomy/Hrv/Menstrual/Altitude…
+    ├── state/           # 7 個狀態/持久化模組：StateManager, StorageManager, TranslationManager,
+    │                    #   ShareManager, ShareExportManager, FormPersistence, BackendClient
+    └── ui/              # UIController + 34 個專責 controller、TrainingCycleManager…
+tests/                   # 38 個單元測試（node:test）；訓練週期有 golden 位元快照
+worker/                  # Cloudflare Worker 後端（KV 賽事 API + magic-link 登入 + 同步）
 eslint.config.js / .prettierrc / .c8rc.json   # 品質工具設定
 ```
-> `assets/js/`（編譯產物）與 `coverage/` 皆為自動產生，已列入 `.gitignore`。
+> `assets/js/`（編譯產物）與 `coverage/` 為自動產生，已列入 `.gitignore`。
 
 ### 技術細節
-- **語言/型別**：TypeScript 5（strict），無前端框架。
+- **語言/型別**：TypeScript 5（strict），無前端框架（Vanilla）。
 - **打包**：esbuild 將整個 app 打包+壓縮成**單一 ES module**（`assets/js/main.js`）。
-- **品質**：ESLint（flat config）+ Prettier；c8 覆蓋率閘門。
-- **PWA**：Service Worker 離線快取，`CACHE_NAME` 由 build 內容雜湊自動版本化（`assets/js/build-info.js`），不需手動維護資產清單。
+- **品質**：ESLint flat config（`no-explicit-any` 為 error、零警告）＋ Prettier；c8 覆蓋率閘門（lines 85／branches 72／functions 60）。
+- **PWA**：Service Worker 離線快取，`CACHE_NAME` 由 build 內容雜湊自動版本化（`assets/js/build-info.js`）。
 - **地圖**：Leaflet.js 解析／繪製 GPX/GeoJSON 路線。
-- **CI/CD**：PR 與 push 跑 typecheck / lint / format / 測試+覆蓋率四道閘門；通過後僅打包必要檔案部署至 GitHub Pages。
+- **後端**：Cloudflare Worker（KV、SendGrid magic-link、Bearer session、cron）。
+- **CI/CD**：PR/push 跑 typecheck／lint／format／測試+覆蓋率四道閘門，通過後部署 GitHub Pages；Worker 由獨立 workflow 部署。
 
 ### 核心特性
-類型安全、低依賴（核心計算為 Vanilla TypeScript）、離線優先（localStorage 狀態復原 + Service Worker）。
+類型安全、低依賴（核心計算為 Vanilla TypeScript）、離線優先（localStorage 狀態復原 + Service Worker）；每項科學工具皆標註研究引用。
 
 ---
 
 ## 🗺️ 後續規劃 (Roadmap)
-本機 GPX 拖放與高度坡度圖、公里分段配速與上坡／補給點配速補償。
+即時語言重譯體驗優化、賽事來源端點重對接（待可登入環境取得內部 API）、更多個體化監控整合。
 
 ---
 

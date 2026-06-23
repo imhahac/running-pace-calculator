@@ -8,11 +8,11 @@
  *       (scheduled) best-effort refresh — parses a JSON feed if one exists and
  *       merges it; otherwise logs (the sources are JS/SPA + login-walled, so
  *       admin curation via PUT remains the reliable path).
- *  2. Magic-link auth (passwordless, email via Resend).
+ *  2. Magic-link auth (passwordless, email via SendGrid).
  *  3. Per-user cloud sync (Bearer session): GET/PUT /api/data.
  *
  * Bindings: KV. Vars: APP_URL, ALLOWED_ORIGIN, FROM_EMAIL, ADMIN_EMAILS,
- * DEBUG_AUTH ("1" surfaces email-send result). Secret: RESEND_API_KEY.
+ * DEBUG_AUTH ("1" surfaces email-send result). Secret: SENDGRID_API_KEY.
  */
 
 import {
@@ -69,28 +69,32 @@ async function getSessionEmail(request, env) {
 }
 
 async function sendMagicEmail(env, email, link) {
-  if (!env.RESEND_API_KEY || !env.FROM_EMAIL) {
-    console.log('[auth] RESEND_API_KEY / FROM_EMAIL not configured — cannot send email');
+  if (!env.SENDGRID_API_KEY || !env.FROM_EMAIL) {
+    console.log('[auth] SENDGRID_API_KEY / FROM_EMAIL not configured — cannot send email');
     return false;
   }
-  const resp = await fetch('https://api.resend.com/emails', {
+  const html =
+    `<p>點此登入 RunningPaceNote（15 分鐘內有效）：</p>` +
+    `<p><a href="${link}">${link}</a></p>` +
+    `<p>Click to sign in (valid 15 min). 若非本人操作請忽略。</p>`;
+  // SendGrid v3 Mail Send API. FROM_EMAIL must be a verified Single Sender
+  // (or a verified domain) on the SendGrid account.
+  const resp = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {
-      Authorization: `Bearer ${env.RESEND_API_KEY}`,
+      Authorization: `Bearer ${env.SENDGRID_API_KEY}`,
       'Content-Type': 'application/json'
     },
     body: JSON.stringify({
-      from: env.FROM_EMAIL,
-      to: email,
+      personalizations: [{ to: [{ email }] }],
+      from: { email: env.FROM_EMAIL },
       subject: 'RunningPaceNote 登入連結 / Your login link',
-      html:
-        `<p>點此登入 RunningPaceNote（15 分鐘內有效）：</p>` +
-        `<p><a href="${link}">${link}</a></p>` +
-        `<p>Click to sign in (valid 15 min). 若非本人操作請忽略。</p>`
+      content: [{ type: 'text/html', value: html }]
     })
   });
+  // SendGrid returns 202 Accepted on success (covered by resp.ok).
   if (!resp.ok) {
-    console.log('[auth] Resend failed:', resp.status, await resp.text());
+    console.log('[auth] SendGrid failed:', resp.status, await resp.text());
     return false;
   }
   return true;

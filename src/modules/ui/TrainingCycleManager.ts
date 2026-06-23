@@ -10,6 +10,11 @@ type TPlan = ReturnType<typeof Calculator.generateTrainingCycle>;
 export class TrainingCycleManager {
   private static lastPlan: TPlan = [];
 
+  /** The most recently rendered plan — surfaced for the standalone report page. */
+  static getLastPlan(): TPlan {
+    return this.lastPlan;
+  }
+
   static getPlanDistanceMeters(): number {
     const planDistanceInput = document.getElementById(
       'training-plan-distance'

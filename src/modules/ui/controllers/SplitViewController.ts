@@ -74,17 +74,21 @@ export class SplitViewController {
     const tabs = document.querySelectorAll('.tab-item');
     const panes = document.querySelectorAll('.tab-pane');
 
+    // Guard against a stale/removed tab id (e.g. an old 'tab-science' persisted
+    // in localStorage before the science split) leaving every pane hidden.
+    const target = Array.from(panes).some((p) => p.id === tabId) ? tabId : 'tab-pace';
+
     tabs.forEach((t) => {
-      const isActive = (t as HTMLElement).dataset.tab === tabId;
+      const isActive = (t as HTMLElement).dataset.tab === target;
       t.classList.toggle('active', isActive);
       t.setAttribute('aria-selected', isActive ? 'true' : 'false');
     });
 
     panes.forEach((p) => {
-      p.classList.toggle('active', p.id === tabId);
+      p.classList.toggle('active', p.id === target);
     });
 
-    StateManager.setActiveTab(tabId);
+    StateManager.setActiveTab(target);
   }
 }
 

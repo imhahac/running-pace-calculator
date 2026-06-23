@@ -3,6 +3,8 @@ import StateManager from '../../state/StateManager.js';
 import ShareExportManager from '../../state/ShareExportManager.js';
 import FormPersistence, { TOOL_INPUT_IDS } from '../../state/FormPersistence.js';
 import TrainingCycleManager from '../TrainingCycleManager.js';
+import InputStore from './InputStore.js';
+import TimeFormatter from '../../core/TimeFormatter.js';
 
 export class ShareController {
   static async copyShareLink(): Promise<void> {
@@ -14,7 +16,22 @@ export class ShareController {
   }
 
   static openTrainingReportPage(): void {
-    ShareExportManager.openTrainingReportPage(this.buildCurrentSharePayload());
+    const distanceMeters = TrainingCycleManager.getPlanDistanceMeters();
+    const paceSecondsPerKm = InputStore.getLastPace();
+    const targetDate =
+      (document.getElementById('training-target-date') as HTMLInputElement | null)?.value || '';
+    ShareExportManager.openTrainingReportPage({
+      plan: TrainingCycleManager.getLastPlan(),
+      meta: {
+        targetDate,
+        planLabel: TrainingCycleManager.getPlanLabel(distanceMeters),
+        estimate:
+          paceSecondsPerKm > 0
+            ? TimeFormatter.format(paceSecondsPerKm * (distanceMeters / 1000))
+            : '--',
+        lang: StateManager.getLanguage()
+      }
+    });
   }
 
   static exportImage(): void {

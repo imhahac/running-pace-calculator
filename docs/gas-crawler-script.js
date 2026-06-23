@@ -21,6 +21,15 @@
  *  - 手動在試算表輸入賽事永遠是最可靠的來源（前端 API 會照常讀取）。
  */
 
+// ===== 待重對接：在登入的瀏覽器擷取真實端點後填回下方 CONFIG =====
+// 兩來源已改 JS/SPA + 登入牆，匿名抓取取得 0 筆。要恢復自動爬取，請在「已登入」的
+// 瀏覽器開發者工具 → Network 面板，找到載入賽事清單的 XHR/fetch 請求，擷取：
+//   1) URL 與 method（GET / POST）
+//   2) 送出的 query 參數 / POST payload（表單或 JSON 內容）
+//   3) 必要的 request headers（特別是 Referer、Cookie、X-Requested-With）
+//   4) 回應 JSON 的結構：首筆物件中「日期 / 名稱 / 地點 / 連結」對應的欄位名
+// 取得後：marathonsWorld 改 url+payload+referer；runningBiji 把真實 URL 放進
+// candidateUrls（必要時於 fetchJson 加上 headers），並對齊 tryParse* 的欄位對映。
 // ===== 可調整設定（來源網站若再改版，改這裡即可）=====
 var CONFIG = {
   marathonsWorld: {

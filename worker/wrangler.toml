@@ -14,7 +14,7 @@ id = "REPLACE_WITH_KV_NAMESPACE_ID"
 APP_URL = "https://imhahac.github.io/running-pace-calculator/"
 # CORS: restrict to the app origin in production (or "*" while testing).
 ALLOWED_ORIGIN = "https://imhahac.github.io"
-# Verified Resend sender address.
+# Verified SendGrid Single Sender (or verified-domain) address.
 FROM_EMAIL = "login@example.com"
 # Comma-separated admin emails allowed to PUT /api/races.
 ADMIN_EMAILS = ""
@@ -24,4 +24,4 @@ ADMIN_EMAILS = ""
 crons = ["0 18 * * *"]
 
 # Secret (do NOT put here): set with
-#   npx wrangler secret put RESEND_API_KEY
+#   npx wrangler secret put SENDGRID_API_KEY

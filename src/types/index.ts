@@ -356,6 +356,21 @@ export interface ISharePayload {
 }
 
 /**
+ * Data handed to the standalone training-report page via localStorage.
+ * The plan rows are already localized at capture time, so the report page
+ * needs no i18n module — only the language tag for its own static chrome.
+ */
+export interface ITrainingReportData {
+  plan: ITrainingWeekPlan[];
+  meta: {
+    targetDate: string;
+    planLabel: string;
+    estimate: string;
+    lang: TLanguage;
+  };
+}
+
+/**
  * Race Event schema fetched from Google Apps Script
  */
 export interface IRaceEvent {
