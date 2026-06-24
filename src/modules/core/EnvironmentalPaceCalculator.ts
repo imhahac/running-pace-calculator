@@ -1,22 +1,31 @@
 /**
  * EnvironmentalPaceCalculator
- * Adjusts a target pace for heat/humidity and slope.
+ * Adjusts a pace for heat/humidity, slope and heat acclimatisation, in either
+ * direction.
  *  - Dew point: Magnus formula.
  *  - WBGT (shade): Australian Bureau of Meteorology approximation
  *    (WBGT ≈ 0.567·T + 0.393·e + 3.94, e = water-vapour pressure).
  *  - Heat slowdown %: piecewise mapping of WBGT to performance loss
- *    (Ely 2007; El Helou 2012 — endurance time degrades as WBGT rises).
+ *    (Ely 2007; El Helou 2012; Mantzios 2022 — endurance pace degrades as WBGT rises).
+ *  - Acclimatisation: scales the heat penalty down for adapted runners
+ *    (Périard, Racinais & Sawka 2015 — ~7–14 days of heat exposure attenuates
+ *    the decrement). Heuristic multipliers, surfaced to the athlete as such.
  *  - Grade factor: Minetti et al. 2002 metabolic cost of gradient running.
+ *  - Mode: 'forward' predicts the hot/hilly pace from a flat-cool target;
+ *    'reverse' backs out the flat-cool-equivalent pace from one run in the heat
+ *    (the model-consistent inverse of forward, not a separate claim).
  */
 
 export type TEnvRisk = 'low' | 'moderate' | 'high' | 'extreme';
+export type TAcclim = 'none' | 'partial' | 'full';
+export type TEnvMode = 'forward' | 'reverse';
 
 export interface IEnvAdjustment {
   dewPointC: number;
   wbgtC: number;
-  heatPct: number; // % slower due to heat/humidity
+  heatPct: number; // % slower due to heat/humidity, after acclimatisation
   gradeFactor: number; // pace multiplier vs flat (1.0 = flat ground)
-  adjustedPaceSec: number; // base pace adjusted for heat + grade (sec/km)
+  adjustedPaceSec: number; // result pace for the chosen mode (sec/km)
   risk: TEnvRisk;
 }
 
@@ -73,14 +82,38 @@ export class EnvironmentalPaceCalculator {
     return cost / flat;
   }
 
-  /** Adjust a base pace (sec/km) for environment + a single-segment grade. */
-  static adjust(basePaceSec: number, tempC: number, rhPct: number, gradePct = 0): IEnvAdjustment {
+  /**
+   * Heat-acclimatisation multiplier on the heat penalty. Heuristic: adapted
+   * runners suffer a smaller decrement (Périard, Racinais & Sawka 2015 — most
+   * adaptation lands within ~7–14 days). Conservative — it never zeroes the
+   * penalty, since acclimatisation attenuates but does not remove heat strain.
+   */
+  private static acclimFactor(a: TAcclim): number {
+    return a === 'full' ? 0.5 : a === 'partial' ? 0.75 : 1;
+  }
+
+  /**
+   * Adjust a pace (sec/km) for environment + a single-segment grade.
+   * @param acclim heat-acclimatisation status (scales the heat penalty down).
+   * @param mode 'forward' = predict the hot/hilly pace from a flat-cool pace;
+   *        'reverse' = back out the flat-cool-equivalent pace from a pace run in
+   *        the heat. `adjustedPaceSec` holds the result for the chosen mode.
+   */
+  static adjust(
+    paceSec: number,
+    tempC: number,
+    rhPct: number,
+    gradePct = 0,
+    acclim: TAcclim = 'none',
+    mode: TEnvMode = 'forward'
+  ): IEnvAdjustment {
     const dewPointC = this.dewPoint(tempC, rhPct);
     const wbgtC = this.wbgtShade(tempC, rhPct);
-    const heatPct = this.heatSlowdownPct(tempC, rhPct);
+    const heatPct = this.heatSlowdownPct(tempC, rhPct) * this.acclimFactor(acclim);
     const gradeFactor = this.gradeFactor(gradePct);
-    const base = basePaceSec > 0 ? basePaceSec : 0;
-    const adjustedPaceSec = base * (1 + heatPct / 100) * gradeFactor;
+    const mult = (1 + heatPct / 100) * gradeFactor;
+    const p = paceSec > 0 ? paceSec : 0;
+    const adjustedPaceSec = mode === 'reverse' ? (mult > 0 ? p / mult : 0) : p * mult;
     return {
       dewPointC: Math.round(dewPointC * 10) / 10,
       wbgtC: Math.round(wbgtC * 10) / 10,

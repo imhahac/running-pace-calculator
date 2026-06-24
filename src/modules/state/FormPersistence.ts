@@ -10,10 +10,12 @@ const STORAGE_KEY = 'rpc_tool_inputs';
 
 /** Inputs of the Phase 1–4 science/environment tools (persisted + synced). */
 export const TOOL_INPUT_IDS = [
+  'env-mode-select',
   'env-temp-input',
   'env-humidity-input',
   'env-pace-input',
   'env-grade-input',
+  'env-acclim-select',
   'acwr-w1',
   'acwr-w2',
   'acwr-w3',
@@ -51,6 +53,7 @@ export const TOOL_INPUT_IDS = [
   're-sex-select',
   're-bf-input',
   'hrv-input',
+  'cycle-start-date',
   'cycle-day-input',
   'cycle-length-input',
   'cycle-dysmenorrhea-select',

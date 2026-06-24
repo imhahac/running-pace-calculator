@@ -30,17 +30,19 @@ test('positive split: starts faster than it finishes', () => {
   assert.ok(plan.rows[0].paceSec < plan.rows[plan.rows.length - 1].paceSec);
 });
 
-test('negative split magnitude is modest (~3% half-to-half, evidence-calibrated)', () => {
+test('negative split is a 3-phase shape: conservative start, even middle, faster finish', () => {
   const plan = RacePlanBuilder.build(42195, 4 * 3600, 'negative'); // 4:00:00 marathon
-  const mid = Math.floor(plan.rows.length / 2);
+  const avg = plan.avgPaceSec;
+  const early = plan.rows[2].paceSec; // ~km 3 (first quarter)
+  const middle = plan.rows[21].paceSec; // ~km 22 (middle)
+  const late = plan.rows[40].paceSec; // ~km 41 (final quarter)
+  assert.ok(early > middle && middle > late, 'pace eases: slow start → even middle → fast finish');
+  assert.ok(Math.abs(middle - avg) / avg < 0.01, 'middle holds ≈ goal pace');
+  // Still an overall (modest) negative split: second half faster than the first.
+  const half = Math.floor(plan.rows.length / 2);
   const meanPace = (rows: typeof plan.rows): number =>
     rows.reduce((s, r) => s + r.paceSec, 0) / rows.length;
-  const ratio = meanPace(plan.rows.slice(mid)) / meanPace(plan.rows.slice(0, mid));
-  // Second half faster, but only modestly (would be ~0.94 with the old 6% delta).
-  assert.ok(
-    ratio > 0.95 && ratio < 0.99,
-    `second half modestly faster (ratio ${ratio.toFixed(3)})`
-  );
+  assert.ok(meanPace(plan.rows.slice(half)) < meanPace(plan.rows.slice(0, half)));
 });
 
 test('invalid input → empty plan', () => {

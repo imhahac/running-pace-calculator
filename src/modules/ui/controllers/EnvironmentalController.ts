@@ -10,6 +10,7 @@ import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { gauge } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
+import type { TAcclim, TEnvMode } from '../../core/EnvironmentalPaceCalculator.js';
 
 const OUTPUT_IDS = [
   'env-dewpoint',
@@ -19,11 +20,15 @@ const OUTPUT_IDS = [
   'env-grade-factor',
   'env-adjusted-pace'
 ];
+const ACCLIMS: TAcclim[] = ['none', 'partial', 'full'];
 
 export class EnvironmentalController {
   static initialize(): void {
     ['env-temp-input', 'env-humidity-input', 'env-pace-input', 'env-grade-input'].forEach((id) =>
       document.getElementById(id)?.addEventListener('input', () => this.calculate())
+    );
+    ['env-mode-select', 'env-acclim-select'].forEach((id) =>
+      document.getElementById(id)?.addEventListener('change', () => this.calculate())
     );
     this.calculate();
   }
@@ -39,6 +44,27 @@ export class EnvironmentalController {
       if (el) el.textContent = value;
     };
 
+    const t = TranslationManager.getDict();
+
+    // forward = predict hot/hilly pace from a flat-cool target; reverse = back
+    // out the flat-cool-equivalent from a pace run in the heat.
+    const mode: TEnvMode =
+      (document.getElementById('env-mode-select') as HTMLSelectElement | null)?.value === 'reverse'
+        ? 'reverse'
+        : 'forward';
+    const acclimVal = (document.getElementById('env-acclim-select') as HTMLSelectElement | null)
+      ?.value;
+    const acclim: TAcclim = ACCLIMS.includes(acclimVal as TAcclim)
+      ? (acclimVal as TAcclim)
+      : 'none';
+
+    // Result-row label flips with the mode. It carries no data-i18n, so set it
+    // here — the language toggle re-runs calculate() and re-translates it.
+    set(
+      'env-result-label',
+      mode === 'reverse' ? t.env_result_rev || '' : t.env_adjusted_label || ''
+    );
+
     const temp = num('env-temp-input');
     const rh = num('env-humidity-input');
     const grade = num('env-grade-input') || 0;
@@ -53,8 +79,7 @@ export class EnvironmentalController {
       return;
     }
 
-    const r = EnvironmentalPaceCalculator.adjust(baseSec, temp, rh, grade);
-    const t = TranslationManager.getDict();
+    const r = EnvironmentalPaceCalculator.adjust(baseSec, temp, rh, grade, acclim, mode);
     set('env-dewpoint', `${r.dewPointC}°C`);
     set('env-wbgt', `${r.wbgtC}°C`);
     set('env-heat-pct', `+${r.heatPct}%`);
@@ -63,6 +88,19 @@ export class EnvironmentalController {
     const riskLabel = t[`env_risk_${r.risk}`] || r.risk;
     riskEl.textContent = riskLabel;
     riskEl.className = `risk-badge risk-${r.risk}`;
+
+    let readout = TranslationManager.format(
+      mode === 'reverse' ? 'env_readout_reverse' : 'env_readout',
+      {
+        wbgt: r.wbgtC,
+        risk: riskLabel,
+        pct: r.heatPct,
+        pace: `${TimeFormatter.format(r.adjustedPaceSec)}/km`
+      }
+    );
+    // Hydration caution once heat stress is High/Extreme (>2% body-mass sweat
+    // loss starts to hurt performance — Garmin/heat-acclimatisation guidance).
+    if (r.risk === 'high' || r.risk === 'extreme') readout += ` ${t.env_sweat_warn || ''}`;
 
     renderInsight('env', {
       ok: true,
@@ -78,12 +116,7 @@ export class EnvironmentalController {
           { upTo: 32, cls: 'bad' }
         ]
       }),
-      readoutText: TranslationManager.format('env_readout', {
-        wbgt: r.wbgtC,
-        risk: riskLabel,
-        pct: r.heatPct,
-        pace: `${TimeFormatter.format(r.adjustedPaceSec)}/km`
-      })
+      readoutText: readout.trim()
     });
   }
 }

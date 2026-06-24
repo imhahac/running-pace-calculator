@@ -7,11 +7,11 @@
 import VdotCalculator from './VdotCalculator.js';
 import type { IRacePlan, IRacePlanRow, TRaceStrategy } from '../../types/index';
 
-// End-segments deviate from average pace by this fraction for non-even splits.
-// Calibrated to a modest negative split: ±1.5% per half → second half ~3%
-// faster, the evidence-supported optimum (marathon pacing systematic review,
-// PMID 39281580; negative-splits review, PMID 40740427). Larger swings tend to
-// cost time, so this is deliberately gentler than a naive 5–6% ramp.
+// First/last quarter deviate from goal pace by this fraction for non-even
+// splits. Kept modest so the swing lands near the practical +5–10 s/km early /
+// −5–15 s/km late guidance, and so the middle holds goal pace. The controlled
+// slightly-negative profile is how elites set records (Díaz 2018, PMID 29557279)
+// and stronger runners pace more evenly (March 2011, PMID 20224445).
 const SPLIT_DELTA = 0.03;
 
 export class RacePlanBuilder {
@@ -35,15 +35,16 @@ export class RacePlanBuilder {
     const remainder = totalKm - nFull;
     if (remainder > 1e-6) segLengths.push(remainder);
 
-    // Pace factor per segment from its midpoint progress p∈[0,1).
-    // negative: slower start (>1) → faster finish (<1); positive: the reverse.
-    const delta = strategy === 'even' ? 0 : SPLIT_DELTA;
+    // Pace factor per segment from its midpoint progress p∈[0,1), as a 3-phase
+    // shape: conservative first quarter, even middle (= goal pace), faster final
+    // quarter. negative = slow→even→fast; positive = the mirror (fast→fade).
     let cum = 0;
     const factors = segLengths.map((len) => {
       const mid = (cum + len / 2) / totalKm;
       cum += len;
-      const ramp = delta * (1 - 2 * mid);
-      return strategy === 'positive' ? 1 - ramp : 1 + ramp;
+      if (strategy === 'even') return 1;
+      const shape = mid < 0.25 ? SPLIT_DELTA : mid > 0.75 ? -SPLIT_DELTA : 0;
+      return strategy === 'positive' ? 1 - shape : 1 + shape;
     });
 
     // Base pace so that Σ(base·factor·len) = target.

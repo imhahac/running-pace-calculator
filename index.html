@@ -548,20 +548,22 @@
                 <div id="raceplan-summary" class="helper-text"></div>
                 <div id="raceplan-table" class="raceplan-table"></div>
                 <div id="raceplan-chart" class="tool-chart"></div>
-                <div class="explain" data-i18n="explain_raceplan">策略：平均（穩定）；負分段（後半加速，通常成績較佳）；正分段（前快後掉，較不建議）。表格為每公里目標配速與累積時間。提醒：起步勿過快、約 30k 易撞牆、依表補給。</div>
+                <div class="explain" data-i18n="explain_raceplan">策略：均速（保守穩定）；負分段（前保守、末加速，菁英與多數世界紀錄的型態）；正分段（前快後掉，最常見也最傷成績）。關鍵：起步勿過快。表格為每公里目標配速與累積時間；約 30k 易撞牆、依表補給。</div>
                 <button class="detail-toggle" type="button" aria-expanded="false" aria-controls="raceplan-detail" data-i18n="btn_detail">詳解</button>
                 <div id="raceplan-detail" class="tool-detail"><div class="tool-detail-inner">
                     <h4 data-i18n="detail_h_principle">原理</h4>
-                    <p data-i18n="detail_raceplan_principle">把目標完賽時間依策略分配到每公里。負分段（後半略快）通常成績與體感最佳；均速穩定；正分段（前快後掉）風險最高。下方曲線為每公里配速。</p>
+                    <p data-i18n="detail_raceplan_principle">把目標完賽時間依策略分配到每公里。最關鍵是「別起步過快」：正分段（前快後掉）最常見、也最傷成績；越強的跑者配速越平穩（March 2011）。菁英多以接近均速、略為負分段創紀錄（Kipchoge 柏林 2018、Kiptum 芝加哥 2023 後半都更快；Díaz 2018：世界紀錄多為均速）。實戰：前段略保守、中段守目標、末段行有餘力再加速。下方曲線為每公里配速。</p>
                     <h4 data-i18n="detail_h_how">怎麼用</h4>
-                    <p data-i18n="detail_raceplan_how">選距離、輸入目標時間與策略，得到每公里配速與累積時間。比照曲線控速，起步務必克制，別被現場氣氛帶快。</p>
+                    <p data-i18n="detail_raceplan_how">選距離、輸入目標時間與策略，得到每公里配速與累積時間。比照曲線控速：前 ~1/4 刻意慢 5–10 秒/km、中段守目標、末 ~1/4 行有餘力再快 5–15 秒/km。重點不是「前半慢」，而是別被現場腎上腺素騙去跑「感覺輕鬆卻偏快」的前半。</p>
                     <h4 data-i18n="detail_h_stages">分段</h4>
-                    <p data-i18n="detail_raceplan_stages">起步（別衝）→中段（進入節奏、規律補給）→全馬約 30k 易撞牆→收尾（行有餘力再加速）。</p>
+                    <p data-i18n="detail_raceplan_stages">起步保守（別衝）→中段守目標配速、規律補給→全馬約 30k 易撞牆→末段行有餘力再加速。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_raceplan_note">配速只是計畫，需與體感、心率、天氣動態調整；高溫或丘陵請改用「環境配速」與「GAP」修正預期。</p>
                     <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
                         <a href="https://pubmed.ncbi.nlm.nih.gov/39281580/" target="_blank" rel="noopener noreferrer">Marathon pacing review ↗</a> ·
                         <a href="https://pubmed.ncbi.nlm.nih.gov/40740427/" target="_blank" rel="noopener noreferrer">Negative splits review ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/20224445/" target="_blank" rel="noopener noreferrer">March 2011 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29557279/" target="_blank" rel="noopener noreferrer">Díaz 2018 ↗</a> ·
                         <a href="https://worldathletics.org/records/by-category/world-records" target="_blank" rel="noopener noreferrer">World Athletics Records ↗</a>
                     </p>
                 </div></div>
@@ -993,8 +995,10 @@
             <!-- Menstrual Cycle Adjustment -->
             <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
                 <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="cycle_title">🌸 月經週期訓練調整</span></h3>
-                <div class="helper-text" data-i18n="hint_cycle_intro" style="margin-bottom: 8px;">輸入週期第幾天與週期長度，給該階段訓練微調</div>
+                <div class="helper-text" data-i18n="hint_cycle_intro" style="margin-bottom: 8px;">填「最近一次月經第一天」自動推算週期天數（或直接填第幾天）；日期越久未更新越不準。</div>
                 <div class="settings-grid" style="width: 100%;">
+                    <label for="cycle-start-date" data-i18n="cycle_start_date">最近一次月經第一天</label>
+                    <input type="date" id="cycle-start-date" style="width: auto; text-align: left;">
                     <label for="cycle-day-input" data-i18n="cycle_day">週期第幾天</label>
                     <input type="number" id="cycle-day-input" placeholder="14" min="1" max="40" style="width: 8ch;">
                     <label for="cycle-length-input" data-i18n="cycle_length">週期長度 (天)</label>
@@ -1015,6 +1019,7 @@
                     <label for="cycle-sleep-input" data-i18n="cycle_sleep">睡眠 (小時)</label>
                     <input type="number" id="cycle-sleep-input" placeholder="7.5" min="0" max="14" step="0.5" style="width: 8ch;">
                 </div>
+                <div id="cycle-derived" class="helper-text" style="margin-top: 6px;"></div>
                 <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
                     <span data-i18n="cycle_phase_label">目前階段</span>: <span id="cycle-phase"></span>
                 </div>
@@ -1027,7 +1032,7 @@
                     <h4 data-i18n="detail_h_principle">原理</h4>
                     <p data-i18n="detail_cycle_principle">雌激素與黃體素在週期中起伏，可能影響體溫、體感與恢復。本工具依週期分四階段給「微調起點」。McNulty 2020 系統綜述強調：個體差異遠大於群體平均效應。</p>
                     <h4 data-i18n="detail_h_how">怎麼用</h4>
-                    <p data-i18n="detail_cycle_how">輸入週期第幾天與週期長度，看目前階段與該階段的訓練微調。下方為週期時間軸（目前階段已標示）。最終仍以自身體感、症狀與表現為準。</p>
+                    <p data-i18n="detail_cycle_how">填「最近一次月經第一天」自動推算目前週期天數（規律週期會循環換算），或直接填「第幾天」；填了日期就以日期為準。看目前階段與該階段的訓練微調，下方為週期時間軸（目前階段已標示）。最終仍以自身體感、症狀與表現為準。</p>
                     <h4 data-i18n="detail_h_stages">四階段</h4>
                     <p data-i18n="detail_cycle_stages">月經期（症狀因人而異，舒適即可訓練）→濾泡期（精力漸增，適合質量與加量）→排卵期（常為高峰，可衝表現）→黃體期（體溫升、較易疲勞與不耐熱，宜加強補水與恢復）。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
@@ -1036,6 +1041,7 @@
                         <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7497427/" target="_blank" rel="noopener noreferrer">McNulty 2020 ↗</a> ·
                         <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7916245/" target="_blank" rel="noopener noreferrer">Carmichael 2021 ↗</a> ·
                         <a href="https://pubmed.ncbi.nlm.nih.gov/29860237/" target="_blank" rel="noopener noreferrer">Ackerman 2019 (RED-S) ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28795075/" target="_blank" rel="noopener noreferrer">Herzberg 2017 ↗</a> ·
                         <span>Sims &amp; Yeager 2024 (ROAR)</span>
                     </p>
                 </div></div>
@@ -1088,16 +1094,27 @@
             <!-- Environmental Pace Adjustment -->
             <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
                 <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="env_title">🌡️ 環境配速調整</span></h3>
-                <div class="helper-text" data-i18n="hint_env_intro" style="margin-bottom: 8px;">輸入氣溫、濕度與基準配速，算出露點、WBGT 與今日實際目標配速</div>
+                <div class="helper-text" data-i18n="hint_env_intro" style="margin-bottom: 8px;">選模式，輸入氣溫、濕度、配速與熱適應程度，算出露點、WBGT 與目標／等效配速</div>
                 <div class="settings-grid" style="width: 100%;">
+                    <label for="env-mode-select" data-i18n="env_mode">模式</label>
+                    <select id="env-mode-select">
+                        <option value="forward" data-i18n="env_mode_forward">預測（目標→熱天配速）</option>
+                        <option value="reverse" data-i18n="env_mode_reverse">反推（熱天實際→涼天等效）</option>
+                    </select>
                     <label for="env-temp-input" data-i18n="env_temp">氣溫 (°C)</label>
                     <input type="number" id="env-temp-input" placeholder="30" style="width: 8ch;">
                     <label for="env-humidity-input" data-i18n="env_humidity">相對濕度 (%)</label>
                     <input type="number" id="env-humidity-input" placeholder="75" min="0" max="100" style="width: 8ch;">
-                    <label for="env-pace-input" data-i18n="env_pace">基準配速 (m:ss/km)</label>
+                    <label for="env-pace-input" data-i18n="env_pace">配速 (m:ss/km)</label>
                     <input type="text" id="env-pace-input" placeholder="5:30" style="width: 8ch;">
                     <label for="env-grade-input" data-i18n="env_grade">坡度 (%, 可選)</label>
                     <input type="number" id="env-grade-input" placeholder="0" style="width: 8ch;">
+                    <label for="env-acclim-select" data-i18n="env_acclim">熱適應程度</label>
+                    <select id="env-acclim-select">
+                        <option value="none" data-i18n="env_acclim_none">未適應</option>
+                        <option value="partial" data-i18n="env_acclim_partial">部分（約 1 週）</option>
+                        <option value="full" data-i18n="env_acclim_full">已適應（10–14 天）</option>
+                    </select>
                 </div>
                 <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
                     <span data-i18n="env_risk_label">熱壓力等級</span>: <span id="env-risk"></span>
@@ -1107,7 +1124,7 @@
                     <span class="zone-badge">🌡</span><span data-i18n="env_wbgt_label">WBGT</span><span id="env-wbgt" class="mono-text vdot-pace">--</span>
                     <span class="zone-badge">🔥</span><span data-i18n="env_heat_label">高溫減速</span><span id="env-heat-pct" class="mono-text vdot-pace">--</span>
                     <span class="zone-badge">⛰</span><span data-i18n="env_grade_label">坡度係數</span><span id="env-grade-factor" class="mono-text vdot-pace">--</span>
-                    <span class="zone-badge">🎯</span><span data-i18n="env_adjusted_label">建議目標配速</span><span id="env-adjusted-pace" class="mono-text vdot-pace">--</span>
+                    <span class="zone-badge">🎯</span><span id="env-result-label">建議目標配速</span><span id="env-adjusted-pace" class="mono-text vdot-pace">--</span>
                 </div>
                 <div id="env-chart" class="tool-chart"></div>
                 <div id="env-readout" class="tool-readout"></div>
@@ -1117,11 +1134,18 @@
                     <h4 data-i18n="detail_h_principle">原理</h4>
                     <p data-i18n="detail_env_principle">人體靠流汗蒸發散熱。高溫高濕（露點高）時汗水不易蒸發，核心體溫上升、心率攀高，同樣配速會更吃力。WBGT 綜合溫濕度評估熱壓力，越高越需放慢（ABM 陰影近似）。</p>
                     <h4 data-i18n="detail_h_how">怎麼用</h4>
-                    <p data-i18n="detail_env_how">輸入氣溫、濕度與平路目標配速（可填坡度）。依「建議目標配速」放慢、別硬追原訂配速；以體感與心率為準，並提早、規律補水與電解質。</p>
+                    <p data-i18n="detail_env_how">「預測」模式：輸入平路涼天目標配速，得熱天/坡地建議配速。「反推」模式：輸入熱天實際跑出的配速，回推涼天平路等效配速（評估真實體能）。並選「熱適應程度」：已適應者高溫減速幅度較小（Périard 2015）。依結果放慢、別硬追原訂配速；以體感與心率為準，提早、規律補水與電解質。</p>
                     <h4 data-i18n="detail_h_stages">熱風險等級</h4>
                     <p data-i18n="detail_env_stages">WBGT &lt;18 低（影響小）；18–23 中（略放慢、注意補水）；23–28 高（明顯放慢、找陰涼、增加補給）；&gt;28 極端（大幅放慢，考慮改時段／縮短／取消）。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
-                    <p data-i18n="detail_env_note">為陰影近似，烈日直曬、無風或柏油路面會更嚴峻。熱適應需 10–14 天；尚未適應者更保守。出現頭暈、起雞皮疙瘩、停止流汗等中暑徵兆務必立即停下。</p>
+                    <p data-i18n="detail_env_note">為陰影近似，烈日直曬、無風或柏油路面會更嚴峻。熱適應約需 7–14 天（Périard 2015），尚未適應者更保守。脫水流失逾體重 2% 即開始影響表現，務必提早規律補水。出現頭暈、起雞皮疙瘩、停止流汗等中暑徵兆務必立即停下。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/25943654/" target="_blank" rel="noopener noreferrer">Périard 2015 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/34652333/" target="_blank" rel="noopener noreferrer">Mantzios 2022 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17473775/" target="_blank" rel="noopener noreferrer">Ely 2007 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/22649525/" target="_blank" rel="noopener noreferrer">El Helou 2012 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12183501/" target="_blank" rel="noopener noreferrer">Minetti 2002 ↗</a>
+                    </p>
                 </div></div>
             </div>
 

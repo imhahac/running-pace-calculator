@@ -24,8 +24,8 @@ const MOODS: TMood[] = ['good', 'normal', 'low'];
 
 export class MenstrualController {
   static initialize(): void {
-    ['cycle-day-input', 'cycle-length-input', 'cycle-sleep-input'].forEach((id) =>
-      document.getElementById(id)?.addEventListener('input', () => this.calculate())
+    ['cycle-start-date', 'cycle-day-input', 'cycle-length-input', 'cycle-sleep-input'].forEach(
+      (id) => document.getElementById(id)?.addEventListener('input', () => this.calculate())
     );
     ['cycle-dysmenorrhea-select', 'cycle-mood-select'].forEach((id) =>
       document.getElementById(id)?.addEventListener('change', () => this.calculate())
@@ -36,28 +36,43 @@ export class MenstrualController {
   static calculate(): void {
     const phaseEl = document.getElementById('cycle-phase');
     const adviceEl = document.getElementById('cycle-advice');
+    const derivedEl = document.getElementById('cycle-derived');
     if (!phaseEl) return;
 
-    const day = parseInt(
-      (document.getElementById('cycle-day-input') as HTMLInputElement | null)?.value || '',
-      10
-    );
     const length =
       parseInt(
         (document.getElementById('cycle-length-input') as HTMLInputElement | null)?.value || '',
         10
       ) || 28;
+
+    // Date takes precedence: if a valid "first day of last period" is set, derive
+    // the cycle day from it (and surface that day); otherwise use the manual day.
+    const startIso =
+      (document.getElementById('cycle-start-date') as HTMLInputElement | null)?.value || '';
+    const derivedDay = MenstrualCalculator.cycleDayFromDate(startIso, length);
+    const manualDay = parseInt(
+      (document.getElementById('cycle-day-input') as HTMLInputElement | null)?.value || '',
+      10
+    );
+    const day = derivedDay ?? (isFinite(manualDay) ? manualDay : NaN);
     const phase = isFinite(day) ? MenstrualCalculator.phase(day, length) : null;
 
     if (!phase) {
       phaseEl.textContent = '--';
       phaseEl.className = '';
       if (adviceEl) adviceEl.textContent = '';
+      if (derivedEl) derivedEl.textContent = '';
       renderInsight('cycle', { ok: false });
       return;
     }
 
     const t = TranslationManager.getDict();
+    if (derivedEl) {
+      derivedEl.textContent =
+        derivedDay !== null
+          ? TranslationManager.format('cycle_derived_day', { n: derivedDay })
+          : '';
+    }
 
     // Optional day-to-day symptom inputs.
     const dysSel = (
@@ -79,16 +94,19 @@ export class MenstrualController {
       dysmenorrhea,
       mood,
       sleepHours,
-      cycleLength: length
+      cycleLength: length,
+      cycleDay: day
     });
 
     phaseEl.textContent = t[`menstrual_phase_${phase}`] || phase;
     phaseEl.className = `risk-badge risk-${READINESS_RISK[adj.readiness]}`;
     if (adviceEl) adviceEl.textContent = t[`menstrual_advice_${phase}`] || '';
 
-    // Combined readout: symptom-adjusted recommendation + luteal fuelling tip
-    // (Carmichael 2021) + RED-S warning (Ackerman 2019) when the cycle is irregular.
+    // Combined readout: symptom-adjusted recommendation + late-luteal PMS note
+    // (Sims & Yeager 2024) + luteal fuelling tip (Carmichael 2021) + RED-S warning
+    // (Ackerman 2019) when the cycle is irregular.
     let readout = t[`menstrual_rec_${adj.recommendationKey}`] || '';
+    if (adj.pmsWindow) readout += ` ${t.menstrual_pms_note || ''}`;
     if (phase === 'luteal') readout += ` ${t.menstrual_luteal_fuel || ''}`;
     if (adj.redSFlag) readout += ` ${t.menstrual_reds_warn || ''}`;
 

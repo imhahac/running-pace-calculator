@@ -23,6 +23,8 @@ export interface IMenstrualAdjustInput {
   mood?: TMood;
   sleepHours?: number;
   cycleLength?: number;
+  /** 1-based cycle day — used only to detect the late-luteal (PMS) window. */
+  cycleDay?: number;
 }
 
 export interface IMenstrualAdjust {
@@ -31,7 +33,12 @@ export interface IMenstrualAdjust {
   recommendationKey: TReadiness;
   /** RED-S (low energy availability) warning — irregular/absent cycle. */
   redSFlag: boolean;
+  /** Late-luteal / premenstrual window (last ~5 days) — surfaces a PMS note. */
+  pmsWindow: boolean;
 }
+
+// Premenstrual symptoms cluster in the last few days of the luteal phase.
+const PMS_WINDOW_DAYS = 5;
 
 // A normal eumenorrheic cycle sits in this range; outside it flags RED-S risk.
 const NORMAL_CYCLE_MIN = 21;
@@ -50,12 +57,45 @@ export class MenstrualCalculator {
   }
 
   /**
+   * Derive the 1-based cycle day from the first day of the last period, wrapping
+   * around for a regular cycle. Timezone-safe: an ISO `YYYY-MM-DD` is parsed as
+   * LOCAL midnight (not the UTC midnight `new Date("YYYY-MM-DD")` would give) and
+   * `now` is floored to local midnight, so the day count never slips by ±1.
+   * @returns an integer in 1..cycleLength, or null if empty/invalid/future.
+   */
+  static cycleDayFromDate(
+    lastPeriodISO: string,
+    cycleLength = 28,
+    now: Date = new Date()
+  ): number | null {
+    if (!lastPeriodISO || !(cycleLength >= 21)) return null;
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(lastPeriodISO.trim());
+    if (!m) return null;
+    const y = Number(m[1]);
+    const mo = Number(m[2]);
+    const d = Number(m[3]);
+    const startMid = new Date(y, mo - 1, d); // local midnight
+    // Reject impossible dates (e.g. 2026-02-31 rolls over → fields won't match).
+    if (
+      startMid.getFullYear() !== y ||
+      startMid.getMonth() !== mo - 1 ||
+      startMid.getDate() !== d
+    ) {
+      return null;
+    }
+    const nowMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    const diffDays = Math.round((nowMid.getTime() - startMid.getTime()) / 86400000);
+    if (diffDays < 0) return null; // start date is in the future
+    return (((diffDays % cycleLength) + cycleLength) % cycleLength) + 1;
+  }
+
+  /**
    * Symptom-adjusted training readiness. Period pain, low mood and short sleep
    * accumulate a "symptom load"; enough load pulls the session easier than the
    * phase alone would suggest. An out-of-range cycle length raises the RED-S flag.
    */
   static adjust(opts: IMenstrualAdjustInput): IMenstrualAdjust {
-    const { dysmenorrhea = 'none', mood = 'normal', sleepHours, cycleLength = 28 } = opts;
+    const { dysmenorrhea = 'none', mood = 'normal', sleepHours, cycleLength = 28, cycleDay } = opts;
 
     // Transparent symptom-load heuristic: there is no published weighting for
     // these factors, and McNulty 2020 stresses that individual variation
@@ -72,7 +112,16 @@ export class MenstrualCalculator {
 
     const redSFlag = !(cycleLength >= NORMAL_CYCLE_MIN && cycleLength <= NORMAL_CYCLE_MAX);
 
-    return { readiness, recommendationKey: readiness, redSFlag };
+    // Late-luteal (premenstrual) window: the last few days before the next
+    // period, where mood/sleep/cramp symptoms commonly cluster. Informational
+    // only — it does NOT change the symptom-load readiness above.
+    const pmsWindow =
+      opts.phase === 'luteal' &&
+      cycleDay !== undefined &&
+      cycleDay > cycleLength - PMS_WINDOW_DAYS &&
+      cycleDay <= cycleLength;
+
+    return { readiness, recommendationKey: readiness, redSFlag, pmsWindow };
   }
 }
 

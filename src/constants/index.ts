@@ -320,11 +320,11 @@ export const TRANSLATIONS: ITranslations = {
     detail_tri_note:
       '反推假設典型分配比例，個人強弱項差異大，務必依自身三項能力調整。長距離鐵人自行車若太猛，跑步會崩。',
     detail_raceplan_principle:
-      '把目標完賽時間依策略分配到每公里。負分段（後半略快）通常成績與體感最佳；均速穩定；正分段（前快後掉）風險最高。下方曲線為每公里配速。',
+      '把目標完賽時間依策略分配到每公里。最關鍵是「別起步過快」：正分段（前快後掉）最常見、也最傷成績；越強的跑者配速越平穩（March 2011）。菁英多以接近均速、略為負分段創紀錄（Kipchoge 柏林 2018、Kiptum 芝加哥 2023 後半都更快；Díaz 2018：世界紀錄多為均速）。實戰：前段略保守、中段守目標、末段行有餘力再加速。下方曲線為每公里配速。',
     detail_raceplan_how:
-      '選距離、輸入目標時間與策略，得到每公里配速與累積時間。比照曲線控速，起步務必克制，別被現場氣氛帶快。',
+      '選距離、輸入目標時間與策略，得到每公里配速與累積時間。比照曲線控速：前 ~1/4 刻意慢 5–10 秒/km、中段守目標、末 ~1/4 行有餘力再快 5–15 秒/km。重點不是「前半慢」，而是別被現場腎上腺素騙去跑「感覺輕鬆卻偏快」的前半。',
     detail_raceplan_stages:
-      '起步（別衝）→中段（進入節奏、規律補給）→全馬約 30k 易撞牆→收尾（行有餘力再加速）。',
+      '起步保守（別衝）→中段守目標配速、規律補給→全馬約 30k 易撞牆→末段行有餘力再加速。',
     detail_raceplan_note:
       '配速只是計畫，需與體感、心率、天氣動態調整；高溫或丘陵請改用「環境配速」與「GAP」修正預期。',
     gap_readout:
@@ -386,7 +386,7 @@ export const TRANSLATIONS: ITranslations = {
     explain_plan_config:
       '難度（初/進/菁英）會自動帶入建議的週數與起始/巔峰週里程；想自訂可直接改數字，全部留白則依賽事日期與目前配速自動推算。',
     explain_raceplan:
-      '策略：平均（穩定）；負分段（後半加速，通常成績較佳）；正分段（前快後掉，較不建議）。表格為每公里目標配速與累積時間。提醒：起步勿過快、約 30k 易撞牆、依表補給。',
+      '策略：均速（保守穩定）；負分段（前保守、末加速，菁英與多數世界紀錄的型態）；正分段（前快後掉，最常見也最傷成績）。關鍵：起步勿過快。表格為每公里目標配速與累積時間；約 30k 易撞牆、依表補給。',
     explain_vdot:
       'VDOT 是由近期成績推估的「有效 VO₂max」，數字越大代表體能越好。下方 E/M/T/I/R 是對應訓練配速，等效成績是相同體能下各距離的預估成績。',
     btn_detail: '詳解',
@@ -625,17 +625,25 @@ export const TRANSLATIONS: ITranslations = {
     detail_acwr_note:
       '里程只是負荷的一種代理；強度、地形、睡眠與壓力同樣重要。ACWR 是趨勢參考非保證，務必結合自身體感與疼痛訊號。',
     env_title: '🌡️ 環境配速調整',
-    hint_env_intro: '輸入氣溫、濕度與基準配速，算出露點、WBGT 與今日實際目標配速',
+    hint_env_intro: '選模式，輸入氣溫、濕度、配速與熱適應程度，算出露點、WBGT 與目標／等效配速',
+    env_mode: '模式',
+    env_mode_forward: '預測（目標→熱天配速）',
+    env_mode_reverse: '反推（熱天實際→涼天等效）',
     env_temp: '氣溫 (°C)',
     env_humidity: '相對濕度 (%)',
-    env_pace: '基準配速 (m:ss/km)',
+    env_pace: '配速 (m:ss/km)',
     env_grade: '坡度 (%, 可選)',
+    env_acclim: '熱適應程度',
+    env_acclim_none: '未適應',
+    env_acclim_partial: '部分（約 1 週）',
+    env_acclim_full: '已適應（10–14 天）',
     env_risk_label: '熱壓力等級',
     env_dewpoint_label: '露點',
     env_wbgt_label: 'WBGT',
     env_heat_label: '高溫減速',
     env_grade_label: '坡度係數',
     env_adjusted_label: '建議目標配速',
+    env_result_rev: '涼天等效配速',
     env_risk_low: '🟢 低',
     env_risk_moderate: '🟡 中等',
     env_risk_high: '🟠 高',
@@ -644,14 +652,17 @@ export const TRANSLATIONS: ITranslations = {
       '露點與 WBGT 反映身體散熱難度：高溫高濕下汗水難蒸發，配速需放慢。本工具用 WBGT（ABM 陰影近似）對應減速幅度，並用 Minetti（2002）坡度能量成本換算坡度係數。台灣夏天常落在「高/極端」區，務必依建議配速放慢並加強補水。',
     env_readout:
       'WBGT {wbgt}°C（{risk}）：建議比平路放慢約 {pct}%、目標約 {pace}，並每 15–20 分鐘補水、多走陰涼處。',
+    env_readout_reverse:
+      'WBGT {wbgt}°C（{risk}）：此熱度／坡度約使配速慢 {pct}%；你的表現相當於涼天平路約 {pace}。',
+    env_sweat_warn: '⚠️ 脫水流失逾體重 2% 即開始影響表現，請提早、規律補水與電解質。',
     detail_env_principle:
       '人體靠流汗蒸發散熱。高溫高濕（露點高）時汗水不易蒸發，核心體溫上升、心率攀高，同樣配速會更吃力。WBGT 綜合溫濕度評估熱壓力，越高越需放慢（ABM 陰影近似）。',
     detail_env_how:
-      '輸入氣溫、濕度與平路目標配速（可填坡度）。依「建議目標配速」放慢、別硬追原訂配速；以體感與心率為準，並提早、規律補水與電解質。',
+      '「預測」模式：輸入平路涼天目標配速，得熱天/坡地建議配速。「反推」模式：輸入熱天實際跑出的配速，回推涼天平路等效配速（評估真實體能）。並選「熱適應程度」：已適應者高溫減速幅度較小（Périard 2015）。依結果放慢、別硬追原訂配速；以體感與心率為準，提早、規律補水與電解質。',
     detail_env_stages:
       'WBGT <18 低（影響小）；18–23 中（略放慢、注意補水）；23–28 高（明顯放慢、找陰涼、增加補給）；>28 極端（大幅放慢，考慮改時段／縮短／取消）。',
     detail_env_note:
-      '為陰影近似，烈日直曬、無風或柏油路面會更嚴峻。熱適應需 10–14 天；尚未適應者更保守。出現頭暈、起雞皮疙瘩、停止流汗等中暑徵兆務必立即停下。',
+      '為陰影近似，烈日直曬、無風或柏油路面會更嚴峻。熱適應約需 7–14 天（Périard 2015），尚未適應者更保守。脫水流失逾體重 2% 即開始影響表現，務必提早規律補水。出現頭暈、起雞皮疙瘩、停止流汗等中暑徵兆務必立即停下。',
     fuel_title: '🍫 卡路里 + 補給時間軸',
     hint_fuel_intro: '輸入體重、距離與目標完賽時間，算出熱量與每站補給',
     fuel_weight: '體重 (kg)',
@@ -876,7 +887,10 @@ export const TRANSLATIONS: ITranslations = {
     detail_hrv_note:
       '需穩定的量測條件才可靠；酒精、生病、缺水、壓力都會影響。變異係數（CV）越大越不穩定、宜保守。單日數字僅供參考，請對齊體感與睡眠。',
     cycle_title: '🌸 月經週期訓練調整',
-    hint_cycle_intro: '輸入週期第幾天與週期長度，給該階段訓練微調',
+    hint_cycle_intro:
+      '填「最近一次月經第一天」自動推算週期天數（或直接填第幾天）；日期越久未更新越不準。',
+    cycle_start_date: '最近一次月經第一天',
+    cycle_derived_day: '（依日期推算為第 {n} 天）',
     cycle_day: '週期第幾天',
     cycle_length: '週期長度 (天)',
     cycle_dysmenorrhea: '經痛程度',
@@ -894,13 +908,19 @@ export const TRANSLATIONS: ITranslations = {
     menstrual_phase_follicular: '濾泡期',
     menstrual_phase_ovulation: '排卵期',
     menstrual_phase_luteal: '黃體期',
-    menstrual_advice_menstrual: '依症狀調整；不適就降量，無症狀可正常訓練。',
-    menstrual_advice_follicular: '通常體感較佳、耐受度高，適合高品質與高強度課表。',
-    menstrual_advice_ovulation: '力量常見高點；注意關節鬆弛、暖身充分。',
-    menstrual_advice_luteal: '體溫升高、較易疲勞與不耐熱：加強補水與恢復，必要時降強度。',
+    menstrual_advice_menstrual:
+      '症狀因人而異：無不適可照常訓練（含質量課）；經痛或疲勞明顯就降量到舒適，輕鬆有氧與伸展有時可緩解經痛。',
+    menstrual_advice_follicular:
+      '雌激素上升，常（非必然）體感較佳、耐受度高；狀況好時適合安排質量課與長距離，仍以體感為準、別只看日曆。',
+    menstrual_advice_ovulation:
+      '部分人力量與表現達高點、可衝；雌激素高峰期關節鬆弛度可能略升（與受傷的關聯證據仍不一致，Herzberg 2017），務必充分暖身。',
+    menstrual_advice_luteal:
+      '體溫與黃體素上升→較不耐熱、同強度體感更費力、後段（經前）易疲勞：加強補水、預留恢復，熱天酌降強度。',
     menstrual_rec_go: '症狀輕微：可照計畫進行，必要時聽身體調整。',
     menstrual_rec_caution: '有不適徵兆：建議降低強度或縮短課表，優先品質與恢復。',
     menstrual_rec_easy: '症狀明顯：今天以輕鬆／恢復為主，必要時休息。',
+    menstrual_pms_note:
+      '經前（黃體期後段）情緒、睡眠與經痛常會變差：彈性安排、優先恢復；輕鬆有氧有時有助情緒（Sims & Yeager 2024）。',
     menstrual_luteal_fuel:
       '黃體期碳水氧化下降、脂肪利用上升，質量課前後可略增碳水補給（Carmichael 2021）。',
     menstrual_reds_warn:
@@ -930,7 +950,7 @@ export const TRANSLATIONS: ITranslations = {
     detail_cycle_principle:
       '雌激素與黃體素在週期中起伏，可能影響體溫、體感與恢復。本工具依週期分四階段給「微調起點」。McNulty 2020 系統綜述強調：個體差異遠大於群體平均效應。',
     detail_cycle_how:
-      '輸入週期第幾天與週期長度，看目前階段與該階段的訓練微調。下方為週期時間軸（目前階段已標示）。最終仍以自身體感、症狀與表現為準。',
+      '填「最近一次月經第一天」自動推算目前週期天數（規律週期會循環換算），或直接填「第幾天」；填了日期就以日期為準。看目前階段與該階段的訓練微調，下方為週期時間軸（目前階段已標示）。最終仍以自身體感、症狀與表現為準。',
     detail_cycle_stages:
       '月經期（症狀因人而異，舒適即可訓練）→濾泡期（精力漸增，適合質量與加量）→排卵期（常為高峰，可衝表現）→黃體期（體溫升、較易疲勞與不耐熱，宜加強補水與恢復）。',
     detail_cycle_note:
@@ -1125,11 +1145,11 @@ export const TRANSLATIONS: ITranslations = {
     detail_tri_note:
       'Back-solving assumes typical split ratios; individual strengths vary a lot, so adjust to your three-sport profile. Over-cook the bike in long course and the run falls apart.',
     detail_raceplan_principle:
-      'Distributes your goal finish time across each km by strategy. A negative split (slightly faster second half) usually feels and finishes best; even is steady; a positive split (fast then fade) is riskiest. The curve below is per-km pace.',
+      'Distributes your goal finish time across each km by strategy. The biggest lever is not starting too fast: a positive split (fast then fade) is the most common and most costly pattern, and stronger runners pace more evenly (March 2011). Elites set records running near-even / slightly negative (Kipchoge, Berlin 2018 and Kiptum, Chicago 2023 both ran faster second halves; Díaz 2018: world records are paced near-even). In practice: start a touch conservative, hold goal pace through the middle, lift the finish only if you have it. The curve below is per-km pace.',
     detail_raceplan_how:
-      'Pick distance, enter goal time and strategy to get per-km pace and cumulative time. Pace to the curve and hold back at the start — don’t let race-day buzz pull you fast.',
+      'Pick distance, enter goal time and strategy for per-km pace and cumulative time. Pace to the curve: first ~1/4 deliberately 5–10 s/km slower, hold goal pace through the middle, last ~1/4 faster by 5–15 s/km if you have it. The point isn’t a “slow first half” — it’s not letting race-day adrenaline pull you into a first half that feels easy but is too fast.',
     detail_raceplan_stages:
-      'Start (don’t surge) → middle (settle into rhythm, fuel regularly) → ~30k wall in the marathon → finish (speed up only if you have it).',
+      'Conservative start (don’t surge) → middle (hold goal pace, fuel regularly) → ~30k wall in the marathon → finish (lift it only if you have it).',
     detail_raceplan_note:
       'Pace is a plan; adjust to feel, heart rate and weather. In heat or on hills use “Environmental Pace” and “GAP” to reset expectations.',
     gap_readout:
@@ -1191,7 +1211,7 @@ export const TRANSLATIONS: ITranslations = {
     explain_plan_config:
       'A level (beginner/intermediate/elite) fills in suggested weeks and start/peak weekly mileage; edit the numbers to customize, or leave all blank to auto-derive from race date and current pace.',
     explain_raceplan:
-      'Strategies: even (steady); negative (faster second half, usually a better result); positive (fast start that fades, not recommended). The table is per-km target pace and cumulative time. Tips: don’t start too fast, the wall often hits ~30k, fuel on schedule.',
+      'Strategies: even (steady and conservative); negative split (conservative start, faster finish — how elites and most world records are run); positive split (fast then fade — most common and most costly). Key: don’t start too fast. The table shows per-km target pace and cumulative time; mind the ~30k wall and fuel to plan.',
     explain_vdot:
       'VDOT is an “effective VO₂max” estimated from a recent result — higher is fitter. The E/M/T/I/R values are the matching training paces; equivalent times are predicted results at the same fitness across distances.',
     btn_detail: 'Learn more',
@@ -1440,17 +1460,25 @@ export const TRANSLATIONS: ITranslations = {
       'Mileage is only one proxy for load; intensity, terrain, sleep and stress matter too. ACWR is a trend guide, not a guarantee — always combine it with how you feel and any pain signals.',
     env_title: '🌡️ Environmental Pace',
     hint_env_intro:
-      'Enter temperature, humidity and a base pace for dew point, WBGT and today’s real target pace',
+      'Pick a mode, enter temperature, humidity, pace and acclimatisation for dew point, WBGT and a target/equivalent pace',
+    env_mode: 'Mode',
+    env_mode_forward: 'Predict (target → hot pace)',
+    env_mode_reverse: 'Reverse (hot actual → cool-equiv)',
     env_temp: 'Temperature (°C)',
     env_humidity: 'Humidity (%)',
-    env_pace: 'Base pace (m:ss/km)',
+    env_pace: 'Pace (m:ss/km)',
     env_grade: 'Grade (%, optional)',
+    env_acclim: 'Heat acclimatisation',
+    env_acclim_none: 'Not adapted',
+    env_acclim_partial: 'Partial (~1 week)',
+    env_acclim_full: 'Adapted (10–14 days)',
     env_risk_label: 'Heat stress',
     env_dewpoint_label: 'Dew point',
     env_wbgt_label: 'WBGT',
     env_heat_label: 'Heat slowdown',
     env_grade_label: 'Grade factor',
     env_adjusted_label: 'Suggested target pace',
+    env_result_rev: 'Cool-weather equivalent',
     env_risk_low: '🟢 Low',
     env_risk_moderate: '🟡 Moderate',
     env_risk_high: '🟠 High',
@@ -1459,14 +1487,18 @@ export const TRANSLATIONS: ITranslations = {
       'Dew point and WBGT reflect how hard it is for your body to shed heat: in hot, humid air sweat evaporates poorly and pace must ease. This tool maps WBGT (ABM shade approximation) to a slowdown, and uses Minetti (2002) gradient energy cost for the grade factor. Taiwan summers often land in the High/Extreme band — slow to the suggested pace and hydrate more.',
     env_readout:
       'WBGT {wbgt}°C ({risk}): ease ~{pct}% off flat pace, target about {pace}, and drink every 15–20 min while seeking shade.',
+    env_readout_reverse:
+      'WBGT {wbgt}°C ({risk}): this heat/grade costs ~{pct}%; your run is worth about {pace} on a flat, cool day.',
+    env_sweat_warn:
+      '⚠️ Losing more than 2% of body mass to sweat starts to hurt performance — hydrate early and regularly with electrolytes.',
     detail_env_principle:
       'You cool mainly by evaporating sweat. In hot, humid air (high dew point) sweat evaporates poorly, core temperature and heart rate climb, and the same pace feels harder. WBGT combines temperature and humidity into a heat-stress index — the higher it is, the more you must ease (ABM shade approximation).',
     detail_env_how:
-      'Enter temperature, humidity and your flat target pace (grade optional). Ease to the suggested target pace instead of chasing your original pace; go by feel and heart rate, and hydrate early and regularly with electrolytes.',
+      'Predict mode: enter a flat, cool target pace to get the hot/hilly pace. Reverse mode: enter the pace you actually ran in the heat to back out a flat, cool-weather equivalent (gauging true fitness). Also set acclimatisation: adapted runners take a smaller heat penalty (Périard 2015). Ease to the result instead of chasing your original pace; go by feel and heart rate, and hydrate early and regularly with electrolytes.',
     detail_env_stages:
       'WBGT <18 low (little effect); 18–23 moderate (ease slightly, mind hydration); 23–28 high (ease clearly, seek shade, fuel more); >28 extreme (ease a lot — consider rescheduling/shortening/cancelling).',
     detail_env_note:
-      'A shade approximation: direct sun, no wind or asphalt make it harsher. Heat acclimatisation takes 10–14 days; be more conservative if unadapted. Stop immediately on heat-illness signs (dizziness, goosebumps, stopping sweating).',
+      'A shade approximation: direct sun, no wind or asphalt make it harsher. Heat acclimatisation takes ~7–14 days (Périard 2015); be more conservative if unadapted. Losing more than 2% of body mass to sweat starts to hurt performance — hydrate early. Stop immediately on heat-illness signs (dizziness, goosebumps, stopping sweating).',
     fuel_title: '🍫 Calories + Fueling Timeline',
     hint_fuel_intro:
       'Enter weight, distance and target finish time for kcal and a per-station plan',
@@ -1697,7 +1729,10 @@ export const TRANSLATIONS: ITranslations = {
     detail_hrv_note:
       'Reliable only with consistent measurement; alcohol, illness, dehydration and stress all affect it. A higher CV means less stability — be conservative. Treat any single day as a hint and align it with how you feel and your sleep.',
     cycle_title: '🌸 Menstrual-Cycle Adjustment',
-    hint_cycle_intro: 'Enter cycle day and length for phase-based training micro-adjustments',
+    hint_cycle_intro:
+      'Enter your last period’s first day to auto-derive the cycle day (or type the day directly); accuracy drifts the longer ago that date was.',
+    cycle_start_date: 'First day of your last period',
+    cycle_derived_day: '(Derived: day {n})',
     cycle_day: 'Cycle day',
     cycle_length: 'Cycle length (days)',
     cycle_dysmenorrhea: 'Period pain',
@@ -1716,16 +1751,19 @@ export const TRANSLATIONS: ITranslations = {
     menstrual_phase_ovulation: 'Ovulation',
     menstrual_phase_luteal: 'Luteal',
     menstrual_advice_menstrual:
-      'Adjust to symptoms; ease off if uncomfortable, train normally if asymptomatic.',
+      'Symptoms vary widely: train normally (including quality work) if you feel fine; if cramps or fatigue are notable, ease volume to comfort — easy aerobic work and stretching can sometimes relieve cramps.',
     menstrual_advice_follicular:
-      'Often feel strong with good tolerance — a good window for quality/high-intensity work.',
-    menstrual_advice_ovulation: 'Strength often peaks; mind joint laxity and warm up well.',
+      'Estrogen rising — many (not all) feel strong with good tolerance; a good window to schedule quality and long runs if you feel good, but go by feel rather than the calendar.',
+    menstrual_advice_ovulation:
+      'Strength and performance peak for some — a day to push; estrogen peaks and joint laxity may rise slightly around ovulation (its link to injury remains inconclusive, Herzberg 2017), so warm up well.',
     menstrual_advice_luteal:
-      'Higher core temp, more fatigue and heat sensitivity: hydrate and recover more, ease intensity if needed.',
+      'Higher core temp and progesterone → less heat tolerance, the same pace feels harder, and the late (premenstrual) days bring more fatigue: hydrate more, build in recovery, and ease intensity in the heat.',
     menstrual_rec_go: 'Symptoms minimal — train as planned; adjust to your body if needed.',
     menstrual_rec_caution:
       'Some symptoms — lower intensity or shorten the session; prioritise quality and recovery.',
     menstrual_rec_easy: 'Notable symptoms — keep it easy/recovery today, or rest if needed.',
+    menstrual_pms_note:
+      'Premenstrual (late luteal): mood, sleep and cramps often worsen — stay flexible and prioritise recovery; easy aerobic work can sometimes help mood (Sims & Yeager 2024).',
     menstrual_luteal_fuel:
       'In the luteal phase carb oxidation drops and fat use rises; add a little carbohydrate around quality sessions (Carmichael 2021).',
     menstrual_reds_warn:
@@ -1755,7 +1793,7 @@ export const TRANSLATIONS: ITranslations = {
     detail_cycle_principle:
       'Estrogen and progesterone rise and fall across the cycle and may affect temperature, perceived effort and recovery. This tool gives a per-phase “starting point.” McNulty 2020’s review stresses that individual variation far exceeds the average group effect.',
     detail_cycle_how:
-      'Enter cycle day and length to see the current phase and its training tweak. The strip below is the cycle timeline (current phase highlighted). Ultimately go by your own symptoms, feel and performance.',
+      'Enter the first day of your last period to auto-derive the current cycle day (it wraps around for a regular cycle), or type the day directly; the date takes precedence when set. See the current phase and its training tweak — the strip below is the cycle timeline (current phase highlighted). Ultimately go by your own symptoms, feel and performance.',
     detail_cycle_stages:
       'Menstrual (symptoms vary — train if comfortable) → Follicular (energy rising, good for quality and volume) → Ovulation (often a peak — push performance) → Luteal (higher temp, more fatigue and heat intolerance — emphasise hydration and recovery).',
     detail_cycle_note:
