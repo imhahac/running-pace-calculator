@@ -74,6 +74,13 @@ export class TrainingCycleManager {
       planDistanceMeters > FULL_MARATHON_METERS ||
       planDistanceMeters === 51500;
 
+    const schoolVal = (document.getElementById('training-school') as HTMLSelectElement | null)
+      ?.value;
+    const school =
+      schoolVal === 'higdon' || schoolVal === 'pfitzinger' || schoolVal === 'daniels'
+        ? schoolVal
+        : undefined;
+
     const plan = Calculator.generateTrainingCycle(
       paceSecondsPerKm,
       dateInput.value,
@@ -83,7 +90,8 @@ export class TrainingCycleManager {
       isTriathlon,
       (key) => TranslationManager.get(key),
       new Date(),
-      this.readPlanConfig()
+      this.readPlanConfig(),
+      school
     );
 
     this.lastPlan = plan;
@@ -98,7 +106,7 @@ export class TrainingCycleManager {
       return;
     }
 
-    plan.forEach((row) => {
+    plan.forEach((row, idx) => {
       const card = document.createElement('div');
       card.className = 'training-week-card';
       card.style.border = '1px solid var(--border-color)';
@@ -107,12 +115,16 @@ export class TrainingCycleManager {
       card.style.marginBottom = '10px';
       card.style.backgroundColor = 'var(--bg-secondary)';
 
+      // Per-week header doubles as a collapse toggle (default collapsed). Reuses
+      // the delegated `.detail-toggle` handler + `.tool-detail` grid-rows CSS, so
+      // no extra JS — clicking the header toggles `.open` on the body panel.
+      const bodyId = `training-week-${idx}-body`;
       let html = `
-        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 5px;">
+        <button type="button" class="detail-toggle week-toggle" aria-expanded="false" aria-controls="${bodyId}" style="border-bottom: 1px solid var(--border-color); padding-bottom: 5px; margin-bottom: 5px;">
           <strong style="font-size: 1.1rem;">${row.weekLabel}: ${row.focus}</strong>
-          <span style="font-size: 0.9rem;">${row.isRecoveryWeek ? '🌿' : '🏃'} ${TranslationManager.get('label_mileage')}: ${row.totalMileageKm}</span>
-        </div>
-        <div style="display: grid; gap: 8px;">
+          <span style="font-size: 0.9rem; font-weight: normal;">${row.isRecoveryWeek ? '🌿' : '🏃'} ${TranslationManager.get('label_mileage')}: ${row.totalMileageKm}</span>
+        </button>
+        <div id="${bodyId}" class="tool-detail"><div class="tool-detail-inner"><div style="display: grid; gap: 8px;">
       `;
 
       row.days.forEach((day) => {
@@ -121,6 +133,7 @@ export class TrainingCycleManager {
         if (day.workoutType === 'swim') icon = '🏊';
         if (day.workoutType === 'bike') icon = '🚴';
         if (day.workoutType === 'long') icon = '⛰️';
+        if (day.workoutType === 'medlong') icon = '🏞️';
         if (day.workoutType === 'interval') icon = '⚡';
 
         let paceHtml = '';
@@ -157,7 +170,7 @@ export class TrainingCycleManager {
         `;
       });
 
-      html += `</div>`;
+      html += `</div></div></div>`;
       card.innerHTML = html;
       container.appendChild(card);
     });

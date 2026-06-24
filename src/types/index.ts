@@ -46,6 +46,9 @@ export type TPlanType = 'running' | 'triathlon';
  */
 export type TTrainingPhase = 'base' | 'build' | 'peak' | 'taper' | 'race';
 
+/** Training methodology / "school" that shapes the weekly structure. */
+export type TTrainingSchool = 'higdon' | 'pfitzinger' | 'daniels';
+
 /**
  * Workout type for a single training day
  */
@@ -54,6 +57,7 @@ export type TWorkoutType =
   | 'swim'
   | 'bike'
   | 'long'
+  | 'medlong'
   | 'easy'
   | 'tempo'
   | 'interval'
@@ -314,7 +318,16 @@ export interface IWorkoutStage {
  */
 export interface ITrainingDay {
   dayOfWeek: string;
-  workoutType: 'rest' | 'easy' | 'tempo' | 'interval' | 'long' | 'swim' | 'bike' | 'race';
+  workoutType:
+    | 'rest'
+    | 'easy'
+    | 'tempo'
+    | 'interval'
+    | 'long'
+    | 'medlong'
+    | 'swim'
+    | 'bike'
+    | 'race';
   description: string;
   durationOrDistance: string;
   paceOrIntensity: string;

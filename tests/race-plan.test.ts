@@ -30,6 +30,19 @@ test('positive split: starts faster than it finishes', () => {
   assert.ok(plan.rows[0].paceSec < plan.rows[plan.rows.length - 1].paceSec);
 });
 
+test('negative split magnitude is modest (~3% half-to-half, evidence-calibrated)', () => {
+  const plan = RacePlanBuilder.build(42195, 4 * 3600, 'negative'); // 4:00:00 marathon
+  const mid = Math.floor(plan.rows.length / 2);
+  const meanPace = (rows: typeof plan.rows): number =>
+    rows.reduce((s, r) => s + r.paceSec, 0) / rows.length;
+  const ratio = meanPace(plan.rows.slice(mid)) / meanPace(plan.rows.slice(0, mid));
+  // Second half faster, but only modestly (would be ~0.94 with the old 6% delta).
+  assert.ok(
+    ratio > 0.95 && ratio < 0.99,
+    `second half modestly faster (ratio ${ratio.toFixed(3)})`
+  );
+});
+
 test('invalid input → empty plan', () => {
   const plan = RacePlanBuilder.build(0, 1000);
   assert.deepEqual(plan.rows, []);

@@ -24,10 +24,11 @@ export class HrvCalculator {
     const vals = rmssd.filter((v) => isFinite(v) && v > 0);
     if (vals.length < 3) return null;
 
-    // Baseline = the PRIOR days (excluding today), so today is compared against
-    // a band it did not help define (Plews rolling-baseline approach).
+    // Baseline = the PRIOR days (excluding today), capped to the most recent 7
+    // so today is compared against a 7-day rolling normal band (mean ± 1 SD)
+    // it did not help define — the Plews et al. (2013) monitoring method.
     const today = vals[vals.length - 1];
-    const baseline = vals.slice(0, -1);
+    const baseline = vals.slice(0, -1).slice(-7);
     const n = baseline.length;
     const mean = baseline.reduce((s, v) => s + v, 0) / n;
     const variance = baseline.reduce((s, v) => s + (v - mean) ** 2, 0) / n;

@@ -19,6 +19,7 @@ import type {
   ITrainingWeekPlan,
   ITrainingDay,
   ITrainingPlanConfig,
+  TTrainingSchool,
   TWorkoutType
 } from '../../types/index';
 
@@ -213,7 +214,8 @@ export class Calculator {
     isTriathlon: boolean = false,
     translate: (key: string) => string,
     now: Date = new Date(),
-    config?: ITrainingPlanConfig
+    config?: ITrainingPlanConfig,
+    school?: TTrainingSchool
   ): ITrainingWeekPlan[] {
     if (!isFinite(paceSecondsPerKm) || paceSecondsPerKm <= 0 || !targetDateISO) {
       return [];
@@ -264,9 +266,9 @@ export class Calculator {
       };
 
       const days: ITrainingDay[] = [];
-      days.push(buildDay(0, 'rest')); // Mon
 
       if (phase === 'race' && week === weekCount) {
+        days.push(buildDay(0, 'rest')); // Mon
         days.push(buildDay(1, 'easy')); // Tue
         days.push(buildDay(2, isTriathlon ? 'swim' : 'easy')); // Wed
         days.push(buildDay(3, 'rest')); // Thu
@@ -274,18 +276,14 @@ export class Calculator {
         days.push(buildDay(5, 'rest')); // Sat
         days.push(buildDay(6, 'race')); // Sun
       } else {
-        const keyWorkout: TWorkoutType =
-          phase === 'base' || mileage.isRecovery
-            ? 'easy'
-            : phase === 'build'
-              ? 'tempo'
-              : 'interval';
-        days.push(buildDay(1, keyWorkout)); // Tue
-        days.push(buildDay(2, isTriathlon ? 'swim' : 'easy')); // Wed
-        days.push(buildDay(3, isTriathlon ? 'bike' : 'tempo')); // Thu
-        days.push(buildDay(4, isTriathlon ? 'swim' : 'easy')); // Fri
-        days.push(buildDay(5, 'long')); // Sat
-        days.push(buildDay(6, isTriathlon ? 'bike' : 'easy')); // Sun
+        // School-specific Mon→Sun template (no school = original structure).
+        const template = TrainingPlanBuilder.weeklyTemplate(
+          school,
+          phase,
+          mileage.isRecovery,
+          isTriathlon
+        );
+        template.forEach((type, idx) => days.push(buildDay(idx, type)));
       }
 
       plans.push({

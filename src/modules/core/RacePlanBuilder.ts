@@ -8,7 +8,11 @@ import VdotCalculator from './VdotCalculator.js';
 import type { IRacePlan, IRacePlanRow, TRaceStrategy } from '../../types/index';
 
 // End-segments deviate from average pace by this fraction for non-even splits.
-const SPLIT_DELTA = 0.06;
+// Calibrated to a modest negative split: ±1.5% per half → second half ~3%
+// faster, the evidence-supported optimum (marathon pacing systematic review,
+// PMID 39281580; negative-splits review, PMID 40740427). Larger swings tend to
+// cost time, so this is deliberately gentler than a naive 5–6% ramp.
+const SPLIT_DELTA = 0.03;
 
 export class RacePlanBuilder {
   /**

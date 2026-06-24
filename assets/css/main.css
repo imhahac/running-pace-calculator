@@ -1424,6 +1424,21 @@ input.diff {
 }
 .detail-toggle::before { content: "▸ "; }
 .detail-toggle[aria-expanded="true"]::before { content: "▾ "; }
+/* Per-week training-plan header doubles as a collapse toggle (reuses the
+   delegated .detail-toggle handler + .tool-detail grid-rows collapse). */
+.week-toggle {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    text-align: left;
+    font-size: 1rem;
+    margin: 0;
+    padding: 2px 0;
+    color: var(--text-light);
+}
+.week-toggle strong { margin-right: auto; }
+.week-toggle::before { color: var(--highlight); flex: none; }
 /* Collapsible via grid-template-rows 0fr→1fr: animates to the panel's natural
    height with no magic max-height, so arbitrarily long 詳解 panels never clip.
    The container clips the inner's padding while collapsed; min-height:0 lets
@@ -1439,6 +1454,10 @@ input.diff {
 .tool-detail-inner { min-height: 0; overflow: hidden; padding: 4px 0 2px; }
 .tool-detail-inner h4 { margin: 8px 0 2px; font-size: 0.82rem; color: var(--text-light); }
 .tool-detail-inner p { margin: 0 0 4px; font-size: 0.8rem; color: var(--text-muted); line-height: 1.7; }
+/* Clickable scientific-reference list inside a 詳解 panel. */
+.detail-refs { margin: 6px 0 2px; font-size: 0.75rem; color: var(--text-muted); line-height: 1.8; word-break: break-word; }
+.detail-refs a { color: var(--highlight); text-decoration: none; }
+.detail-refs a:hover { text-decoration: underline; }
 
 /* ── Result readout (plain-language interpretation) ───────────────────── */
 .tool-readout { margin-top: 8px; font-size: 0.85rem; line-height: 1.7; color: var(--text-light); }

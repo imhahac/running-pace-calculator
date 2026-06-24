@@ -19,6 +19,7 @@ import type {
   ITrainingPlanConfig,
   IWorkoutStage,
   TTrainingPhase,
+  TTrainingSchool,
   TWorkoutType
 } from '../../types/index';
 
@@ -161,6 +162,46 @@ export class TrainingPlanBuilder {
   }
 
   /**
+   * Mon→Sun workout types for a (non-race) week, differentiated by training
+   * school. Mon is always rest and Sat the long run; the locked periodisation
+   * (phaseForWeek) and every-4th-week stepback still apply. No school reproduces
+   * the original generic structure exactly.
+   *  - Higdon: beginner-friendly, ≤1 quality day + weekend long run.
+   *  - Pfitzinger: midweek medium-long run + threshold/VO2 quality.
+   *  - Daniels: two quality days rotating T/I by phase (E fills the rest).
+   */
+  static weeklyTemplate(
+    school: TTrainingSchool | undefined,
+    phase: TTrainingPhase,
+    isRecovery: boolean,
+    isTriathlon: boolean
+  ): TWorkoutType[] {
+    if (isTriathlon) {
+      const key: TWorkoutType =
+        phase === 'base' || isRecovery ? 'easy' : phase === 'build' ? 'tempo' : 'interval';
+      return ['rest', key, 'swim', 'bike', 'swim', 'long', 'bike'];
+    }
+    if (school === 'higdon') {
+      const wed: TWorkoutType = isRecovery || phase === 'base' ? 'easy' : 'tempo';
+      return ['rest', 'easy', wed, 'easy', 'easy', 'long', 'easy'];
+    }
+    if (school === 'pfitzinger') {
+      const tue: TWorkoutType = isRecovery ? 'easy' : phase === 'peak' ? 'interval' : 'tempo';
+      const wed: TWorkoutType = isRecovery ? 'easy' : 'medlong';
+      return ['rest', tue, wed, 'easy', 'easy', 'long', 'easy'];
+    }
+    if (school === 'daniels') {
+      const q1: TWorkoutType = isRecovery ? 'easy' : 'tempo';
+      const q2: TWorkoutType = isRecovery ? 'easy' : phase === 'base' ? 'tempo' : 'interval';
+      return ['rest', q1, 'easy', q2, 'easy', 'long', 'easy'];
+    }
+    // No school → original generic structure (unchanged behavior).
+    const key: TWorkoutType =
+      phase === 'base' || isRecovery ? 'easy' : phase === 'build' ? 'tempo' : 'interval';
+    return ['rest', key, 'easy', 'tempo', 'easy', 'long', 'easy'];
+  }
+
+  /**
    * Localized weekday label for a 0-based day index (0 = Monday).
    */
   static dayLabel(d: number, translate: (key: string) => string): string {
@@ -214,6 +255,16 @@ export class TrainingPlanBuilder {
     // Flatten structured stages into one readable line for the `pace` text field.
     const flatten = (st: IWorkoutStage[]): string =>
       st.map((s) => `${s.label} ${s.action}${s.pace ? ` @ ${s.pace}` : ''}`).join(', ');
+
+    if (type === 'medlong') {
+      // Pfitzinger's signature midweek medium-long: a continuous steady run.
+      const dur = planDistanceMeters >= 42195 ? '90-110 min' : '70-90 min';
+      const stages: IWorkoutStage[] = [
+        { label: tk('stage_front'), action: tk('act_warmup'), pace: ePlus10 },
+        { label: tk('stage_main'), action: tk('act_steady'), pace: ePace }
+      ];
+      return { desc: translate('workout_medlong'), dur, pace: flatten(stages), stages };
+    }
 
     if (type === 'long') {
       const dur =

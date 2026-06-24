@@ -5,6 +5,7 @@
  */
 
 import RecoveryCalculator from '../../core/RecoveryCalculator.js';
+import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { phaseStrip } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
@@ -14,7 +15,7 @@ const EFFORTS: TEffort[] = ['easy', 'moderate', 'hard', 'allout'];
 
 export class RecoveryController {
   static initialize(): void {
-    ['rec-dist-select', 'rec-effort-select', 'rec-age-input'].forEach((id) => {
+    ['rec-dist-select', 'rec-effort-select', 'rec-age-input', 'rec-time-input'].forEach((id) => {
       const el = document.getElementById(id);
       el?.addEventListener('input', () => this.calculate());
       el?.addEventListener('change', () => this.calculate());
@@ -42,6 +43,11 @@ export class RecoveryController {
       (document.getElementById('rec-age-input') as HTMLInputElement | null)?.value || '35',
       10
     );
+    // Optional finish time → time-on-feet factor.
+    const parsedTime = TimeFormatter.tryParse(
+      (document.getElementById('rec-time-input') as HTMLInputElement | null)?.value || ''
+    );
+    const finishSeconds = parsedTime && parsedTime > 0 ? parsedTime : undefined;
 
     if (!(distM > 0)) {
       set('rec-before-hard', '--');
@@ -51,7 +57,12 @@ export class RecoveryController {
       return;
     }
 
-    const p = RecoveryCalculator.recovery(distM / 1000, effort, isFinite(age) ? age : 35);
+    const p = RecoveryCalculator.recovery(
+      distM / 1000,
+      effort,
+      isFinite(age) ? age : 35,
+      finishSeconds
+    );
     const t = TranslationManager.getDict();
     const daysLabel = t.rec_days || 'days';
     set('rec-before-hard', `${p.beforeHardDays} ${daysLabel}`);

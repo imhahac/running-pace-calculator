@@ -113,3 +113,29 @@ test('dayLabel maps 0..6 to localized weekday keys', () => {
   assert.equal(TrainingPlanBuilder.dayLabel(0, translate), '<day_mon>');
   assert.equal(TrainingPlanBuilder.dayLabel(6, translate), '<day_sun>');
 });
+
+test('weeklyTemplate differentiates the three schools', () => {
+  const T = (
+    s: 'higdon' | 'pfitzinger' | 'daniels' | undefined,
+    phase: 'base' | 'build' | 'peak'
+  ) => TrainingPlanBuilder.weeklyTemplate(s, phase, false, false);
+  // Pfitzinger: signature midweek medium-long run.
+  assert.ok(T('pfitzinger', 'build').includes('medlong'));
+  // Daniels: a quality interval day in the peak phase.
+  assert.ok(T('daniels', 'peak').includes('interval'));
+  // Higdon: at most one hard (tempo/interval) day besides the long run.
+  assert.ok(T('higdon', 'peak').filter((t) => t === 'tempo' || t === 'interval').length <= 1);
+  // No school → original generic structure unchanged.
+  assert.deepEqual(T(undefined, 'base'), ['rest', 'easy', 'easy', 'tempo', 'easy', 'long', 'easy']);
+  // All templates keep Mon rest + Sat long.
+  for (const s of ['higdon', 'pfitzinger', 'daniels', undefined] as const) {
+    const wk = T(s, 'build');
+    assert.equal(wk[0], 'rest');
+    assert.equal(wk[5], 'long');
+  }
+});
+
+test('weeklyTemplate recovery week drops quality to easy', () => {
+  const rec = TrainingPlanBuilder.weeklyTemplate('daniels', 'build', true, false);
+  assert.ok(!rec.includes('interval') && !rec.includes('tempo'));
+});

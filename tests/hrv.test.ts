@@ -27,3 +27,12 @@ test('needs at least 3 valid readings', () => {
   assert.equal(HrvCalculator.analyze([60, 62]), null);
   assert.equal(HrvCalculator.analyze([0, -1]), null);
 });
+
+test('baseline uses only the most recent 7 prior days (Plews window)', () => {
+  const recent = [60, 61, 59, 62, 60, 61, 58]; // 7 prior days ~60
+  const clean = HrvCalculator.analyze([...recent, 60]);
+  // Old wild readings BEYOND the 7-day window must not move the baseline.
+  const withOldOutlier = HrvCalculator.analyze([200, 200, ...recent, 60]);
+  assert.ok(clean && withOldOutlier);
+  assert.equal(withOldOutlier?.baseline, clean?.baseline);
+});

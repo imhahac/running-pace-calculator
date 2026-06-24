@@ -11,6 +11,7 @@ import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { phaseStrip } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
+import type { TIntervalPhase } from '../../core/IntervalBuilder.js';
 
 export class IntervalController {
   static initialize(): void {
@@ -18,7 +19,10 @@ export class IntervalController {
       'vdot-dist-select',
       'vdot-time-input',
       'interval-weekly-input',
-      'interval-type-select'
+      'interval-type-select',
+      'interval-goal-select',
+      'interval-phase-select',
+      'interval-qdays-input'
     ].forEach((id) => {
       const el = document.getElementById(id);
       const evt = el && el.tagName === 'SELECT' ? 'change' : 'input';
@@ -53,7 +57,24 @@ export class IntervalController {
       | 'I'
       | 'T'
       | 'R';
-    const s = IntervalBuilder.build(vdot, weekly, type);
+
+    // Optional Daniels tuning: goal race distance, training phase, quality days.
+    const goalEl = document.getElementById('interval-goal-select') as HTMLSelectElement | null;
+    const phaseEl = document.getElementById('interval-phase-select') as HTMLSelectElement | null;
+    const qdaysEl = document.getElementById('interval-qdays-input') as HTMLInputElement | null;
+    const goalDistanceM = parseFloat(goalEl?.value || '') || undefined;
+    const phaseRaw = phaseEl?.value;
+    const phase: TIntervalPhase | undefined =
+      phaseRaw === 'base'
+        ? 'base'
+        : phaseRaw === 'peak'
+          ? 'peak'
+          : phaseRaw === 'quality'
+            ? 'quality'
+            : undefined;
+    const qualityDays = parseInt(qdaysEl?.value || '', 10) || undefined;
+
+    const s = IntervalBuilder.build(vdot, weekly, type, { goalDistanceM, phase, qualityDays });
     if (!s) {
       resultEl.innerHTML = '';
       noteEl.textContent = t.interval_need_vdot || '';

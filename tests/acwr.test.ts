@@ -32,3 +32,22 @@ test('compute rejects insufficient or zero data', () => {
   assert.equal(AcwrCalculator.compute([50]), null);
   assert.equal(AcwrCalculator.compute([0, 0]), null);
 });
+
+test('riskContext: magnitude scales with ACWR (Gabbett/Hulin)', () => {
+  assert.equal(AcwrCalculator.riskContext({ acwr: 1.0, zone: 'sweet' }).magnitudeKey, 'optimal');
+  assert.equal(AcwrCalculator.riskContext({ acwr: 1.4, zone: 'caution' }).magnitudeKey, 'elevated');
+  assert.equal(AcwrCalculator.riskContext({ acwr: 1.7, zone: 'highrisk' }).magnitudeKey, 'high');
+  assert.equal(AcwrCalculator.riskContext({ acwr: 2.1, zone: 'highrisk' }).magnitudeKey, 'extreme');
+});
+
+test('riskContext: protective toggles select the matching advice keys', () => {
+  const none = AcwrCalculator.riskContext({ acwr: 1.0, zone: 'sweet' });
+  assert.deepEqual(none.protectiveKeys, ['strength_off', 'shoes_off']);
+  const both = AcwrCalculator.riskContext({
+    acwr: 1.0,
+    zone: 'sweet',
+    strengthTraining: true,
+    shoeRotation: true
+  });
+  assert.deepEqual(both.protectiveKeys, ['strength_on', 'shoes_on']);
+});

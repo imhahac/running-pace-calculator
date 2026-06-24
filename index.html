@@ -519,7 +519,12 @@
                 </div>
                 <button id="training-export-csv" class="btn-secondary" style="margin-top: 8px; display: none;"><span data-i18n="btn_export_csv">⬇️ 匯出 CSV</span></button>
                 <button id="open-report-btn" class="btn-secondary" style="margin-top: 8px; margin-left: 8px;"><span data-i18n="btn_open_report">📑 開啟訓練報表</span></button>
-                <div class="explain" data-i18n="explain_training_cycle">計畫分期：基礎→進展→巔峰→減量→比賽週；每 4 週安排一次減量恢復週。里程與配速隨分期自動調整。</div>
+                <div class="explain" data-i18n="explain_training_cycle">計畫分期：基礎→進展→巔峰→減量→比賽週；每 4 週安排一次減量恢復週。里程與配速隨分期自動調整。選派別後每日課表會依該流派差異化。</div>
+                <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                    <a href="https://www.halhigdon.com/" target="_blank" rel="noopener noreferrer">Hal Higdon ↗</a> ·
+                    <span>Pfitzinger &amp; Douglas, Advanced Marathoning</span> ·
+                    <a href="https://vdoto2.com/" target="_blank" rel="noopener noreferrer">Daniels — VDOT O2 ↗</a>
+                </p>
             </div>
 
             <!-- Race Pace Planner -->
@@ -554,6 +559,11 @@
                     <p data-i18n="detail_raceplan_stages">起步（別衝）→中段（進入節奏、規律補給）→全馬約 30k 易撞牆→收尾（行有餘力再加速）。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_raceplan_note">配速只是計畫，需與體感、心率、天氣動態調整；高溫或丘陵請改用「環境配速」與「GAP」修正預期。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/39281580/" target="_blank" rel="noopener noreferrer">Marathon pacing review ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/40740427/" target="_blank" rel="noopener noreferrer">Negative splits review ↗</a> ·
+                        <a href="https://worldathletics.org/records/by-category/world-records" target="_blank" rel="noopener noreferrer">World Athletics Records ↗</a>
+                    </p>
                 </div></div>
             </div>
 
@@ -751,6 +761,22 @@
                         <option value="T" data-i18n="interval_type_t">T 節奏 (閾值)</option>
                         <option value="R" data-i18n="interval_type_r">R 重複 (速度)</option>
                     </select>
+                    <label for="interval-goal-select" data-i18n="interval_goal">目標賽事</label>
+                    <select id="interval-goal-select">
+                        <option value="" data-i18n="interval_goal_any">不指定</option>
+                        <option value="5000" data-i18n="interval_goal_5k">5K</option>
+                        <option value="10000" data-i18n="interval_goal_10k">10K</option>
+                        <option value="21097.5" data-i18n="interval_goal_half">半馬</option>
+                        <option value="42195" data-i18n="interval_goal_full">全馬</option>
+                    </select>
+                    <label for="interval-phase-select" data-i18n="interval_phase">訓練階段</label>
+                    <select id="interval-phase-select">
+                        <option value="quality" data-i18n="interval_phase_quality">質量期</option>
+                        <option value="base" data-i18n="interval_phase_base">基礎期</option>
+                        <option value="peak" data-i18n="interval_phase_peak">巔峰期</option>
+                    </select>
+                    <label for="interval-qdays-input" data-i18n="interval_qdays">每週質量天數</label>
+                    <input type="number" id="interval-qdays-input" placeholder="2" min="1" max="5" style="width: 8ch;">
                 </div>
                 <div id="interval-result" class="vdot-grid" style="margin-top: 10px;"></div>
                 <div id="interval-note" class="helper-text" style="margin-top: 6px;"></div>
@@ -766,6 +792,11 @@
                     <p data-i18n="detail_interval_stages">暖身（漸進、帶幾趟 strides）→主課表（按配速與恢復反覆）→緩和（輕鬆跑收操）。恢復別偷跑太快，品質重於數量。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_interval_note">質量課表每週至多 2–3 次、與輕鬆日交替；配速以能完成全部反覆為準，跑崩代表設太快。傷痛或大疲勞先跳過。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://vdoto2.com/" target="_blank" rel="noopener noreferrer">VDOT O2 (Daniels) ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17887811/" target="_blank" rel="noopener noreferrer">Midgley 2007 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11227980/" target="_blank" rel="noopener noreferrer">Billat 2001 ↗</a>
+                    </p>
                 </div></div>
             </div>
 
@@ -821,6 +852,13 @@
                     <p data-i18n="detail_strides_stages">由 4×15s 漸增到 8×30s（下方長條為各週總時長）。先建立頻率與技術，再逐步加趟數與時長。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_strides_note">強度是「快但放鬆」非全力衝刺；場地平整、避免在疲勞下硬做。傷痛初期或恢復期可降量。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <span>Daniels &amp; Gilbert 1979</span> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/10233114/" target="_blank" rel="noopener noreferrer">Paavolainen 1999 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29249083/" target="_blank" rel="noopener noreferrer">Blagrove 2018 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/15233599/" target="_blank" rel="noopener noreferrer">Saunders 2004 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/11394561/" target="_blank" rel="noopener noreferrer">Ross 2001 ↗</a>
+                    </p>
                 </div></div>
             </div>
 
@@ -871,6 +909,16 @@
                     <input type="number" id="acwr-w3" placeholder="44" min="0" style="width: 8ch;">
                     <label for="acwr-w4" data-i18n="acwr_w4">第 4 週 (本週)</label>
                     <input type="number" id="acwr-w4" placeholder="46" min="0" style="width: 8ch;">
+                    <label for="acwr-strength" data-i18n="acwr_strength">每週肌力訓練</label>
+                    <select id="acwr-strength">
+                        <option value="no" data-i18n="acwr_opt_no">否</option>
+                        <option value="yes" data-i18n="acwr_opt_yes">是</option>
+                    </select>
+                    <label for="acwr-shoes" data-i18n="acwr_shoes">輪替 2+ 雙跑鞋</label>
+                    <select id="acwr-shoes">
+                        <option value="no" data-i18n="acwr_opt_no">否</option>
+                        <option value="yes" data-i18n="acwr_opt_yes">是</option>
+                    </select>
                 </div>
                 <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
                     ACWR: <span id="acwr-value" class="highlight-text mono-text">--</span>&emsp;<span id="acwr-zone"></span>
@@ -893,6 +941,13 @@
                     <p data-i18n="detail_acwr_stages">&lt;0.8 訓練不足／剛回歸（量偏低）；0.8–1.3 甜蜜區（穩健進步）；1.3–1.5 警戒（留意疲勞與痠痛）；&gt;1.5 高風險（負荷暴增，建議減量）。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_acwr_note">里程只是負荷的一種代理；強度、地形、睡眠與壓力同樣重要。ACWR 是趨勢參考非保證，務必結合自身體感與疼痛訊號。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26758673/" target="_blank" rel="noopener noreferrer">Gabbett 2016 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23962877/" target="_blank" rel="noopener noreferrer">Hulin 2014 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24100287/" target="_blank" rel="noopener noreferrer">Lauersen 2014 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24286345/" target="_blank" rel="noopener noreferrer">Malisoux 2015 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/17940147/" target="_blank" rel="noopener noreferrer">Buist 2008 ↗</a>
+                    </p>
                 </div></div>
             </div>
 
@@ -926,6 +981,12 @@
                     <p data-i18n="detail_hrv_stages">陰影帶為個人正常範圍（基線 ± 1 標準差），折線為每日 RMSSD，末點為今天。趨勢比單日更重要：連續下降代表累積疲勞，平穩或上升代表恢復良好。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_hrv_note">需穩定的量測條件才可靠；酒精、生病、缺水、壓力都會影響。變異係數（CV）越大越不穩定、宜保守。單日數字僅供參考，請對齊體感與睡眠。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23852425/" target="_blank" rel="noopener noreferrer">Plews 2013 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26909534/" target="_blank" rel="noopener noreferrer">Vesterinen 2016 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/31490431/" target="_blank" rel="noopener noreferrer">Javaloyes 2019 ↗</a> ·
+                        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC8730395/" target="_blank" rel="noopener noreferrer">Mishica 2022 ↗</a>
+                    </p>
                 </div></div>
             </div>
 
@@ -938,12 +999,28 @@
                     <input type="number" id="cycle-day-input" placeholder="14" min="1" max="40" style="width: 8ch;">
                     <label for="cycle-length-input" data-i18n="cycle_length">週期長度 (天)</label>
                     <input type="number" id="cycle-length-input" placeholder="28" min="21" max="40" style="width: 8ch;">
+                    <label for="cycle-dysmenorrhea-select" data-i18n="cycle_dysmenorrhea">經痛程度</label>
+                    <select id="cycle-dysmenorrhea-select">
+                        <option value="none" data-i18n="cycle_dys_none">無</option>
+                        <option value="mild" data-i18n="cycle_dys_mild">輕</option>
+                        <option value="moderate" data-i18n="cycle_dys_moderate">中</option>
+                        <option value="severe" data-i18n="cycle_dys_severe">重</option>
+                    </select>
+                    <label for="cycle-mood-select" data-i18n="cycle_mood">情緒</label>
+                    <select id="cycle-mood-select">
+                        <option value="normal" data-i18n="cycle_mood_normal">普通</option>
+                        <option value="good" data-i18n="cycle_mood_good">佳</option>
+                        <option value="low" data-i18n="cycle_mood_low">低落</option>
+                    </select>
+                    <label for="cycle-sleep-input" data-i18n="cycle_sleep">睡眠 (小時)</label>
+                    <input type="number" id="cycle-sleep-input" placeholder="7.5" min="0" max="14" step="0.5" style="width: 8ch;">
                 </div>
                 <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
                     <span data-i18n="cycle_phase_label">目前階段</span>: <span id="cycle-phase"></span>
                 </div>
                 <div id="cycle-advice" class="helper-text" style="margin-top: 6px;"></div>
                 <div id="cycle-chart" class="tool-chart"></div>
+                <div id="cycle-readout" class="tool-readout"></div>
                 <div class="explain" data-i18n="explain_cycle">依週期分四階段給訓練微調。重要：McNulty 2020 系統綜述指出「個體差異遠大於群體效應」，所以這些只是起點，請以自身體感與症狀為準（黃體期常見體溫升高、較易疲勞與不耐熱，宜加強補水與恢復）。</div>
                 <button class="detail-toggle" type="button" aria-expanded="false" aria-controls="cycle-detail" data-i18n="btn_detail">詳解</button>
                 <div id="cycle-detail" class="tool-detail"><div class="tool-detail-inner">
@@ -955,6 +1032,12 @@
                     <p data-i18n="detail_cycle_stages">月經期（症狀因人而異，舒適即可訓練）→濾泡期（精力漸增，適合質量與加量）→排卵期（常為高峰，可衝表現）→黃體期（體溫升、較易疲勞與不耐熱，宜加強補水與恢復）。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_cycle_note">這些是起點而非規則；研究證據分歧、個體差異大。服用荷爾蒙避孕者週期反應不同。以症狀與表現調整，異常出血或經痛請就醫。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7497427/" target="_blank" rel="noopener noreferrer">McNulty 2020 ↗</a> ·
+                        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC7916245/" target="_blank" rel="noopener noreferrer">Carmichael 2021 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/29860237/" target="_blank" rel="noopener noreferrer">Ackerman 2019 (RED-S) ↗</a> ·
+                        <span>Sims &amp; Yeager 2024 (ROAR)</span>
+                    </p>
                 </div></div>
             </div>
 
@@ -1167,10 +1250,21 @@
                         <option value="classic" data-i18n="glyco_classic">Classic (Bergström)</option>
                         <option value="wa" data-i18n="glyco_wa">WA 一日法</option>
                     </select>
+                    <label for="glyco-dist-select" data-i18n="glyco_dist">賽事距離</label>
+                    <select id="glyco-dist-select">
+                        <option value="42195" data-i18n="glyco_dist_full">全馬</option>
+                        <option value="21097.5" data-i18n="glyco_dist_half">半馬</option>
+                        <option value="10000" data-i18n="glyco_dist_10k">10K</option>
+                        <option value="5000" data-i18n="glyco_dist_5k">5K</option>
+                        <option value="100000" data-i18n="glyco_dist_ultra">超馬</option>
+                    </select>
+                    <label for="glyco-time-input" data-i18n="glyco_time">目標時間 (選填)</label>
+                    <input type="text" id="glyco-time-input" placeholder="3:30:00" style="width: 8ch;">
                 </div>
                 <div style="width: 100%; margin-top: 10px; font-size: 0.95rem;">
                     <span data-i18n="glyco_load_label">超補量</span>: <span id="glyco-load" class="highlight-text mono-text">--</span>
                 </div>
+                <div id="glyco-prerace" class="helper-text" style="width: 100%; margin-top: 4px;"></div>
                 <div class="helper-text" data-i18n="glyco_schedule_label" style="margin-top: 8px;">每日時程</div>
                 <div id="glyco-schedule" class="fuel-timeline" style="width: 100%; margin-top: 4px;"></div>
                 <div id="glyco-chart" class="tool-chart"></div>
@@ -1186,6 +1280,13 @@
                     <p data-i18n="detail_glyco_stages">Modified Sherman（推薦）：免耗竭、賽前 3 天高碳水＋減量；Classic：先耗竭再超補（較辛苦、風險高）；WA：賽前一日壓縮超補（10–12 g/kg 單日）。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_glyco_note">高碳水會伴隨水分滯留、體重短期上升 1–2 kg 屬正常。高纖、高脂、太晚的大餐易腸胃不適；務必在訓練中先試過你的賽前餐。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/5584523/" target="_blank" rel="noopener noreferrer">Bergström 1967 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/7333741/" target="_blank" rel="noopener noreferrer">Sherman 1981 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/12111292/" target="_blank" rel="noopener noreferrer">Bussau 2002 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/21660838/" target="_blank" rel="noopener noreferrer">Burke 2011 ↗</a> ·
+                        <span>Hawley &amp; Burke 1997</span>
+                    </p>
                 </div></div>
             </div>
 
@@ -1242,6 +1343,8 @@
                     </select>
                     <label for="rec-age-input" data-i18n="rec_age">年齡</label>
                     <input type="number" id="rec-age-input" placeholder="35" min="10" max="100" style="width: 8ch;">
+                    <label for="rec-time-input" data-i18n="rec_time">完賽時間 (選填)</label>
+                    <input type="text" id="rec-time-input" placeholder="3:30:00" style="width: 8ch;">
                 </div>
                 <div class="vdot-grid" style="margin-top: 10px;">
                     <span class="zone-badge">🟢</span><span data-i18n="rec_easy_label">輕鬆/恢復天數</span><span id="rec-easy" class="mono-text vdot-pace">--</span>
@@ -1250,7 +1353,7 @@
                 <ul id="rec-strategies" class="strategy-list" style="margin-top: 8px;"></ul>
                 <div id="rec-chart" class="tool-chart"></div>
                 <div id="rec-readout" class="tool-readout"></div>
-                <div class="explain" data-i18n="explain_rec">恢復天數隨距離、費力與年齡增加（約 1 天/英里為保守上限）。賽後 24 小時黃金窗：補碳水＋蛋白質、補水、睡眠。策略證據等級：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）對主觀疲勞有益（Mujika 2010；Halson 2013；Ihsan 2016）。</div>
+                <div class="explain" data-i18n="explain_rec">恢復天數隨距離、費力與年齡增加（約 1 天/英里為保守上限）。賽後 24 小時黃金窗：補碳水＋蛋白質、補水、睡眠。策略證據等級：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）與按摩對主觀疲勞有益（Morton 2018；Halson 2014；Ihsan 2016；Dupuy 2018）。</div>
                 <button class="detail-toggle" type="button" aria-expanded="false" aria-controls="rec-detail" data-i18n="btn_detail">詳解</button>
                 <div id="rec-detail" class="tool-detail"><div class="tool-detail-inner">
                     <h4 data-i18n="detail_h_principle">原理</h4>
@@ -1261,6 +1364,13 @@
                     <p data-i18n="detail_rec_stages">0–24h 黃金窗：補碳水＋蛋白質、補水、睡眠；接著數天全休或輕鬆活動恢復；達建議天數後，先以一次短質量試水溫，再逐步回到正常課表。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_rec_note">證據強度：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）對主觀疲勞有益但可能鈍化長期適應，賽後用可、平時少用。疼痛異常請就醫。</p>
+                    <p class="detail-refs"><span data-i18n="detail_h_refs">參考文獻</span>:
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/28698222/" target="_blank" rel="noopener noreferrer">Morton 2018 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/24791913/" target="_blank" rel="noopener noreferrer">Halson 2014 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/26888646/" target="_blank" rel="noopener noreferrer">Ihsan 2016 ↗</a> ·
+                        <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC5932411/" target="_blank" rel="noopener noreferrer">Dupuy 2018 ↗</a> ·
+                        <a href="https://pubmed.ncbi.nlm.nih.gov/23013520/" target="_blank" rel="noopener noreferrer">Schoenfeld 2012 ↗</a>
+                    </p>
                 </div></div>
             </div>
         </div> <!-- End of tab-environment -->

@@ -26,3 +26,20 @@ test('progression spans 12 non-decreasing weeks', () => {
     assert.ok(p[i].durationSec >= p[i - 1].durationSec);
   }
 });
+
+test('session with R-pace adds pace and per-stride distance', () => {
+  const s = StridesBuilder.session(6, 200); // 200 s/km, 20 s stride
+  assert.equal(s.repPaceSec, 200);
+  assert.equal(s.distancePerStrideM, 100); // 20 × 1000/200
+});
+
+test('progression carries the R-pace onto every row', () => {
+  const p = StridesBuilder.progression(210);
+  assert.ok(p.every((row) => row.repPaceSec === 210 && (row.distancePerStrideM ?? 0) > 0));
+});
+
+test('no pace given → pace fields omitted (backward compatible)', () => {
+  const s = StridesBuilder.session(6);
+  assert.equal(s.repPaceSec, undefined);
+  assert.equal(s.distancePerStrideM, undefined);
+});

@@ -7,6 +7,7 @@
  */
 
 export type TAcwrZone = 'undertraining' | 'sweet' | 'caution' | 'highrisk';
+export type TAcwrMagnitude = 'low' | 'optimal' | 'elevated' | 'high' | 'extreme';
 
 export interface IAcwrResult {
   acute: number;
@@ -17,6 +18,13 @@ export interface IAcwrResult {
   recommendedNextWeekMax: number;
 }
 
+export interface IAcwrRiskContext {
+  /** i18n suffix acwr_mag_<key> — injury-risk magnitude for this ratio. */
+  magnitudeKey: TAcwrMagnitude;
+  /** i18n suffixes acwr_protect_<key> — strength/shoe protective-factor advice. */
+  protectiveKeys: string[];
+}
+
 export class AcwrCalculator {
   /** Risk zone for an ACWR value. */
   static zoneOf(acwr: number): TAcwrZone {
@@ -24,6 +32,36 @@ export class AcwrCalculator {
     if (acwr <= 1.3) return 'sweet';
     if (acwr <= 1.5) return 'caution';
     return 'highrisk';
+  }
+
+  /**
+   * Injury-risk magnitude + protective-factor advice for an ACWR value.
+   * Magnitude: spike > 1.5 ≈ 2–4× soft-tissue risk (Gabbett 2016); > 2.0 ≈ 4.5×
+   * (Hulin 2014). Protective factors: 2+ strength sessions/wk ≈ −50% (Lauersen
+   * 2014); rotating 2+ shoes ≈ −39% (Malisoux 2015).
+   */
+  static riskContext(opts: {
+    acwr: number;
+    zone: TAcwrZone;
+    strengthTraining?: boolean;
+    shoeRotation?: boolean;
+  }): IAcwrRiskContext {
+    const { acwr, zone, strengthTraining, shoeRotation } = opts;
+    const magnitudeKey: TAcwrMagnitude =
+      acwr > 2.0
+        ? 'extreme'
+        : zone === 'highrisk'
+          ? 'high'
+          : zone === 'caution'
+            ? 'elevated'
+            : zone === 'sweet'
+              ? 'optimal'
+              : 'low';
+    const protectiveKeys = [
+      strengthTraining ? 'strength_on' : 'strength_off',
+      shoeRotation ? 'shoes_on' : 'shoes_off'
+    ];
+    return { magnitudeKey, protectiveKeys };
   }
 
   /**

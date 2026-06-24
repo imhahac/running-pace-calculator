@@ -18,6 +18,9 @@ export class AcwrController {
     WEEK_IDS.forEach((id) =>
       document.getElementById(id)?.addEventListener('input', () => this.calculate())
     );
+    ['acwr-strength', 'acwr-shoes'].forEach((id) =>
+      document.getElementById(id)?.addEventListener('change', () => this.calculate())
+    );
     this.calculate();
   }
 
@@ -52,6 +55,30 @@ export class AcwrController {
     zoneEl.textContent = zoneLabel;
     zoneEl.className = `risk-badge risk-${r.zone === 'sweet' ? 'low' : r.zone === 'caution' ? 'high' : r.zone === 'highrisk' ? 'extreme' : 'moderate'}`;
 
+    // Protective-factor toggles → injury-risk magnitude + tailored advice.
+    const strengthTraining =
+      (document.getElementById('acwr-strength') as HTMLSelectElement | null)?.value === 'yes';
+    const shoeRotation =
+      (document.getElementById('acwr-shoes') as HTMLSelectElement | null)?.value === 'yes';
+    const risk = AcwrCalculator.riskContext({
+      acwr: r.acwr,
+      zone: r.zone,
+      strengthTraining,
+      shoeRotation
+    });
+    const readoutText = [
+      TranslationManager.format('acwr_readout', {
+        acwr: r.acwr.toFixed(2),
+        zone: zoneLabel,
+        min: r.recommendedNextWeekMin,
+        max: r.recommendedNextWeekMax
+      }),
+      t[`acwr_mag_${risk.magnitudeKey}`] || '',
+      ...risk.protectiveKeys.map((k) => t[`acwr_protect_${k}`] || '')
+    ]
+      .filter(Boolean)
+      .join(' ');
+
     renderInsight('acwr', {
       ok: true,
       chartHtml: gauge({
@@ -66,12 +93,7 @@ export class AcwrController {
           { upTo: 2, cls: 'bad' }
         ]
       }),
-      readoutText: TranslationManager.format('acwr_readout', {
-        acwr: r.acwr.toFixed(2),
-        zone: zoneLabel,
-        min: r.recommendedNextWeekMin,
-        max: r.recommendedNextWeekMax
-      })
+      readoutText
     });
   }
 }
