@@ -31,3 +31,18 @@ test('StateManager persists theme and language preferences', () => {
 
   StorageManager.clear();
 });
+
+test('API URL getters: user value wins, else fall back to the build-injected default', () => {
+  // A user-entered value is returned verbatim.
+  StateManager.setGasApiUrl('https://script.google.com/macros/s/abc/exec');
+  StateManager.setBackendUrl('https://api.example.workers.dev');
+  assert.equal(StateManager.getGasApiUrl(), 'https://script.google.com/macros/s/abc/exec');
+  assert.equal(StateManager.getBackendUrl(), 'https://api.example.workers.dev');
+
+  // Empty value falls back to the injected default (empty in tests — no esbuild
+  // define), exercising the `|| INJECTED_*` path without throwing.
+  StateManager.setGasApiUrl('');
+  StateManager.setBackendUrl('');
+  assert.equal(StateManager.getGasApiUrl(), '');
+  assert.equal(StateManager.getBackendUrl(), '');
+});

@@ -69,7 +69,12 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      # Bake the public race-API / backend URLs in from repository *Variables*
+      # (absent → empty string → app falls back to the in-app settings field).
       - name: Build (bundle + minify)
+        env:
+          GAS_API_URL: ${{ vars.GAS_API_URL }}
+          BACKEND_URL: ${{ vars.BACKEND_URL }}
         run: npm run build
 
       # Assemble only the runtime files — no src/, tests/, node_modules/, configs.

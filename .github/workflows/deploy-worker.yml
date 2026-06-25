@@ -3,10 +3,12 @@ name: Deploy Worker
 # Validates the Cloudflare Worker backend (worker/) on every push to main that
 # touches worker files, and deploys it ONCE the Worker is fully configured.
 # ALL config comes from GitHub (nothing real is committed):
-#   Repository *Variables*: KV_NAMESPACE_ID, APP_URL, ALLOWED_ORIGIN,
-#                           FROM_EMAIL, ADMIN_EMAILS
+#   Repository *Variables*: APP_URL, ALLOWED_ORIGIN, FROM_EMAIL, ADMIN_EMAILS
+#                           (KV_NAMESPACE_ID is created + written back here — no
+#                            manual/local step; pin it to skip auto-resolution)
 #   Repository *Secrets*:   CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID,
-#                           SENDGRID_API_KEY
+#                           SENDGRID_API_KEY, GH_VARIABLES_TOKEN (PAT with
+#                           Variables: read & write — persists the KV id)
 # Until those are set it validates the code and skips the deploy with a notice
 # instead of failing the build. The GitHub Pages site is handled by pipeline.yml.
 
@@ -50,19 +52,17 @@ jobs:
 
       # Decide whether a real deploy can run. Missing config is a skip, not a
       # failure — so pushing Worker code never breaks CI before it's configured.
+      # The KV namespace id is NOT required here — it is resolved (or created)
+      # automatically in the next step; only the Cloudflare credentials + SendGrid
+      # key gate the deploy.
       - name: Check deploy readiness
         id: ready
         env:
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           SENDGRID: ${{ secrets.SENDGRID_API_KEY }}
-          KV_ID: ${{ vars.KV_NAMESPACE_ID }}
         run: |
           ready=true
-          if [ -z "$KV_ID" ]; then
-            echo "::warning::Skipping deploy — set the KV_NAMESPACE_ID repository *variable* (create the namespace with 'cd worker && npx wrangler kv namespace create KV')."
-            ready=false
-          fi
           if [ -z "$CF_TOKEN" ] || [ -z "$CF_ACCOUNT" ]; then
             echo "::warning::Skipping deploy — set the CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID repository secrets."
             ready=false
@@ -73,17 +73,62 @@ jobs:
           fi
           echo "ready=$ready" >> "$GITHUB_OUTPUT"
 
-      # Inject the KV namespace id from the repository variable — the committed
-      # wrangler.toml only carries a placeholder, so the real id is never in git.
-      # Pass via env (not direct interpolation) and verify the substitution took.
-      - name: Inject KV namespace id
+      # Resolve the KV namespace id with NO local/manual step. If the
+      # KV_NAMESPACE_ID variable is pinned, use it; otherwise list-or-create the
+      # namespace (the CF API token already carries Workers KV Storage: Edit) and
+      # write the id back to the repository Variable so later runs read it
+      # directly. The list-or-create guard means a failed write-back never spawns
+      # duplicate namespaces. Resolved id is exported via $GITHUB_ENV.
+      - name: Resolve KV namespace id
         if: steps.ready.outputs.ready == 'true'
         env:
-          KV_ID: ${{ vars.KV_NAMESPACE_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          KV_ID_VAR: ${{ vars.KV_NAMESPACE_ID }}
+          GH_VARIABLES_TOKEN: ${{ secrets.GH_VARIABLES_TOKEN }}
+        run: |
+          KV_ID="$KV_ID_VAR"
+          if [ -n "$KV_ID" ]; then
+            echo "Using pinned KV_NAMESPACE_ID variable."
+          else
+            WNAME=$(grep -E '^name *=' worker/wrangler.toml | sed -E 's/.*"(.*)".*/\1/')
+            TITLE="${WNAME}-KV"   # wrangler titles a namespace <worker-name>-<binding>
+            echo "Looking up KV namespace titled '$TITLE'…"
+            KV_ID=$(npx --yes wrangler@"$WRANGLER_VERSION" kv namespace list \
+              | jq -r --arg t "$TITLE" '[.[] | select(.title==$t)][0].id // empty')
+            if [ -z "$KV_ID" ]; then
+              echo "None found — creating it."
+              OUT=$(cd worker && npx --yes wrangler@"$WRANGLER_VERSION" kv namespace create KV)
+              KV_ID=$(printf '%s' "$OUT" | grep -oiE '[0-9a-f]{32}' | head -n1)
+              echo "Created KV namespace $KV_ID"
+            else
+              echo "Reusing existing KV namespace $KV_ID"
+            fi
+            if [ -n "$KV_ID" ] && [ -n "$GH_VARIABLES_TOKEN" ]; then
+              if GH_TOKEN="$GH_VARIABLES_TOKEN" gh variable set KV_NAMESPACE_ID \
+                   --repo "$GITHUB_REPOSITORY" --body "$KV_ID"; then
+                echo "Persisted KV_NAMESPACE_ID repository variable."
+              else
+                echo "::warning::Could not write KV_NAMESPACE_ID (GH_VARIABLES_TOKEN needs Variables: read & write)."
+              fi
+            elif [ -z "$GH_VARIABLES_TOKEN" ]; then
+              echo "::warning::GH_VARIABLES_TOKEN unset — id not persisted; list-or-create will reuse it next run."
+            fi
+          fi
+          if [ -z "$KV_ID" ]; then
+            echo "::error::Could not resolve or create the KV namespace."
+            exit 1
+          fi
+          echo "KV_ID=$KV_ID" >> "$GITHUB_ENV"
+
+      # Inject the resolved KV namespace id — the committed wrangler.toml only
+      # carries a placeholder, so the real id is never in git. Verify it took.
+      - name: Inject KV namespace id
+        if: steps.ready.outputs.ready == 'true'
         run: |
           sed -i "s|REPLACE_WITH_KV_NAMESPACE_ID|${KV_ID}|" worker/wrangler.toml
           grep -q "$KV_ID" worker/wrangler.toml || {
-            echo "::error::KV namespace id injection failed (check KV_NAMESPACE_ID variable)."
+            echo "::error::KV namespace id injection failed."
             exit 1
           }
 

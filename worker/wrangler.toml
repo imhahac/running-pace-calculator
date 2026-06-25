@@ -3,10 +3,11 @@ main = "src/index.js"
 compatibility_date = "2024-11-01"
 
 # KV namespace for tokens / sessions / races / user data.
-# Create it once:  npx wrangler kv namespace create KV
-# The id below is a PLACEHOLDER kept for local `wrangler dev` (local mode does
-# not need a real id). In CI the deploy workflow rewrites it from the
-# KV_NAMESPACE_ID repository *variable* — so the real id is never committed.
+# No manual step needed: the deploy workflow auto-resolves the namespace
+# (list-or-create) and writes its id back to the KV_NAMESPACE_ID repository
+# *variable*, then rewrites the placeholder below at deploy time — so the real id
+# is never committed. The id below is a PLACEHOLDER kept for local `wrangler dev`
+# (local mode does not need a real id).
 [[kv_namespaces]]
 binding = "KV"
 id = "REPLACE_WITH_KV_NAMESPACE_ID"

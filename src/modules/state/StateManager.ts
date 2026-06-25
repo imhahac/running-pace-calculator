@@ -3,7 +3,11 @@
  * Manages global application state with centralized updates
  */
 
-import { DEFAULT_STATE } from '../../constants/index.js';
+import {
+  DEFAULT_STATE,
+  INJECTED_GAS_API_URL,
+  INJECTED_BACKEND_URL
+} from '../../constants/index.js';
 import StorageManager from './StorageManager.js';
 import type {
   IPaceState,
@@ -147,15 +151,18 @@ export class StateManager {
     this.setState({ planType });
   }
 
+  // A user-entered non-empty value wins; otherwise fall back to the URL baked in
+  // at build time from the GitHub Actions Variable (so a fresh deploy — and even
+  // a returning user whose saved value is empty — points at the configured API).
   static getGasApiUrl(): string {
-    return this.state.gasApiUrl || '';
+    return this.state.gasApiUrl || INJECTED_GAS_API_URL;
   }
   static setGasApiUrl(url: string): void {
     this.setState({ gasApiUrl: url });
   }
 
   static getBackendUrl(): string {
-    return this.state.backendUrl || '';
+    return this.state.backendUrl || INJECTED_BACKEND_URL;
   }
   static setBackendUrl(url: string): void {
     this.setState({ backendUrl: url });

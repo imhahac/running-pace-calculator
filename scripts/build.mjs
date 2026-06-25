@@ -37,6 +37,13 @@ await build({
   target: ['es2020'],
   outfile: path.join(root, 'assets/js/main.js'),
   legalComments: 'none',
+  // Bake the public backend/race-API URLs in from GitHub Actions *Variables*
+  // (GAS_API_URL / BACKEND_URL). Absent locally → empty string, so the app
+  // falls back to the user-entered settings exactly as before.
+  define: {
+    __GAS_API_URL__: JSON.stringify(process.env.GAS_API_URL ?? ''),
+    __BACKEND_URL__: JSON.stringify(process.env.BACKEND_URL ?? '')
+  },
   plugins: [resolveTsJs]
 });
 

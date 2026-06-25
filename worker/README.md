@@ -31,14 +31,12 @@ Auth is a **Bearer session token** (`Authorization: Bearer <sessionId>`) stored 
 
 All configuration lives in **GitHub**, not in the repo — no real ids or keys are committed. Do this once:
 
-**1. Create the KV namespace**
+**1. KV namespace — nothing to do**
 
-```bash
-cd worker
-npm install
-npx wrangler login
-npx wrangler kv namespace create KV   # copy the returned id
-```
+The deploy workflow creates the KV namespace for you on the first deploy
+(list-or-create) and writes its id back to the `KV_NAMESPACE_ID` repository
+Variable, so there is **no local `wrangler kv namespace create` step**. (You may
+still pin `KV_NAMESPACE_ID` yourself to skip auto-resolution.)
 
 **2. Get Cloudflare credentials**
 
@@ -54,16 +52,17 @@ npx wrangler kv namespace create KV   # copy the returned id
 
 | Name                    | Type     | Example                                            | Purpose                                          |
 | ----------------------- | -------- | -------------------------------------------------- | ------------------------------------------------ |
-| `KV_NAMESPACE_ID`       | Variable | `a1b2c3…` (from step 1)                            | Binds the KV store (CI writes it into wrangler.toml) |
 | `APP_URL`               | Variable | `https://imhahac.github.io/running-pace-calculator/` | Where the magic link points back                 |
 | `ALLOWED_ORIGIN`        | Variable | `https://imhahac.github.io`                        | CORS origin (bare, no path; `*` only for testing) |
 | `FROM_EMAIL`            | Variable | the verified Single Sender                         | Magic-link "from" address                        |
 | `ADMIN_EMAILS`          | Variable | `you@example.com` (comma-separated, **no spaces**) | Who may `PUT /api/races`                          |
-| `CLOUDFLARE_API_TOKEN`  | Secret   | —                                                  | Deploy auth                                       |
-| `CLOUDFLARE_ACCOUNT_ID` | Secret   | —                                                  | Deploy target                                     |
+| `KV_NAMESPACE_ID`       | Variable | _(auto)_                                           | **CI-managed** — created + written back on first deploy; set it manually only to pin a specific namespace |
+| `CLOUDFLARE_API_TOKEN`  | Secret   | —                                                  | Deploy auth (+ KV create/list)                   |
+| `CLOUDFLARE_ACCOUNT_ID` | Secret   | —                                                  | Deploy target                                    |
 | `SENDGRID_API_KEY`      | Secret   | `SG.…`                                             | Sends the magic-link email                        |
+| `GH_VARIABLES_TOKEN`    | Secret   | fine-grained PAT                                   | Persists the auto-created KV id back to `KV_NAMESPACE_ID` (needs repo **Variables: read & write**) |
 
-**5. Deploy** — push any change under `worker/**` (or run the workflow manually). [`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) always runs the unit tests + a `wrangler deploy --dry-run` bundle check (no account needed); once the variable + secrets above exist it injects the KV id, deploys with the vars (`--var`), then uploads `SENDGRID_API_KEY`. If anything is missing it **skips the deploy with a warning** — it never fails the build.
+**5. Deploy** — push any change under `worker/**` (or run the workflow manually). [`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) always runs the unit tests + a `wrangler deploy --dry-run` bundle check (no account needed); once the secrets above exist it **auto-resolves the KV namespace** (reuse `KV_NAMESPACE_ID` if pinned, else list-or-create and write it back), injects that id, deploys with the vars (`--var`), then uploads `SENDGRID_API_KEY`. If anything is missing it **skips the deploy with a warning** — it never fails the build.
 
 ### Local development / manual deploy
 
@@ -71,7 +70,12 @@ npx wrangler kv namespace create KV   # copy the returned id
 
 ## Wire the frontend
 
-In the app's **⚙️ 系統設定 / Settings**, set **後端 URL (Worker)** to the deployed Worker origin, e.g. `https://running-pace-backend.<you>.workers.dev`. The app then:
+Either bake the URL into the deployed site (recommended) or set it per-browser:
+
+- **Build-time default (recommended):** add a repository **Variable** `BACKEND_URL` (and, if you still use the legacy GAS source, `GAS_API_URL`) under **Settings → Secrets and variables → Actions**. The Pages build ([pipeline.yml](../.github/workflows/pipeline.yml)) bakes them into the bundle so the site works out-of-the-box.
+- **Per-browser override:** in the app's **⚙️ 系統設定 / Settings**, set **後端 URL (Worker)** to the deployed Worker origin, e.g. `https://running-pace-backend.<you>.workers.dev` (a non-empty value here always wins over the build default).
+
+With a backend URL in effect the app then:
 
 - loads races from `${backendUrl}/api/races` (falls back to the old GAS URL if unset);
 - shows an email login box → magic link → signed-in state;

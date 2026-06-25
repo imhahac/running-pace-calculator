@@ -45,7 +45,7 @@
 
 ## ☁️ 賽事資料來源
 
-賽事清單需要一個後端提供。**建議用 Cloudflare Worker**（穩定、由你掌控）；舊的 GAS 方案仍可用，但自動爬蟲已失效（見下）。在 **⚙️ 系統設定** 填入後端 URL 後，賽事改由該後端取得，並出現 Email 登入框。
+賽事清單需要一個後端提供。**建議用 Cloudflare Worker**（穩定、由你掌控）；舊的 GAS 方案仍可用，但自動爬蟲已失效（見下）。後端 URL 可由 GitHub Actions Variable（`BACKEND_URL`）於 build 時注入為站台預設，或在 **⚙️ 系統設定** 自行填入（手填值優先）。設定後賽事改由該後端取得，並出現 Email 登入框。
 
 ### ① Cloudflare Worker（推薦）
 
@@ -55,14 +55,14 @@
 - **Magic-link 登入** — 免密碼，用 Email 魔術連結（透過 [SendGrid](https://sendgrid.com)；驗證單一寄件人即可、免網域）。
 - **個人雲端同步** — 登入後各工具輸入與主題/語言偏好存到你的後端、跨裝置同步。
 
-**部署用 GitHub Actions、設定全走 GH Secrets/Variables（金鑰不寫進 repo）**。完整逐步教學(含建 KV、CF token 權限、SendGrid 單一寄件人)見 **[worker/README.md](worker/README.md)**。摘要——在 repo **Settings → Secrets and variables → Actions** 設定:
+**部署用 GitHub Actions、設定全走 GH Secrets/Variables（金鑰不寫進 repo）**。完整逐步教學(含 CF token 權限、SendGrid 單一寄件人)見 **[worker/README.md](worker/README.md)**。摘要——在 repo **Settings → Secrets and variables → Actions** 設定:
 
-- **Variables**:`KV_NAMESPACE_ID`、`APP_URL`、`ALLOWED_ORIGIN`(裸來源)、`FROM_EMAIL`、`ADMIN_EMAILS`(逗號分隔、勿含空格)。
-- **Secrets**:`CLOUDFLARE_API_TOKEN`(Workers 編輯權限)、`CLOUDFLARE_ACCOUNT_ID`、`SENDGRID_API_KEY`。
+- **Variables**:`APP_URL`、`ALLOWED_ORIGIN`(裸來源)、`FROM_EMAIL`、`ADMIN_EMAILS`(逗號分隔、勿含空格);`KV_NAMESPACE_ID` **由 CI 自動建立並回寫**(免手設,要釘特定 namespace 才填)。前端另設 `BACKEND_URL`(此 Worker 網址)、`GAS_API_URL`(備選),build 時注入站台預設。
+- **Secrets**:`CLOUDFLARE_API_TOKEN`(Workers + KV 編輯權限)、`CLOUDFLARE_ACCOUNT_ID`、`SENDGRID_API_KEY`、`GH_VARIABLES_TOKEN`(回寫 KV id 用的 PAT,需 repo Variables 讀寫權)。
 
-推送 `worker/**` 變動或手動觸發 [.github/workflows/deploy-worker.yml](.github/workflows/deploy-worker.yml):每次都跑單元測試＋`--dry-run` 打包驗證;**待上述變數/密鑰齊全才實際部署**(CI 自動把 KV id 寫入設定、用 `--var` 帶入參數、再上傳 SendGrid 金鑰),否則略過並標警告(不讓 CI 失敗)。
+推送 `worker/**` 變動或手動觸發 [.github/workflows/deploy-worker.yml](.github/workflows/deploy-worker.yml):每次都跑單元測試＋`--dry-run` 打包驗證;**待上述憑證齊全才實際部署**(CI 自動 list-or-create KV namespace、回寫 `KV_NAMESPACE_ID`、把 id 寫入設定、用 `--var` 帶入參數、再上傳 SendGrid 金鑰),否則略過並標警告(不讓 CI 失敗)。**KV namespace 全在 Actions 內建立,毋須本機 wrangler。**
 
-> 🔐 需自備 Cloudflare 帳號、KV namespace 與 SendGrid API key(驗證單一寄件人信箱、不必擁有網域)。所有真實值都存在 GitHub,repo 內 [worker/wrangler.toml](worker/wrangler.toml) 只留佔位與本機開發預設。賽事清單由管理員以 `PUT /api/races` 維護(或沿用下方 GAS 試算表手動輸入)。
+> 🔐 需自備 Cloudflare 帳號與 SendGrid API key(驗證單一寄件人信箱、不必擁有網域);KV namespace 由 CI 自動建立。所有真實值都存在 GitHub,repo 內 [worker/wrangler.toml](worker/wrangler.toml) 只留佔位與本機開發預設。賽事清單由管理員以 `PUT /api/races` 維護(或沿用下方 GAS 試算表手動輸入)。
 
 ### ② Google Apps Script（備選 / 手動為主）
 

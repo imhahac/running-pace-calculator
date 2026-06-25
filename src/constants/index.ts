@@ -10,6 +10,14 @@ import type {
   TTrainingPhase
 } from '../types/index';
 
+// Public backend/race-API URLs baked in at build time from GitHub Actions
+// *Variables* (esbuild `define` in scripts/build.mjs). `typeof` guards keep this
+// safe under tsc/tests where the tokens are undefined → fall back to ''.
+declare const __GAS_API_URL__: string | undefined;
+declare const __BACKEND_URL__: string | undefined;
+export const INJECTED_GAS_API_URL = typeof __GAS_API_URL__ !== 'undefined' ? __GAS_API_URL__ : '';
+export const INJECTED_BACKEND_URL = typeof __BACKEND_URL__ !== 'undefined' ? __BACKEND_URL__ : '';
+
 /**
  * Conversion factors for distance units
  */
@@ -122,8 +130,8 @@ export const DEFAULT_STATE: IPaceState = {
   lang: 'zh',
   splitMode: 'track',
   planType: 'running',
-  gasApiUrl: '',
-  backendUrl: '',
+  gasApiUrl: INJECTED_GAS_API_URL,
+  backendUrl: INJECTED_BACKEND_URL,
   activeTab: 'tab-pace',
   triDistance: 51.5
 };
