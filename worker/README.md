@@ -1,87 +1,78 @@
-# Running Pace Calculator — Cloudflare Worker backend
+# 配速計算機 — Cloudflare Worker 後端
 
-A single Worker that provides:
+單一 Worker 提供：
 
-- **Race API** — `GET /api/races` (public, from KV), `PUT /api/races` (admin) — replaces the fragile GAS scraper with a stable backend you own.
-- **Magic-link auth** — passwordless email login via [SendGrid](https://sendgrid.com).
-- **Per-user cloud sync** — `GET/PUT /api/data` stores each user's tool inputs + preferences, synced across devices.
+- **賽事 API** — `GET /api/races`（公開、由 KV 提供）、`PUT /api/races`（管理員）——以你掌控的穩定後端取代脆弱的 GAS 爬蟲。
+- **Magic-link 登入** — 免密碼，透過 [SendGrid](https://sendgrid.com) 寄 Email 魔術連結。
+- **個人雲端同步** — `GET/PUT /api/data` 儲存每位使用者的工具輸入與偏好，跨裝置同步。
 
-> ⚠️ Scraping the JS/SPA + login-walled race sites is still hard (same as the GAS note). The reliable path is admin curation via `PUT /api/races`; the daily cron only logs what the sources currently return so it can be tuned.
+> ⚠️ 賽事網站多為 JS/SPA＋登入牆，匿名爬取仍困難（同 GAS 註記）。可靠做法是管理員以 `PUT /api/races` 維護清單；每日 cron 僅記錄各來源目前回傳的內容，以便日後調整。
 
 ## Endpoints
 
-| Method | Path | Auth | Purpose |
+| Method | Path | 授權 | 用途 |
 |---|---|---|---|
-| GET | `/api/races` | public | List races (KV `races`) |
-| PUT | `/api/races` | admin (Bearer) | Replace race list (JSON array of `IRaceEvent`) |
-| POST | `/api/auth/request` | public | `{ email }` → emails a magic link |
-| GET | `/api/auth/verify?token=…` | public | Exchange magic token → `{ token: sessionId, email }` |
-| POST | `/api/auth/logout` | Bearer | Invalidate session |
-| GET | `/api/data` | Bearer | Get the user's saved blob |
-| PUT | `/api/data` | Bearer | Replace the user's saved blob |
+| GET | `/api/races` | 公開 | 列出賽事（KV `races`） |
+| PUT | `/api/races` | 管理員（Bearer） | 取代賽事清單（`IRaceEvent` JSON 陣列） |
+| POST | `/api/auth/request` | 公開 | `{ email }` → 寄出魔術連結 |
+| GET | `/api/auth/verify?token=…` | 公開 | 以魔術 token 換 `{ token: sessionId, email }` |
+| POST | `/api/auth/logout` | Bearer | 註銷 session |
+| GET | `/api/data` | Bearer | 取得使用者儲存的資料 |
+| PUT | `/api/data` | Bearer | 取代使用者儲存的資料 |
 
-Auth is a **Bearer session token** (`Authorization: Bearer <sessionId>`) stored client-side — no cookies, so CORS stays simple.
+授權採 **Bearer session token**（`Authorization: Bearer <sessionId>`），存於用戶端、不用 cookie，CORS 維持單純。
 
-**Security notes / tradeoffs:**
-- The session token lives in `localStorage` (readable by JS) — the standard SPA tradeoff. Acceptable here (data is only training inputs + your email); for higher sensitivity, move to an HttpOnly cookie + `SameSite`/CORS-credentials flow.
-- Magic tokens are single-use, 256-bit, 15-min TTL; sessions 30 days; one magic-link request per email per minute. CORS is locked to `ALLOWED_ORIGIN` (a **bare origin** — the Worker normalises it, but set it without a path).
-- `DEBUG_AUTH="1"` makes `/api/auth/request` return whether the email actually sent (handy while configuring SendGrid); leave it unset in production so address existence isn't leaked.
+**安全性權衡：**
+- session token 存於 `localStorage`（JS 可讀）——SPA 標準權衡。此處可接受（資料僅訓練輸入與你的 Email）；更高機敏性可改用 HttpOnly cookie ＋ `SameSite`／CORS-credentials 流程。
+- 魔術 token 單次有效、256-bit、15 分鐘 TTL；session 30 天；同一 Email 每分鐘限一次魔術連結請求。CORS 鎖定 `ALLOWED_ORIGIN`（**裸來源**——Worker 會正規化，但請勿帶路徑）。
+- `DEBUG_AUTH="1"` 會讓 `/api/auth/request` 回傳 Email 是否真的寄出（設定 SendGrid 時方便）；正式環境請勿設，以免洩漏信箱是否存在。
 
-## Configure & deploy (GitHub Actions — recommended)
+## 設定與部署（GitHub Actions）
 
-All configuration lives in **GitHub**, not in the repo — no real ids or keys are committed. Do this once:
+所有設定都放在 **GitHub**、不入 repo——真實 id 與金鑰一律不提交。**KV namespace 由部署 workflow 自動處理**：首次部署時 list-or-create，並把 id 回寫 `KV_NAMESPACE_ID` Variable，毋須本機 `wrangler kv namespace create`。以下只需做一次：
 
-**1. KV namespace — nothing to do**
+**① Cloudflare 憑證**
+- **API token**：dashboard → **My Profile → API Tokens → Create Token** → 用 **「Edit Cloudflare Workers」** 範本（授予 Account → _Workers Scripts: Edit_ 與 _Workers KV Storage: Edit_）。
+- **Account ID**：**Workers & Pages** → 右側欄。
 
-The deploy workflow creates the KV namespace for you on the first deploy
-(list-or-create) and writes its id back to the `KV_NAMESPACE_ID` repository
-Variable, so there is **no local `wrangler kv namespace create` step**. (You may
-still pin `KV_NAMESPACE_ID` yourself to skip auto-resolution.)
+**② SendGrid（magic-link Email，免網域）**
+- **Settings → Sender Authentication → Single Sender Verification** → 驗證你擁有的信箱，該地址即 `FROM_EMAIL`。
+- **Settings → API Keys → Create API Key**，給 _Mail Send_ 權限。
 
-**2. Get Cloudflare credentials**
+**③ 在 GitHub 加入設定** → repo **Settings → Secrets and variables → Actions**：
 
-- **API token**: dashboard → **My Profile → API Tokens → Create Token** → use the **"Edit Cloudflare Workers"** template (grants Account → _Workers Scripts: Edit_ and _Workers KV Storage: Edit_).
-- **Account ID**: **Workers & Pages** → right sidebar.
+| 名稱 | 類型 | 範例 | 用途 |
+| --- | --- | --- | --- |
+| `APP_URL` | Variable | `https://imhahac.github.io/running-pace-calculator/` | 魔術連結導回的位址 |
+| `ALLOWED_ORIGIN` | Variable | `https://imhahac.github.io` | CORS 來源（裸來源、不帶路徑；`*` 僅供測試） |
+| `FROM_EMAIL` | Variable | 已驗證的 Single Sender | 魔術連結寄件地址 |
+| `ADMIN_EMAILS` | Variable | `you@example.com`（逗號分隔、**勿含空格**） | 可 `PUT /api/races` 的人 |
+| `KV_NAMESPACE_ID` | Variable | _(自動)_ | **CI 管理**——首次部署自動建立並回寫；只有要釘特定 namespace 才手動填 |
+| `CLOUDFLARE_API_TOKEN` | Secret | — | 部署授權（兼建立/列出 KV） |
+| `CLOUDFLARE_ACCOUNT_ID` | Secret | — | 部署目標 |
+| `SENDGRID_API_KEY` | Secret | `SG.…` | 寄送魔術連結 Email |
+| `GH_VARIABLES_TOKEN` | Secret | fine-grained PAT | 把自動建立的 KV id 回寫 `KV_NAMESPACE_ID`（需 repo **Variables：讀寫**權限） |
 
-**3. SendGrid (magic-link email — no domain needed)**
+**④ 部署** — 推送任何 `worker/**` 變動（或手動觸發）。[`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) 每次都跑單元測試＋`wrangler deploy --dry-run` 打包驗證（免帳號）；待上述憑證齊全才實際部署：自動解析 KV namespace（已釘 `KV_NAMESPACE_ID` 就用，否則 list-or-create 並回寫）、把 id 寫入設定、以 `--var` 帶入參數、再上傳 `SENDGRID_API_KEY`。缺任何一項則**略過部署並標警告**，不讓 build 失敗。
 
-- **Settings → Sender Authentication → Single Sender Verification** → verify an email you own; that address is your `FROM_EMAIL`.
-- **Settings → API Keys → Create API Key** with the _Mail Send_ permission.
+### 本機開發 / 手動部署
 
-**4. Add the config to GitHub** → repo **Settings → Secrets and variables → Actions**:
+`wrangler.toml` 保留無害的 `[vars]` 開發預設與 KV id 佔位（本機 `wrangler dev` 不需真實 id）。本機金鑰：複製 `.dev.vars.example` → `.dev.vars`（放 `SENDGRID_API_KEY`），再 `npm run dev`。要手動部署而非走 CI：把真實 KV id 填進 `wrangler.toml`、`npx wrangler secret put SENDGRID_API_KEY`，再 `npm run deploy`。純函式單元測試：`npm test`。
 
-| Name                    | Type     | Example                                            | Purpose                                          |
-| ----------------------- | -------- | -------------------------------------------------- | ------------------------------------------------ |
-| `APP_URL`               | Variable | `https://imhahac.github.io/running-pace-calculator/` | Where the magic link points back                 |
-| `ALLOWED_ORIGIN`        | Variable | `https://imhahac.github.io`                        | CORS origin (bare, no path; `*` only for testing) |
-| `FROM_EMAIL`            | Variable | the verified Single Sender                         | Magic-link "from" address                        |
-| `ADMIN_EMAILS`          | Variable | `you@example.com` (comma-separated, **no spaces**) | Who may `PUT /api/races`                          |
-| `KV_NAMESPACE_ID`       | Variable | _(auto)_                                           | **CI-managed** — created + written back on first deploy; set it manually only to pin a specific namespace |
-| `CLOUDFLARE_API_TOKEN`  | Secret   | —                                                  | Deploy auth (+ KV create/list)                   |
-| `CLOUDFLARE_ACCOUNT_ID` | Secret   | —                                                  | Deploy target                                    |
-| `SENDGRID_API_KEY`      | Secret   | `SG.…`                                             | Sends the magic-link email                        |
-| `GH_VARIABLES_TOKEN`    | Secret   | fine-grained PAT                                   | Persists the auto-created KV id back to `KV_NAMESPACE_ID` (needs repo **Variables: read & write**) |
+## 串接前端
 
-**5. Deploy** — push any change under `worker/**` (or run the workflow manually). [`.github/workflows/deploy-worker.yml`](../.github/workflows/deploy-worker.yml) always runs the unit tests + a `wrangler deploy --dry-run` bundle check (no account needed); once the secrets above exist it **auto-resolves the KV namespace** (reuse `KV_NAMESPACE_ID` if pinned, else list-or-create and write it back), injects that id, deploys with the vars (`--var`), then uploads `SENDGRID_API_KEY`. If anything is missing it **skips the deploy with a warning** — it never fails the build.
+兩種方式擇一（可並用，手填優先）：
 
-### Local development / manual deploy
+- **build 時注入（推薦）**：在 **Settings → Secrets and variables → Actions** 加 repo **Variable** `BACKEND_URL`（若仍用舊 GAS 來源則加 `GAS_API_URL`）。主站 build（[pipeline.yml](../.github/workflows/pipeline.yml)）會把它烘進 bundle，站台開箱即用。
+- **逐瀏覽器覆寫**：在 app 的 **⚙️ 系統設定** 把「後端 URL (Worker)」設為部署後的 Worker 來源，例如 `https://running-pace-backend.<you>.workers.dev`（此處非空值一律優先於 build 預設）。
 
-`wrangler.toml` keeps harmless dev defaults for `[vars]` plus a placeholder KV id (local `wrangler dev` needs no real id). For local secrets, copy `.dev.vars.example` → `.dev.vars` (holds `SENDGRID_API_KEY`), then `npm run dev`. To deploy by hand instead of via CI: put the real KV id in `wrangler.toml`, `npx wrangler secret put SENDGRID_API_KEY`, then `npm run deploy`. Pure-helper unit tests: `npm test`.
+設定後 app 會：
 
-## Wire the frontend
+- 從 `${backendUrl}/api/races` 載入賽事（未設則回退舊 GAS URL）；
+- 顯示 Email 登入框 → 魔術連結 → 登入狀態；
+- 登入後拉取你儲存的工具輸入／偏好，並自動推送變更。
 
-Either bake the URL into the deployed site (recommended) or set it per-browser:
-
-- **Build-time default (recommended):** add a repository **Variable** `BACKEND_URL` (and, if you still use the legacy GAS source, `GAS_API_URL`) under **Settings → Secrets and variables → Actions**. The Pages build ([pipeline.yml](../.github/workflows/pipeline.yml)) bakes them into the bundle so the site works out-of-the-box.
-- **Per-browser override:** in the app's **⚙️ 系統設定 / Settings**, set **後端 URL (Worker)** to the deployed Worker origin, e.g. `https://running-pace-backend.<you>.workers.dev` (a non-empty value here always wins over the build default).
-
-With a backend URL in effect the app then:
-
-- loads races from `${backendUrl}/api/races` (falls back to the old GAS URL if unset);
-- shows an email login box → magic link → signed-in state;
-- pulls your saved tool inputs/preferences on login and pushes changes automatically.
-
-## Seed races (admin)
+## 灌入賽事（管理員）
 
 ```bash
 curl -X PUT "$WORKER/api/races" \
@@ -90,4 +81,4 @@ curl -X PUT "$WORKER/api/races" \
   -d '[{"id":"r1","date":"2026-12-20","name":"台北馬拉松","location":"台北","registrationLink":"","stravaFull":"","stravaHalf":"","gpxFull":"","gpxHalf":""}]'
 ```
 
-(`$SESSION` = the token returned by `/api/auth/verify` for an email listed in `ADMIN_EMAILS`.)
+（`$SESSION` = 以 `ADMIN_EMAILS` 內的信箱經 `/api/auth/verify` 取得的 token。）
