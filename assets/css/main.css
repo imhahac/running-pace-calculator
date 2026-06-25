@@ -11,6 +11,7 @@
     --input-underline: rgba(148, 163, 184, 0.28);
     --box-bg: #161d2e;              /* card surface (opaque) */
     --split-bg: #131a29;            /* nested surface (opaque) */
+    --bg-secondary: #1b2336;        /* raised surface: explain band, sticky headers, cycle cards */
     --blur: none;                   /* glassmorphism retired for legibility */
     --border-color: rgba(255, 255, 255, 0.12);
     --active-border-color: rgba(96, 165, 250, 0.6);
@@ -43,6 +44,7 @@
     --input-underline: rgba(15, 23, 42, 0.2);
     --box-bg: #ffffff;
     --split-bg: #f8fafc;
+    --bg-secondary: #eef2f7;        /* raised surface: explain band, sticky headers, cycle cards */
     --blur: none;
     --border-color: rgba(15, 23, 42, 0.12);
     --active-border-color: rgba(37, 99, 235, 0.55);
@@ -70,6 +72,7 @@
         --input-underline: rgba(15, 23, 42, 0.2);
         --box-bg: #ffffff;
         --split-bg: #f8fafc;
+        --bg-secondary: #eef2f7;
         --border-color: rgba(15, 23, 42, 0.12);
         --active-border-color: rgba(37, 99, 235, 0.55);
         --shadow: 0 4px 16px -6px rgba(15, 23, 42, 0.12);
@@ -283,6 +286,7 @@ h1.title {
 }
 .risk-high {
     background: #ef6c00;
+    color: #222; /* dark text on bright orange — white fails AA (~2.9:1) here */
 }
 .risk-extreme {
     background: #c62828;
@@ -310,7 +314,9 @@ h1.title {
     text-align: left;
 }
 .fuel-row:nth-child(even) {
-    background: var(--accent-bg);
+    /* Subtle zebra stripe — the old solid accent-bg made --highlight mono text
+       invisible (blue on blue) in light theme; --split-bg keeps text legible. */
+    background: var(--split-bg);
 }
 .fuel-head {
     font-weight: bold;
@@ -1473,13 +1479,15 @@ input.diff {
 .zbar-val { font-family: var(--font-mono); font-size: 0.76rem; color: var(--text-light); white-space: nowrap; }
 .zbar-cap { font-size: 0.66rem; color: var(--text-muted); text-align: center; }
 
-/* Intensity ramp (blue; legible on both themes) — also reused by phase/bars */
-.z1 { background: rgba(96, 165, 250, 0.32); }
-.z2 { background: rgba(96, 165, 250, 0.48); }
-.z3 { background: rgba(96, 165, 250, 0.64); }
-.z4 { background: rgba(96, 165, 250, 0.82); }
-.z5 { background: rgba(37, 99, 235, 0.95); }
-.z6 { background: rgba(29, 78, 216, 1); }
+/* Intensity ramp — OPAQUE blues kept dark enough that the white .zbar-label /
+   .phase-label clears WCAG AA (≥4.5:1) on EVERY step in BOTH themes. (The old
+   semi-transparent fills went near-white over a light card, hiding the label.) */
+.z1 { background: #3f72d0; }
+.z2 { background: #3566c6; }
+.z3 { background: #2b5abb; }
+.z4 { background: #234ea8; }
+.z5 { background: #1d4493; }
+.z6 { background: #17387b; }
 
 /* ── Linear gauge (ACWR, WBGT) ────────────────────────────────────────── */
 .gauge { width: 100%; }

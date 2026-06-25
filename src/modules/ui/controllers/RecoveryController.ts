@@ -73,7 +73,7 @@ export class RecoveryController {
       ok: true,
       // Recovery timeline: golden window → easy days → return to quality.
       chartHtml: phaseStrip([
-        { label: t.rec_phase_window || '0–24h', weight: 1, caption: '0–24h', cls: 'gauge-good' },
+        { label: t.rec_phase_window || '0–24h', weight: 1, caption: '0–24h' },
         {
           label: t.rec_phase_easy || 'Easy',
           weight: Math.max(1, p.easyDays),
