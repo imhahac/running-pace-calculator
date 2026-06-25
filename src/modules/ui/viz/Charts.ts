@@ -198,4 +198,47 @@ export function sparkline(opts: { points: number[]; band?: { lo: number; hi: num
   );
 }
 
-export default { zoneBar, gauge, phaseStrip, barSeries, sparkline };
+/**
+ * Dated trend line: a value series plotted over labelled points (e.g. VDOT by
+ * race date) with dots, end-point labels and the latest value. Uniform scaling
+ * (unlike sparkline's stretched fill) so the axis text isn't distorted.
+ */
+export function lineTrend(points: { label: string; value: number }[]): string {
+  const pts = points.filter((p) => Number.isFinite(p.value));
+  if (pts.length < 2) return '';
+  let min = pts[0].value;
+  let max = pts[0].value;
+  for (const p of pts) {
+    if (p.value < min) min = p.value;
+    if (p.value > max) max = p.value;
+  }
+  const range = max - min || 1;
+  const w = 320;
+  const h = 90;
+  const padX = 10;
+  const top = 12;
+  const bot = 64; // plot bottom; date labels sit below this
+  const xAt = (i: number): number => padX + (i / (pts.length - 1)) * (w - 2 * padX);
+  const yAt = (v: number): number => bot - ((v - min) / range) * (bot - top);
+  const coords = pts.map((p, i) => `${xAt(i).toFixed(1)},${yAt(p.value).toFixed(1)}`).join(' ');
+  const dots = pts
+    .map(
+      (p, i) =>
+        `<circle cx="${xAt(i).toFixed(1)}" cy="${yAt(p.value).toFixed(1)}" r="2.5" fill="var(--highlight)"/>`
+    )
+    .join('');
+  const last = pts[pts.length - 1];
+  const xLabel = (x: number, anchor: string, s: string): string =>
+    `<text x="${x.toFixed(1)}" y="82" font-size="9" text-anchor="${anchor}" fill="var(--text-muted)">${esc(s)}</text>`;
+  const valLabel = `<text x="${xAt(pts.length - 1).toFixed(1)}" y="${(yAt(last.value) - 5).toFixed(1)}" font-size="10" text-anchor="end" fill="var(--text-light)">${esc(String(last.value))}</text>`;
+  const aria = `trend ${pts[0].value} to ${last.value}`;
+  return (
+    `<svg viewBox="0 0 ${w} ${h}" class="trend-svg" role="img" aria-label="${esc(aria)}" style="width:100%;height:auto">` +
+    `<polyline points="${coords}" fill="none" stroke="var(--highlight)" stroke-width="2"/>` +
+    `${dots}${valLabel}` +
+    `${xLabel(padX, 'start', pts[0].label)}${xLabel(w - padX, 'end', last.label)}` +
+    `</svg>`
+  );
+}
+
+export default { zoneBar, gauge, phaseStrip, barSeries, sparkline, lineTrend };

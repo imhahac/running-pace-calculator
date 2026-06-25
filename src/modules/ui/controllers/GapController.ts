@@ -10,6 +10,7 @@ import GapCalculator from '../../core/GapCalculator.js';
 import HeartRateCalculator from '../../core/HeartRateCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import { setText as set } from './dom.js';
 
 const OUTPUT_IDS = ['gap-totaldist', 'gap-ascent', 'gap-descent', 'gap-predicted', 'gap-hr-band'];
 const FIRST_FUEL_SEC = 2700; // first fuel at ~45 min
@@ -44,10 +45,6 @@ export class GapController {
     const splitsEl = document.getElementById('gap-splits');
     const profileEl = document.getElementById('gap-profile');
     if (!splitsEl) return;
-    const set = (id: string, v: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
 
     const paceSec = TimeFormatter.tryParse(
       (document.getElementById('gap-pace-input') as HTMLInputElement | null)?.value || ''

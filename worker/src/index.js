@@ -21,12 +21,16 @@ import {
   corsAllowOrigin,
   buildMagicLinkUrl,
   tryParseRaces,
-  mergeRaces
+  mergeRaces,
+  safeParseArray,
+  validateRaces,
+  sha256Hex
 } from './lib.js';
 
 const MAGIC_TTL_S = 900; // 15 min
 const SESSION_TTL_S = 60 * 60 * 24 * 30; // 30 days
 const RATE_TTL_S = 60; // 1 magic-link request per email per minute
+const MAX_DATA_BYTES = 100 * 1024; // per-user sync blob cap (DoS / KV-quota guard)
 const MW_URL = 'https://www.marathonsworld.com/artapp/racePage.php';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
@@ -104,8 +108,8 @@ async function sendMagicEmail(env, email, link) {
 // ── Route handlers ──────────────────────────────────────────────────────────
 
 async function handleGetRaces(env, request) {
-  const raw = await env.KV.get('races');
-  const races = raw ? JSON.parse(raw) : [];
+  // Tolerate corrupt/non-array KV content rather than throwing a 500.
+  const races = safeParseArray(await env.KV.get('races'));
   return json(races, 200, env, request, { 'Cache-Control': 'public, max-age=300' });
 }
 
@@ -124,7 +128,8 @@ async function handlePutRaces(env, request) {
   } catch {
     return json({ error: 'invalid json' }, 400, env, request);
   }
-  if (!Array.isArray(body)) return json({ error: 'expected array' }, 400, env, request);
+  const v = validateRaces(body);
+  if (!v.ok) return json({ error: v.error }, 400, env, request);
   await env.KV.put('races', JSON.stringify(body));
   return json({ ok: true, count: body.length }, 200, env, request);
 }
@@ -146,7 +151,8 @@ async function handleAuthRequest(env, request) {
   await env.KV.put(rlKey, '1', { expirationTtl: RATE_TTL_S });
 
   const token = randomId();
-  await env.KV.put(`magic:${token}`, email, { expirationTtl: MAGIC_TTL_S });
+  // Store only the token HASH — a KV/log exposure can't then replay live links.
+  await env.KV.put(`magic:${await sha256Hex(token)}`, email, { expirationTtl: MAGIC_TTL_S });
 
   const link = buildMagicLinkUrl(env.APP_URL || '', token);
   const sent = await sendMagicEmail(env, email, link);
@@ -160,10 +166,11 @@ async function handleAuthRequest(env, request) {
 async function handleAuthVerify(env, request, url) {
   const token = url.searchParams.get('token');
   if (!token) return json({ error: 'missing token' }, 400, env, request);
-  const email = await env.KV.get(`magic:${token}`);
+  const tokenHash = await sha256Hex(token);
+  const email = await env.KV.get(`magic:${tokenHash}`);
   if (!email) return json({ error: 'invalid_or_expired' }, 401, env, request);
 
-  await env.KV.delete(`magic:${token}`); // single use
+  await env.KV.delete(`magic:${tokenHash}`); // single use
   const sid = randomId();
   await env.KV.put(`session:${sid}`, email, { expirationTtl: SESSION_TTL_S });
   return json({ token: sid, email }, 200, env, request);
@@ -186,15 +193,18 @@ async function handleGetData(env, request) {
 async function handlePutData(env, request) {
   const email = await getSessionEmail(request, env);
   if (!email) return json({ error: 'unauthorized' }, 401, env, request);
+  // Cap the blob so an authenticated user can't exhaust KV storage/quota.
+  const text = await request.text();
+  if (text.length > MAX_DATA_BYTES) return json({ error: 'payload too large' }, 413, env, request);
   let body;
   try {
-    body = await request.json();
+    body = JSON.parse(text);
   } catch {
     return json({ error: 'invalid json' }, 400, env, request);
   }
-  if (!body || typeof body !== 'object')
+  if (!body || typeof body !== 'object' || Array.isArray(body))
     return json({ error: 'expected object' }, 400, env, request);
-  await env.KV.put(`user:${email}`, JSON.stringify(body));
+  await env.KV.put(`user:${email}`, text); // already-validated JSON
   return json({ ok: true }, 200, env, request);
 }
 
@@ -250,8 +260,7 @@ export default {
         console.log('[cron] no parseable races (source likely JS/SPA) — use PUT /api/races');
         return;
       }
-      const raw = await env.KV.get('races');
-      const { list, added } = mergeRaces(raw ? JSON.parse(raw) : [], fresh);
+      const { list, added } = mergeRaces(safeParseArray(await env.KV.get('races')), fresh);
       if (added > 0) await env.KV.put('races', JSON.stringify(list));
       console.log('[cron] merged', added, 'new races');
     } catch (err) {

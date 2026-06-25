@@ -10,6 +10,7 @@ import TranslationManager from '../../state/TranslationManager.js';
 import { phaseStrip } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
 import type { TEffort } from '../../core/RecoveryCalculator.js';
+import { setText as set } from './dom.js';
 
 const EFFORTS: TEffort[] = ['easy', 'moderate', 'hard', 'allout'];
 
@@ -26,10 +27,6 @@ export class RecoveryController {
   static calculate(): void {
     const strategiesEl = document.getElementById('rec-strategies');
     if (!strategiesEl) return;
-    const set = (id: string, v: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
 
     const distM = parseFloat(
       (document.getElementById('rec-dist-select') as HTMLSelectElement | null)?.value || ''

@@ -10,6 +10,7 @@ import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { gauge } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
+import { setText as set } from './dom.js';
 
 const OUTPUT_IDS = [
   'cadence-band',
@@ -30,11 +31,6 @@ export class CadenceController {
   static calculate(): void {
     const bandEl = document.getElementById('cadence-band');
     if (!bandEl) return;
-
-    const set = (id: string, value: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    };
 
     const paceSec = TimeFormatter.tryParse(
       (document.getElementById('cadence-pace-input') as HTMLInputElement | null)?.value || ''

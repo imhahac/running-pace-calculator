@@ -1,7 +1,29 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { zoneBar, gauge, phaseStrip, barSeries, sparkline } from '../src/modules/ui/viz/Charts.js';
+import {
+  zoneBar,
+  gauge,
+  phaseStrip,
+  barSeries,
+  sparkline,
+  lineTrend
+} from '../src/modules/ui/viz/Charts.js';
+
+test('lineTrend: <2 points → empty; valid series → svg polyline with end labels', () => {
+  assert.equal(lineTrend([{ label: 'a', value: 50 }]), '');
+  assert.equal(lineTrend([]), '');
+  const html = lineTrend([
+    { label: '01-01', value: 48 },
+    { label: '02-01', value: 50 },
+    { label: '03-01', value: 52 }
+  ]);
+  assert.match(html, /<svg/);
+  assert.match(html, /<polyline/);
+  assert.match(html, /01-01/); // first x-label
+  assert.match(html, /03-01/); // last x-label
+  assert.equal((html.match(/<circle/g) || []).length, 3); // a dot per point
+});
 
 test('zoneBar: one column per segment, palette ramps z1..zN, escapes text', () => {
   const html = zoneBar([

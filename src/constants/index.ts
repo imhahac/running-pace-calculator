@@ -203,7 +203,7 @@ export const TRANSLATIONS: ITranslations = {
     hint_hr_intro: '輸入年齡與靜息心率，算出 Karvonen 五區心率',
     hr_age: '年齡',
     hr_rest: '靜息心率 (bpm)',
-    hr_max_optional: '實測最大心率 (可選)',
+    hr_max_optional: '實測最大心率 (可選, bpm)',
     hr_formula: '最大心率公式',
     hr_formula_tanaka: 'Tanaka (建議)',
     hr_formula_fox: '220 − 年齡',
@@ -563,9 +563,9 @@ export const TRANSLATIONS: ITranslations = {
     mode_triathlon: '三鐵配速',
     triathlon_total_time: '目標總時間',
     tri_swim_pace: '游泳配速 (/100m)',
-    tri_t1_time: 'T1 轉換 (分鐘)',
+    tri_t1_time: 'T1 轉換 (m:ss)',
     tri_bike_speed: '單車時速 (km/h)',
-    tri_t2_time: 'T2 轉換 (分鐘)',
+    tri_t2_time: 'T2 轉換 (m:ss)',
     tri_run_pace: '跑步配速 (/km)',
     tri_swim: '游泳',
     tri_bike: '單車',
@@ -577,7 +577,7 @@ export const TRANSLATIONS: ITranslations = {
     cadence_title: '👟 步頻分析',
     hint_cadence_intro: '輸入配速與目前步頻，算出合理步頻區間與 +5/+10% 目標',
     cadence_pace: '配速 (m:ss/km)',
-    cadence_current: '目前步頻 (可選)',
+    cadence_current: '目前步頻 (可選, spm)',
     cadence_band_label: '建議步頻區間',
     cadence_stride_label: '步幅',
     cadence_plus5_label: '+5% 目標',
@@ -597,10 +597,10 @@ export const TRANSLATIONS: ITranslations = {
       'Strides＝約 15–30 秒「可控的快」（非衝刺），組間完全恢復，一週插入 2–3 次（輕鬆跑後或質量課表前）。改善神經肌肉協調與跑步經濟性（Daniels & Gilbert 1979；Blagrove 2018）。本表為 12 週漸進：4×15s → 8×30s。',
     acwr_title: '🩹 傷害風險 (ACWR)',
     hint_acwr_intro: '輸入最近 4 週里程（最後一欄為本週），算出急慢性負荷比',
-    acwr_w1: '第 1 週 (最舊)',
-    acwr_w2: '第 2 週',
-    acwr_w3: '第 3 週',
-    acwr_w4: '第 4 週 (本週)',
+    acwr_w1: '第 1 週 (最舊, km)',
+    acwr_w2: '第 2 週 (km)',
+    acwr_w3: '第 3 週 (km)',
+    acwr_w4: '第 4 週 (本週, km)',
     acwr_acute_label: '急性 (本週)',
     acwr_chronic_label: '慢性 (4週均)',
     acwr_rec_label: '下週建議里程',
@@ -842,8 +842,8 @@ export const TRANSLATIONS: ITranslations = {
     gap_descent_label: '總下降',
     gap_predicted_label: '預估完賽配速',
     gap_splits_label: '每公里坡度修正配速',
-    gap_maxhr: '最大心率 (可選)',
-    gap_resthr: '靜息心率 (可選)',
+    gap_maxhr: '最大心率 (可選, bpm)',
+    gap_resthr: '靜息心率 (可選, bpm)',
     gap_hr_band_label: '建議耐力心率',
     gap_hr_note:
       '🍬 標記為補給時機（約 45 分起、每 30 分）；上坡心率易飆，以心率為上限、別追配速。',
@@ -872,7 +872,7 @@ export const TRANSLATIONS: ITranslations = {
       '由 5K 成績以 Daniels 引擎推估 VO₂max（即 VDOT）。體脂級距採 ACE 常用標準（男/女不同）。提升跑步經濟性三層：肌力訓練（重訓改善 RE 約 2–8%，Beattie 2017）、增強式（跳躍/彈振強化肌腱剛性）、體組成（在健康範圍內降低非功能性體重以改善功率體重比）。',
     hrv_title: '📈 HRV 訓練調整',
     hint_hrv_intro: '輸入晨起 RMSSD（逗號分隔 3–7 筆，最後一筆為今天）',
-    hrv_input_label: '晨起 RMSSD',
+    hrv_input_label: '晨起 RMSSD (ms, 逗號分隔)',
     hrv_status_label: '今日狀態',
     hrv_baseline_label: '基線',
     hrv_today_label: '今日',
@@ -987,7 +987,49 @@ export const TRANSLATIONS: ITranslations = {
     ref_resources:
       '延伸資源：RQ（訓練平台 + VDOT 分析）、Strava（GPS + 社群）；書籍：Daniels《Running Formula》、Fitzgerald《80/20 Running》。工具內各頁標註引用來源，可追 PubMed/PMC/原著。',
     ref_accuracy:
-      '準確度與信任：屬「公式」者為教科書精確公式（VDOT、Tanaka/Gellish 最大心率、Karvonen、Minetti 坡度、Riegel、碳水 30–90 g/h、冰沙 7.5 g/kg、Mujika 減量），數值已用單元測試鎖定；屬「估算」者（高溫減速、汗率、步頻區間、恢復天數、海拔增益）為依文獻建立的合理模型，個體差異大，請當作起點而非保證。海拔/HRV/月經週期尤其因人而異。'
+      '準確度與信任：屬「公式」者為教科書精確公式（VDOT、Tanaka/Gellish 最大心率、Karvonen、Minetti 坡度、Riegel、碳水 30–90 g/h、冰沙 7.5 g/kg、Mujika 減量），數值已用單元測試鎖定；屬「估算」者（高溫減速、汗率、步頻區間、恢復天數、海拔增益）為依文獻建立的合理模型，個體差異大，請當作起點而非保證。海拔/HRV/月經週期尤其因人而異。',
+    vdot_log_btn: '＋ 記錄此成績到體能趨勢',
+    trend_title: '📈 體能趨勢',
+    hint_trend_intro: '記錄歷次比賽成績，追蹤 VDOT 隨時間變化與各距離個人最佳',
+    trend_date: '日期',
+    trend_dist: '距離',
+    trend_time: '成績 (m:ss / h:mm:ss)',
+    trend_add: '＋ 新增紀錄',
+    trend_empty: '尚無紀錄，新增一筆比賽成績開始追蹤。',
+    trend_delete: '刪除這筆',
+    trend_readout: '最佳 VDOT {best}，最近 {recent}。長期走勢比單點更可靠。',
+    explain_trend:
+      '記錄每次比賽成績，自動換算 VDOT 並畫出隨時間的體能趨勢，以及各距離個人最佳（PB）。資料存在本機，登入後跨裝置同步。',
+    detail_trend_principle:
+      '每筆成績用 Daniels–Gilbert 公式換算成 VDOT（有效 VO₂max）。追蹤 VDOT 隨時間的走勢，比單看完賽時間更能跨距離地反映體能變化。',
+    detail_trend_how:
+      '填日期、距離與成績後「新增紀錄」，或在上方 VDOT 工具按「記錄此成績」。下方顯示紀錄清單、VDOT 趨勢線與各距離 PB。可刪除任一筆。',
+    detail_trend_note:
+      'VDOT 為單筆成績推估，受當天狀態、天氣、賽道影響；趨勢看長期方向比單點更可靠。資料僅存於你的瀏覽器（登入則同步到你的後端）。',
+    readiness_title: '🧭 今日訓練準備度',
+    hint_readiness_intro: '整合下方 ACWR、HRV 與恢復工具的輸入；未填的因子不計分',
+    readiness_level_label: '準備度',
+    readiness_none: '尚無足夠資料 — 填下方 ACWR／HRV／恢復任一項即可。',
+    readiness_na: 'n/a（未填）',
+    readiness_factor_hrv: 'HRV（自律神經）',
+    readiness_factor_acwr: 'ACWR（負荷）',
+    readiness_factor_recovery: '恢復需求',
+    readiness_state_good: '🟢 良好',
+    readiness_state_ok: '🟡 普通',
+    readiness_state_bad: '🔴 不佳',
+    readiness_level_go: '可進行高品質訓練',
+    readiness_level_caution: '注意，適度即可',
+    readiness_level_easy: '以輕鬆為主',
+    readiness_level_rest: '建議休息／恢復',
+    readiness_readout: '今日準備度 {score}/100：{level}。此為啟發式整合，請結合體感判斷。',
+    explain_readiness:
+      '把 HRV（自律神經）、ACWR（負荷／傷害風險）與恢復需求整合成單一每日準備度。這是「啟發式整合」非經驗證的指標，僅供參考，請以體感與專業判斷為準。',
+    detail_readiness_principle:
+      '三個訊號各映成 0–100 子分：HRV 正常/偏高/偏低、ACWR 甜蜜區→高風險、恢復需求天數。讀數取「有值因子」的平均；未填者不計分。分數越高越適合高品質訓練。',
+    detail_readiness_how:
+      '先在下方填 ACWR 週里程、HRV 晨起讀數、賽後恢復；本卡會自動綜合成今日準備度與建議。只填其中一兩項也可用，缺的記 n/a。',
+    detail_readiness_note:
+      '此為透明的啟發式加權，非臨床或經驗證指標；個體差異大。請結合主觀體感、睡眠與生活壓力綜合判斷，異常請尋求專業建議。'
   },
   en: {
     helper: 'Input anything, calculate instantly.',
@@ -1023,7 +1065,7 @@ export const TRANSLATIONS: ITranslations = {
     hint_hr_intro: 'Enter age and resting HR for Karvonen 5-zone heart rates',
     hr_age: 'Age',
     hr_rest: 'Resting HR (bpm)',
-    hr_max_optional: 'Measured max HR (optional)',
+    hr_max_optional: 'Measured max HR (optional, bpm)',
     hr_formula: 'Max-HR formula',
     hr_formula_tanaka: 'Tanaka (recommended)',
     hr_formula_fox: '220 − age',
@@ -1389,9 +1431,9 @@ export const TRANSLATIONS: ITranslations = {
     mode_triathlon: 'Tri Planner',
     triathlon_total_time: 'Target Time',
     tri_swim_pace: 'Swim Pace (/100m)',
-    tri_t1_time: 'T1 (mins)',
+    tri_t1_time: 'T1 (m:ss)',
     tri_bike_speed: 'Bike Speed (km/h)',
-    tri_t2_time: 'T2 (mins)',
+    tri_t2_time: 'T2 (m:ss)',
     tri_run_pace: 'Run Pace (/km)',
     tri_swim: 'Swim',
     tri_bike: 'Bike',
@@ -1404,7 +1446,7 @@ export const TRANSLATIONS: ITranslations = {
     hint_cadence_intro:
       'Enter pace and current cadence for a sensible cadence band and +5/+10% targets',
     cadence_pace: 'Pace (m:ss/km)',
-    cadence_current: 'Current cadence (optional)',
+    cadence_current: 'Current cadence (optional, spm)',
     cadence_band_label: 'Recommended band',
     cadence_stride_label: 'Stride length',
     cadence_plus5_label: '+5% target',
@@ -1428,10 +1470,10 @@ export const TRANSLATIONS: ITranslations = {
     acwr_title: '🩹 Injury Risk (ACWR)',
     hint_acwr_intro:
       'Enter the last 4 weeks of mileage (last box = this week) for the acute:chronic ratio',
-    acwr_w1: 'Week 1 (oldest)',
-    acwr_w2: 'Week 2',
-    acwr_w3: 'Week 3',
-    acwr_w4: 'Week 4 (current)',
+    acwr_w1: 'Week 1 (oldest, km)',
+    acwr_w2: 'Week 2 (km)',
+    acwr_w3: 'Week 3 (km)',
+    acwr_w4: 'Week 4 (current, km)',
     acwr_acute_label: 'Acute (this week)',
     acwr_chronic_label: 'Chronic (4-wk avg)',
     acwr_rec_label: 'Next week target',
@@ -1682,8 +1724,8 @@ export const TRANSLATIONS: ITranslations = {
     gap_descent_label: 'Total descent',
     gap_predicted_label: 'Predicted pace',
     gap_splits_label: 'Per-km grade-adjusted pace',
-    gap_maxhr: 'Max HR (optional)',
-    gap_resthr: 'Resting HR (optional)',
+    gap_maxhr: 'Max HR (optional, bpm)',
+    gap_resthr: 'Resting HR (optional, bpm)',
     gap_hr_band_label: 'Endurance HR band',
     gap_hr_note:
       '🍬 marks fueling points (~from 45 min, every 30 min); HR rises on climbs — cap by HR, don’t chase pace.',
@@ -1713,7 +1755,7 @@ export const TRANSLATIONS: ITranslations = {
       'VO₂max is estimated from your 5K via the Daniels engine (i.e. VDOT). Body-fat bands use common ACE standards (sex-specific). Three layers to improve running economy: strength training (heavy resistance improves RE ~2–8%, Beattie 2017), plyometrics (jumps/bounding for tendon stiffness), and body composition (lower non-functional weight within a healthy range to improve power-to-weight).',
     hrv_title: '📈 HRV-guided Training',
     hint_hrv_intro: 'Enter morning RMSSD readings (comma-separated, 3–7, last = today)',
-    hrv_input_label: 'Morning RMSSD',
+    hrv_input_label: 'Morning RMSSD (ms, comma-separated)',
     hrv_status_label: "Today's status",
     hrv_baseline_label: 'Baseline',
     hrv_today_label: 'Today',
@@ -1830,7 +1872,52 @@ export const TRANSLATIONS: ITranslations = {
     ref_resources:
       'Further resources: RQ (training platform + VDOT analysis), Strava (GPS + community); books: Daniels "Running Formula", Fitzgerald "80/20 Running". Each tool cites its sources (traceable to PubMed/PMC/original works).',
     ref_accuracy:
-      'Accuracy & trust: items marked "formula" are exact textbook formulas (VDOT, Tanaka/Gellish max-HR, Karvonen, Minetti grade, Riegel, 30–90 g/h carbs, 7.5 g/kg ice slurry, Mujika taper) and are locked by unit tests; items marked "estimate" (heat slowdown, sweat rate, cadence band, recovery days, altitude gains) are literature-grounded models with large individual variation — treat them as a starting point, not a guarantee. Altitude/HRV/menstrual responses especially vary by person.'
+      'Accuracy & trust: items marked "formula" are exact textbook formulas (VDOT, Tanaka/Gellish max-HR, Karvonen, Minetti grade, Riegel, 30–90 g/h carbs, 7.5 g/kg ice slurry, Mujika taper) and are locked by unit tests; items marked "estimate" (heat slowdown, sweat rate, cadence band, recovery days, altitude gains) are literature-grounded models with large individual variation — treat them as a starting point, not a guarantee. Altitude/HRV/menstrual responses especially vary by person.',
+    vdot_log_btn: '＋ Log this result to Fitness Trend',
+    trend_title: '📈 Fitness Trend',
+    hint_trend_intro: 'Log past races to track VDOT over time and per-distance personal bests',
+    trend_date: 'Date',
+    trend_dist: 'Distance',
+    trend_time: 'Time (m:ss / h:mm:ss)',
+    trend_add: '＋ Add entry',
+    trend_empty: 'No entries yet — add a race result to start tracking.',
+    trend_delete: 'Delete entry',
+    trend_readout:
+      'Best VDOT {best}, latest {recent}. The long-term direction is more reliable than any single point.',
+    explain_trend:
+      'Log each race result; it converts to VDOT and plots your fitness trend over time plus per-distance PBs. Stored on this device; synced across devices when signed in.',
+    detail_trend_principle:
+      'Each result converts to VDOT (effective VO₂max) via the Daniels–Gilbert formula. Tracking VDOT over time reflects fitness change across distances better than finish time alone.',
+    detail_trend_how:
+      'Enter date, distance and time then "Add entry", or use "Log this result" on the VDOT tool above. Below: the entry list, a VDOT trend line and per-distance PBs. Any row can be deleted.',
+    detail_trend_note:
+      'VDOT is estimated from a single result and is affected by conditions, weather and course; trust the long-term direction over single points. Data lives only in your browser (synced to your backend when signed in).',
+    readiness_title: '🧭 Daily Readiness',
+    hint_readiness_intro:
+      'Combines the ACWR, HRV and Recovery inputs below; unfilled factors are not scored',
+    readiness_level_label: 'Readiness',
+    readiness_none: 'Not enough data yet — fill any of ACWR / HRV / Recovery below.',
+    readiness_na: 'n/a (unfilled)',
+    readiness_factor_hrv: 'HRV (autonomic)',
+    readiness_factor_acwr: 'ACWR (load)',
+    readiness_factor_recovery: 'Recovery need',
+    readiness_state_good: '🟢 Good',
+    readiness_state_ok: '🟡 Fair',
+    readiness_state_bad: '🔴 Poor',
+    readiness_level_go: 'Ready for quality training',
+    readiness_level_caution: 'Caution — keep it moderate',
+    readiness_level_easy: 'Keep it easy',
+    readiness_level_rest: 'Rest / recover',
+    readiness_readout:
+      'Today’s readiness {score}/100: {level}. A heuristic blend — combine with how you feel.',
+    explain_readiness:
+      'Blends HRV (autonomic), ACWR (load / injury risk) and recovery need into one daily readiness. A transparent heuristic, not a validated index — for guidance; go by feel and professional judgement.',
+    detail_readiness_principle:
+      'Each signal maps to a 0–100 sub-score (HRV normal/high/low; ACWR sweet→high-risk; recovery days needed). Readiness is the average of available factors; unfilled ones are not scored. Higher = better suited to quality work.',
+    detail_readiness_how:
+      'Fill ACWR weekly mileage, morning HRV and post-race recovery below; this card auto-combines them into today’s readiness and advice. One or two filled is fine — missing ones show n/a.',
+    detail_readiness_note:
+      'A transparent heuristic weighting, not a clinical or validated index; individuals vary widely. Combine with subjective feel, sleep and life stress; seek professional advice for anomalies.'
   }
 };
 

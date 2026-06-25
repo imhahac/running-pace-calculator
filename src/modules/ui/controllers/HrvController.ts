@@ -9,6 +9,7 @@ import TranslationManager from '../../state/TranslationManager.js';
 import { sparkline } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
 import type { THrvStatus } from '../../core/HrvCalculator.js';
+import { setText as set } from './dom.js';
 
 const STATUS_RISK: Record<THrvStatus, string> = {
   low: 'high',
@@ -27,10 +28,6 @@ export class HrvController {
     const statusEl = document.getElementById('hrv-status');
     const adviceEl = document.getElementById('hrv-advice');
     if (!statusEl) return;
-    const set = (id: string, v: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
 
     const raw = (document.getElementById('hrv-input') as HTMLInputElement | null)?.value || '';
     const rmssd = raw

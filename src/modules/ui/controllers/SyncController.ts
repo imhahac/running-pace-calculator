@@ -11,7 +11,10 @@ import BackendClient from '../../state/BackendClient.js';
 import FormPersistence, { TOOL_INPUT_IDS } from '../../state/FormPersistence.js';
 import StateManager from '../../state/StateManager.js';
 import TranslationManager from '../../state/TranslationManager.js';
+import RaceLogStore from '../../state/RaceLogStore.js';
+import RaceLog, { type IRaceEntry } from '../../core/RaceLog.js';
 import LanguageController from './LanguageController.js';
+import FitnessTrendController from './FitnessTrendController.js';
 
 export class SyncController {
   private static pushTimer: ReturnType<typeof setTimeout> | null = null;
@@ -99,6 +102,13 @@ export class SyncController {
 
     // Otherwise the server is the source of truth across devices.
     FormPersistence.apply(toolInputs, true); // dispatch → recompute + autosave
+
+    // The race log is append-only: UNION local + server (never overwrite) so a
+    // result logged on another device is preserved, then re-render the trend.
+    const serverLog = Array.isArray(data.raceLog) ? (data.raceLog as IRaceEntry[]) : [];
+    RaceLogStore.replace(RaceLog.merge(RaceLogStore.all(), serverLog));
+    FitnessTrendController.calculate();
+
     const prefs = data.prefs as { theme?: string; lang?: string } | undefined;
     if (prefs) {
       if (prefs.theme === 'dark' || prefs.theme === 'light') StateManager.setTheme(prefs.theme);
@@ -116,6 +126,7 @@ export class SyncController {
       // includeEmpty: true so clearing a field propagates to other devices.
       toolInputs: FormPersistence.snapshot(TOOL_INPUT_IDS, true),
       prefs: { theme: StateManager.getTheme(), lang: StateManager.getLanguage() },
+      raceLog: RaceLogStore.all(),
       updatedAt: Date.now()
     };
   }

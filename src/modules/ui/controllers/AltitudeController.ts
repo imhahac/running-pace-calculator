@@ -9,6 +9,7 @@ import TranslationManager from '../../state/TranslationManager.js';
 import { sparkline } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
 import type { TAltProtocol } from '../../core/AltitudeCalculator.js';
+import { num, setText as set } from './dom.js';
 
 const PROTOCOLS: TAltProtocol[] = ['LHTL', 'LHTH', 'IHE'];
 const OUTPUT_IDS = ['alt-hours', 'alt-hbmass', 'alt-vo2'];
@@ -27,12 +28,6 @@ export class AltitudeController {
   static calculate(): void {
     const statusEl = document.getElementById('alt-status');
     if (!statusEl) return;
-    const set = (id: string, v: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
-    const num = (id: string): number =>
-      parseFloat((document.getElementById(id) as HTMLInputElement | null)?.value || '');
 
     const altitude = num('alt-altitude-input');
     const days = num('alt-days-input');

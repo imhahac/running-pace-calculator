@@ -10,6 +10,7 @@ import TranslationManager from '../../state/TranslationManager.js';
 import { gauge } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
 import type { TSex } from '../../core/RunningEconomyCalculator.js';
+import { setText as set } from './dom.js';
 
 const BAND_RISK: Record<string, string> = {
   essential: 'low',
@@ -34,10 +35,6 @@ export class RunningEconomyController {
     this.renderStrategies();
     const bandEl = document.getElementById('re-band');
     if (!bandEl) return;
-    const set = (id: string, v: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
 
     const sec = TimeFormatter.tryParse(
       (document.getElementById('re-5k-input') as HTMLInputElement | null)?.value || ''

@@ -44,6 +44,8 @@ import RunningEconomyController from './controllers/RunningEconomyController.js'
 import HrvController from './controllers/HrvController.js';
 import MenstrualController from './controllers/MenstrualController.js';
 import AltitudeController from './controllers/AltitudeController.js';
+import FitnessTrendController from './controllers/FitnessTrendController.js';
+import ReadinessController from './controllers/ReadinessController.js';
 import SyncController from './controllers/SyncController.js';
 import VersionController from './controllers/VersionController.js';
 import type { TMode } from '../../types/index';
@@ -112,6 +114,8 @@ export class UIController {
     HrvController.initialize();
     MenstrualController.initialize();
     AltitudeController.initialize();
+    FitnessTrendController.initialize();
+    ReadinessController.initialize();
     FormPersistence.bindAutosave(TOOL_INPUT_IDS);
     ShareLoadController.applySharedPayloadFromURL();
 

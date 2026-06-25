@@ -29,6 +29,8 @@ import RunningEconomyController from './RunningEconomyController.js';
 import HrvController from './HrvController.js';
 import MenstrualController from './MenstrualController.js';
 import AltitudeController from './AltitudeController.js';
+import FitnessTrendController from './FitnessTrendController.js';
+import ReadinessController from './ReadinessController.js';
 import GapController from './GapController.js';
 import VersionController from './VersionController.js';
 
@@ -58,6 +60,8 @@ const DYNAMIC_VIEWS: { calculate(): void }[] = [
   HrvController,
   MenstrualController,
   AltitudeController,
+  FitnessTrendController,
+  ReadinessController,
   VersionController
 ];
 

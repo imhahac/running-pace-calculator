@@ -8,7 +8,10 @@ import {
   buildMagicLinkUrl,
   normalizeRaceDate,
   tryParseRaces,
-  mergeRaces
+  mergeRaces,
+  safeParseArray,
+  validateRaces,
+  sha256Hex
 } from '../src/lib.js';
 
 test('email helpers', () => {
@@ -61,4 +64,30 @@ test('mergeRaces dedupes by date+name', () => {
   ]);
   assert.equal(added, 1);
   assert.equal(list.length, 2);
+});
+
+test('safeParseArray tolerates null / corrupt / non-array', () => {
+  assert.deepEqual(safeParseArray(null), []);
+  assert.deepEqual(safeParseArray('not json'), []);
+  assert.deepEqual(safeParseArray('{"a":1}'), []); // object, not array
+  assert.deepEqual(safeParseArray('[{"date":"2026-01-01","name":"X"}]'), [
+    { date: '2026-01-01', name: 'X' }
+  ]);
+});
+
+test('validateRaces accepts well-formed lists and rejects bad shape/size', () => {
+  assert.equal(validateRaces([{ date: '2026-01-01', name: 'X' }]).ok, true);
+  assert.equal(validateRaces('nope').ok, false);
+  assert.equal(validateRaces([{ name: 'X' }]).ok, false); // missing date
+  assert.equal(validateRaces([{ date: '2026-01-01' }]).ok, false); // missing name
+  assert.equal(validateRaces([1, 2, 3]).ok, false); // not objects
+  assert.equal(validateRaces(new Array(10), { maxCount: 5 }).ok, false); // too many
+  assert.equal(validateRaces([{ date: 'd', name: 'n' }], { maxBytes: 5 }).ok, false); // too big
+});
+
+test('sha256Hex is a stable 64-char lowercase hex digest', async () => {
+  const h = await sha256Hex('abc');
+  assert.equal(h, 'ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad');
+  assert.match(h, /^[0-9a-f]{64}$/);
+  assert.equal(await sha256Hex('abc'), h); // deterministic
 });

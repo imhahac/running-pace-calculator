@@ -10,6 +10,7 @@ import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { gauge } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
+import { num, setText, pickOption } from './dom.js';
 import type { TAcclim, TEnvMode } from '../../core/EnvironmentalPaceCalculator.js';
 
 const OUTPUT_IDS = [
@@ -37,30 +38,19 @@ export class EnvironmentalController {
     const riskEl = document.getElementById('env-risk');
     if (!riskEl) return;
 
-    const num = (id: string): number =>
-      parseFloat((document.getElementById(id) as HTMLInputElement | null)?.value || '');
-    const set = (id: string, value: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    };
-
     const t = TranslationManager.getDict();
 
     // forward = predict hot/hilly pace from a flat-cool target; reverse = back
     // out the flat-cool-equivalent from a pace run in the heat.
-    const mode: TEnvMode =
-      (document.getElementById('env-mode-select') as HTMLSelectElement | null)?.value === 'reverse'
-        ? 'reverse'
-        : 'forward';
+    const modeVal = (document.getElementById('env-mode-select') as HTMLSelectElement | null)?.value;
+    const mode: TEnvMode = pickOption(modeVal, ['forward', 'reverse'] as const, 'forward');
     const acclimVal = (document.getElementById('env-acclim-select') as HTMLSelectElement | null)
       ?.value;
-    const acclim: TAcclim = ACCLIMS.includes(acclimVal as TAcclim)
-      ? (acclimVal as TAcclim)
-      : 'none';
+    const acclim: TAcclim = pickOption(acclimVal, ACCLIMS, 'none');
 
     // Result-row label flips with the mode. It carries no data-i18n, so set it
     // here — the language toggle re-runs calculate() and re-translates it.
-    set(
+    setText(
       'env-result-label',
       mode === 'reverse' ? t.env_result_rev || '' : t.env_adjusted_label || ''
     );
@@ -73,18 +63,18 @@ export class EnvironmentalController {
     );
 
     if (!isFinite(temp) || !isFinite(rh) || baseSec === null || baseSec <= 0) {
-      OUTPUT_IDS.forEach((id) => set(id, '--'));
+      OUTPUT_IDS.forEach((id) => setText(id, '--'));
       riskEl.className = '';
       renderInsight('env', { ok: false });
       return;
     }
 
     const r = EnvironmentalPaceCalculator.adjust(baseSec, temp, rh, grade, acclim, mode);
-    set('env-dewpoint', `${r.dewPointC}°C`);
-    set('env-wbgt', `${r.wbgtC}°C`);
-    set('env-heat-pct', `+${r.heatPct}%`);
-    set('env-grade-factor', `×${r.gradeFactor}`);
-    set('env-adjusted-pace', `${TimeFormatter.format(r.adjustedPaceSec)}/km`);
+    setText('env-dewpoint', `${r.dewPointC}°C`);
+    setText('env-wbgt', `${r.wbgtC}°C`);
+    setText('env-heat-pct', `+${r.heatPct}%`);
+    setText('env-grade-factor', `×${r.gradeFactor}`);
+    setText('env-adjusted-pace', `${TimeFormatter.format(r.adjustedPaceSec)}/km`);
     const riskLabel = t[`env_risk_${r.risk}`] || r.risk;
     riskEl.textContent = riskLabel;
     riskEl.className = `risk-badge risk-${r.risk}`;

@@ -100,6 +100,45 @@ export function tryParseRaces(text) {
   return out;
 }
 
+/** Parse a stored JSON string into an array, tolerating null/corrupt data. */
+export function safeParseArray(raw) {
+  if (!raw) return [];
+  try {
+    const v = JSON.parse(raw);
+    return Array.isArray(v) ? v : [];
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * Validate an admin-supplied race list before it replaces the public feed.
+ * Guards count, total size and per-record shape so bad data can't corrupt
+ * `GET /api/races` (which the client consumes). Returns {ok} or {ok:false,error}.
+ */
+export function validateRaces(arr, opts = {}) {
+  const maxCount = opts.maxCount || 5000;
+  const maxBytes = opts.maxBytes || 512 * 1024;
+  if (!Array.isArray(arr)) return { ok: false, error: 'expected array' };
+  if (arr.length > maxCount) return { ok: false, error: `too many races (max ${maxCount})` };
+  if (JSON.stringify(arr).length > maxBytes) return { ok: false, error: 'race list too large' };
+  for (const r of arr) {
+    if (!r || typeof r !== 'object') return { ok: false, error: 'each race must be an object' };
+    if (typeof r.date !== 'string' || !r.date)
+      return { ok: false, error: 'each race needs a date string' };
+    if (typeof r.name !== 'string' || !r.name)
+      return { ok: false, error: 'each race needs a name string' };
+  }
+  return { ok: true };
+}
+
+/** Lowercase hex SHA-256 of a string (Web Crypto; works in Workers and Node). */
+export async function sha256Hex(input) {
+  const data = new TextEncoder().encode(String(input));
+  const digest = await crypto.subtle.digest('SHA-256', data);
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
+}
+
 /** Merge fresh races into an existing list, deduped by date+name. */
 export function mergeRaces(existing, fresh) {
   const list = Array.isArray(existing) ? existing.slice() : [];

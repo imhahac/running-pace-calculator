@@ -9,6 +9,7 @@ import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { barSeries } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
+import { num, setText as set } from './dom.js';
 
 const INPUT_IDS = [
   'sweat-weight-input',
@@ -30,12 +31,6 @@ export class SweatRateController {
   static calculate(): void {
     const timeline = document.getElementById('sweat-timeline');
     if (!timeline) return;
-    const set = (id: string, v: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
-    const num = (id: string): number =>
-      parseFloat((document.getElementById(id) as HTMLInputElement | null)?.value || '');
 
     const weight = num('sweat-weight-input');
     const distKm = num('sweat-dist-input');

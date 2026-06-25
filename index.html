@@ -378,9 +378,9 @@
                 <div class="helper-text" data-i18n="hint_triathlon_intro" style="margin-bottom: 8px;">輸入目標總時間或各段配速，推算游／騎／跑分段</div>
                 <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
                     <select id="tri-dist-select" style="flex: 1;">
-                        <option value="51.5">51.5 (標鐵)</option>
-                        <option value="113">113 (半程)</option>
-                        <option value="226">226 (全程)</option>
+                        <option value="51.5">51.5 km (標鐵)</option>
+                        <option value="113">113 km (半程)</option>
+                        <option value="226">226 km (全程)</option>
                     </select>
                 </div>
                 <div style="display: flex; gap: 10px; width: 100%; align-items: center; margin-bottom: 10px;">
@@ -626,6 +626,7 @@
                     <input type="text" id="vdot-time-input" placeholder="h:mm:ss" aria-label="VDOT 賽事時間" style="width: 10ch; text-align: center;">
                     <span class="highlight-text mono-text" style="margin-left: auto; font-size: 1.05rem;">VDOT <span id="vdot-value">--</span></span>
                 </div>
+                <button type="button" id="vdot-log-btn" class="detail-toggle" data-i18n="vdot_log_btn" style="margin: -4px 0 8px;">＋ 記錄此成績到體能趨勢</button>
                 <div id="vdot-paces" class="vdot-grid">
                     <span class="zone-badge">E</span><span data-i18n="zone_easy_desc">有氧基礎</span><span id="vdot-pace-easy" class="mono-text vdot-pace">--</span>
                     <span class="zone-badge">M</span><span data-i18n="zone_marathon_desc">馬拉松配速</span><span id="vdot-pace-marathon" class="mono-text vdot-pace">--</span>
@@ -655,6 +656,40 @@
                     <p data-i18n="detail_vdot_stages">E 有氧打底／恢復（量最多）；M 馬拉松配速；T 乳酸閾值（可維持約 20–40 分）；I VO₂max 間歇（3–5 分）；R 速度與跑姿（短而快）。由易到難、量由多到少。</p>
                     <h4 data-i18n="detail_h_note">注意</h4>
                     <p data-i18n="detail_vdot_note">由單筆成績推估，當天狀態、天氣、賽道都會影響；跨距離預測越遠越保守看待。每週質量課表（T/I/R）合計別超過週里程約 8–10%。</p>
+                </div></div>
+            </div>
+
+            <!-- Fitness Trend (race log → VDOT trend + per-distance PBs) -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="trend_title">📈 體能趨勢</span></h3>
+                <div class="helper-text" data-i18n="hint_trend_intro" style="margin-bottom: 8px;">記錄歷次比賽成績，追蹤 VDOT 隨時間變化與各距離個人最佳</div>
+                <div class="settings-grid" style="width: 100%;">
+                    <label for="trend-date" data-i18n="trend_date">日期</label>
+                    <input type="date" id="trend-date" style="width: auto; text-align: left;">
+                    <label for="trend-dist-select" data-i18n="trend_dist">距離</label>
+                    <select id="trend-dist-select">
+                        <option value="5k">5K</option>
+                        <option value="10k" selected>10K</option>
+                        <option value="half">21.1K</option>
+                        <option value="full">42.2K</option>
+                    </select>
+                    <label for="trend-time-input" data-i18n="trend_time">成績 (m:ss / h:mm:ss)</label>
+                    <input type="text" id="trend-time-input" placeholder="48:00" style="width: 10ch;">
+                </div>
+                <button type="button" id="trend-add-btn" class="detail-toggle" data-i18n="trend_add" style="margin-top: 8px;">＋ 新增紀錄</button>
+                <div id="trend-list" style="width: 100%; margin-top: 10px;"></div>
+                <div id="trend-chart" class="tool-chart"></div>
+                <div id="trend-readout" class="tool-readout"></div>
+                <div class="vdot-grid" id="trend-pb" style="margin-top: 8px;"></div>
+                <div class="explain" data-i18n="explain_trend">記錄每次比賽成績，自動換算 VDOT 並畫出隨時間的體能趨勢，以及各距離個人最佳（PB）。資料存在本機，登入後跨裝置同步。</div>
+                <button class="detail-toggle" type="button" aria-expanded="false" aria-controls="trend-detail" data-i18n="btn_detail">詳解</button>
+                <div id="trend-detail" class="tool-detail"><div class="tool-detail-inner">
+                    <h4 data-i18n="detail_h_principle">原理</h4>
+                    <p data-i18n="detail_trend_principle">每筆成績用 Daniels–Gilbert 公式換算成 VDOT（有效 VO₂max）。追蹤 VDOT 隨時間的走勢，比單看完賽時間更能跨距離地反映體能變化。</p>
+                    <h4 data-i18n="detail_h_how">怎麼用</h4>
+                    <p data-i18n="detail_trend_how">填日期、距離與成績後「新增紀錄」，或在上方 VDOT 工具按「記錄此成績」。下方顯示紀錄清單、VDOT 趨勢線與各距離 PB。可刪除任一筆。</p>
+                    <h4 data-i18n="detail_h_note">注意</h4>
+                    <p data-i18n="detail_trend_note">VDOT 為單筆成績推估，受當天狀態、天氣、賽道影響；趨勢看長期方向比單點更可靠。資料僅存於你的瀏覽器（登入則同步到你的後端）。</p>
                 </div></div>
             </div>
 
@@ -898,6 +933,28 @@
         </div> <!-- End of tab-workout -->
 
         <div class="tab-pane" id="tab-monitoring" role="tabpanel" aria-labelledby="tabbtn-monitoring">
+            <!-- Daily Readiness (integrates ACWR + HRV + Recovery below) -->
+            <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
+                <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="readiness_title">🧭 今日訓練準備度</span></h3>
+                <div class="helper-text" data-i18n="hint_readiness_intro" style="margin-bottom: 8px;">整合下方 ACWR、HRV 與恢復工具的輸入；未填的因子不計分</div>
+                <div style="width: 100%; margin-top: 6px; font-size: 1.05rem;">
+                    <span data-i18n="readiness_level_label">準備度</span>: <span id="readiness-level" class="highlight-text mono-text">--</span>
+                </div>
+                <div id="readiness-chart" class="tool-chart"></div>
+                <div class="vdot-grid" id="readiness-factors" style="margin-top: 8px;"></div>
+                <div id="readiness-readout" class="tool-readout"></div>
+                <div class="explain" data-i18n="explain_readiness">把 HRV（自律神經）、ACWR（負荷／傷害風險）與恢復需求整合成單一每日準備度。這是「啟發式整合」非經驗證的指標，僅供參考，請以體感與專業判斷為準。</div>
+                <button class="detail-toggle" type="button" aria-expanded="false" aria-controls="readiness-detail" data-i18n="btn_detail">詳解</button>
+                <div id="readiness-detail" class="tool-detail"><div class="tool-detail-inner">
+                    <h4 data-i18n="detail_h_principle">原理</h4>
+                    <p data-i18n="detail_readiness_principle">三個訊號各映成 0–100 子分：HRV 正常/偏高/偏低、ACWR 甜蜜區→高風險、恢復需求天數。讀數取「有值因子」的平均；未填者不計分。分數越高越適合高品質訓練。</p>
+                    <h4 data-i18n="detail_h_how">怎麼用</h4>
+                    <p data-i18n="detail_readiness_how">先在下方填 ACWR 週里程、HRV 晨起讀數、賽後恢復；本卡會自動綜合成今日準備度與建議。只填其中一兩項也可用，缺的記 n/a。</p>
+                    <h4 data-i18n="detail_h_note">注意</h4>
+                    <p data-i18n="detail_readiness_note">此為透明的啟發式加權，非臨床或經驗證指標；個體差異大。請結合主觀體感、睡眠與生活壓力綜合判斷，異常請尋求專業建議。</p>
+                </div></div>
+            </div>
+
             <!-- Injury Risk (ACWR) -->
             <div class="box input-group" style="flex-direction: column; align-items: flex-start; margin-top: 10px;">
                 <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="acwr_title">🩹 傷害風險 (ACWR)</span></h3>

@@ -8,6 +8,7 @@ import CoolingCalculator from '../../core/CoolingCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { gauge } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
+import { num, setText as set } from './dom.js';
 
 export class CoolingController {
   static initialize(): void {
@@ -21,12 +22,6 @@ export class CoolingController {
     const riskEl = document.getElementById('cool-risk');
     const strategiesEl = document.getElementById('cool-strategies');
     if (!riskEl || !strategiesEl) return;
-    const set = (id: string, v: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = v;
-    };
-    const num = (id: string): number =>
-      parseFloat((document.getElementById(id) as HTMLInputElement | null)?.value || '');
 
     const weight = num('cool-weight-input');
     const temp = num('cool-temp-input');

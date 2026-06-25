@@ -9,6 +9,7 @@ import AcwrCalculator from '../../core/AcwrCalculator.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { gauge } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
+import { setText as set } from './dom.js';
 
 const WEEK_IDS = ['acwr-w1', 'acwr-w2', 'acwr-w3', 'acwr-w4'];
 const OUTPUT_IDS = ['acwr-value', 'acwr-acute', 'acwr-chronic', 'acwr-rec'];
@@ -27,11 +28,6 @@ export class AcwrController {
   static calculate(): void {
     const zoneEl = document.getElementById('acwr-zone');
     if (!zoneEl) return;
-
-    const set = (id: string, value: string): void => {
-      const el = document.getElementById(id);
-      if (el) el.textContent = value;
-    };
 
     const weekly = WEEK_IDS.map((id) =>
       parseFloat((document.getElementById(id) as HTMLInputElement | null)?.value || '')

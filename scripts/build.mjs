@@ -7,6 +7,7 @@
  */
 import { build } from 'esbuild';
 import { readFile, writeFile, mkdir } from 'node:fs/promises';
+import { existsSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,7 +23,10 @@ const resolveTsJs = {
       if (!args.importer) return undefined;
       if (!args.path.endsWith('.js')) return undefined;
       const abs = path.resolve(path.dirname(args.importer), args.path);
-      return { path: abs.replace(/\.js$/, '.ts') };
+      const tsPath = abs.replace(/\.js$/, '.ts');
+      // Only redirect when the .ts source actually exists; otherwise defer to
+      // esbuild's normal resolution (e.g. a genuine .js file or dependency).
+      return existsSync(tsPath) ? { path: tsPath } : undefined;
     });
   }
 };
