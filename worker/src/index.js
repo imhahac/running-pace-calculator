@@ -77,8 +77,9 @@ async function sendMagicEmail(env, email, link) {
     `<p>點此登入 RunningPaceNote（15 分鐘內有效）：</p>` +
     `<p><a href="${link}">${link}</a></p>` +
     `<p>Click to sign in (valid 15 min). 若非本人操作請忽略。</p>`;
-  // SendGrid v3 Mail Send API. FROM_EMAIL must be a verified Single Sender
-  // (or a verified domain) on the SendGrid account.
+  // SendGrid v3 Mail Send API. FROM_EMAIL must be an address on a SendGrid
+  // authenticated domain (recommended — DKIM/SPF, better deliverability) or a
+  // verified Single Sender. A friendly `name` improves how the sender displays.
   const resp = await fetch('https://api.sendgrid.com/v3/mail/send', {
     method: 'POST',
     headers: {
@@ -87,7 +88,7 @@ async function sendMagicEmail(env, email, link) {
     },
     body: JSON.stringify({
       personalizations: [{ to: [{ email }] }],
-      from: { email: env.FROM_EMAIL },
+      from: { email: env.FROM_EMAIL, name: 'RunningPaceNote' },
       subject: 'RunningPaceNote 登入連結 / Your login link',
       content: [{ type: 'text/html', value: html }]
     })

@@ -87,6 +87,13 @@ jobs:
           KV_ID_VAR: ${{ vars.KV_NAMESPACE_ID }}
           GH_VARIABLES_TOKEN: ${{ secrets.GH_VARIABLES_TOKEN }}
         run: |
+          # An account id pasted into a GitHub secret often carries a stray
+          # newline/space, which makes the API path unroutable (Cloudflare 7003).
+          # Strip whitespace (the hex id has none) and re-mask the clean value.
+          CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')
+          export CLOUDFLARE_ACCOUNT_ID
+          echo "::add-mask::$CLOUDFLARE_ACCOUNT_ID"
+
           KV_ID="$KV_ID_VAR"
           if [ -n "$KV_ID" ]; then
             echo "Using pinned KV_NAMESPACE_ID variable."
@@ -94,11 +101,19 @@ jobs:
             WNAME=$(grep -E '^name *=' worker/wrangler.toml | sed -E 's/.*"(.*)".*/\1/')
             TITLE="${WNAME}-KV"   # wrangler titles a namespace <worker-name>-<binding>
             echo "Looking up KV namespace titled '$TITLE'…"
-            KV_ID=$(npx --yes wrangler@"$WRANGLER_VERSION" kv namespace list \
-              | jq -r --arg t "$TITLE" '[.[] | select(.title==$t)][0].id // empty')
+            # Capture the list separately so an API failure is NOT mistaken for
+            # "no namespace found" (which would wrongly trigger a create).
+            if ! LIST_JSON=$(npx --yes wrangler@"$WRANGLER_VERSION" kv namespace list); then
+              echo "::error::Cloudflare KV API call failed (error 7003 = bad account path). Almost always a wrong/mistyped CLOUDFLARE_ACCOUNT_ID secret, or an API token from a different account / lacking 'Workers KV Storage: Edit'. Verify the id (dashboard → Workers & Pages → Account ID, or 'npx wrangler whoami') and the token's account + permissions."
+              exit 1
+            fi
+            KV_ID=$(printf '%s' "$LIST_JSON" | jq -r --arg t "$TITLE" '[.[] | select(.title==$t)][0].id // empty')
             if [ -z "$KV_ID" ]; then
               echo "None found — creating it."
-              OUT=$(cd worker && npx --yes wrangler@"$WRANGLER_VERSION" kv namespace create KV)
+              if ! OUT=$(cd worker && npx --yes wrangler@"$WRANGLER_VERSION" kv namespace create KV); then
+                echo "::error::Creating the KV namespace failed — same likely cause as above (CLOUDFLARE_ACCOUNT_ID / token account & permissions)."
+                exit 1
+              fi
               KV_ID=$(printf '%s' "$OUT" | grep -oiE '[0-9a-f]{32}' | head -n1)
               echo "Created KV namespace $KV_ID"
             else
@@ -148,6 +163,7 @@ jobs:
           FROM_EMAIL: ${{ vars.FROM_EMAIL }}
           ADMIN_EMAILS: ${{ vars.ADMIN_EMAILS }}
         run: |
+          export CLOUDFLARE_ACCOUNT_ID=$(printf '%s' "$CLOUDFLARE_ACCOUNT_ID" | tr -d '[:space:]')
           npx --yes wrangler@"$WRANGLER_VERSION" deploy \
             --var APP_URL:"$APP_URL" \
             --var ALLOWED_ORIGIN:"$ALLOWED_ORIGIN" \

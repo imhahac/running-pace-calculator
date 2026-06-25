@@ -35,9 +35,9 @@
 - **API token**：dashboard → **My Profile → API Tokens → Create Token** → 用 **「Edit Cloudflare Workers」** 範本（授予 Account → _Workers Scripts: Edit_ 與 _Workers KV Storage: Edit_）。
 - **Account ID**：**Workers & Pages** → 右側欄。
 
-**② SendGrid（magic-link Email，免網域）**
-- **Settings → Sender Authentication → Single Sender Verification** → 驗證你擁有的信箱，該地址即 `FROM_EMAIL`。
-- **Settings → API Keys → Create API Key**，給 _Mail Send_ 權限。
+**② SendGrid（magic-link Email）**
+- **寄件人驗證**：建議用 **Settings → Sender Authentication → Authenticate Your Domain**（DKIM/SPF、deliverability 較佳；驗證後可用該網域底下任意地址當 `FROM_EMAIL`）。無自有網域則改用 **Single Sender Verification** 驗證單一信箱亦可。
+- **API Key**：**Settings → API Keys → Create API Key**，給 _Mail Send_ 權限。
 
 **③ 在 GitHub 加入設定** → repo **Settings → Secrets and variables → Actions**：
 
@@ -45,7 +45,7 @@
 | --- | --- | --- | --- |
 | `APP_URL` | Variable | `https://imhahac.github.io/running-pace-calculator/` | 魔術連結導回的位址 |
 | `ALLOWED_ORIGIN` | Variable | `https://imhahac.github.io` | CORS 來源（裸來源、不帶路徑；`*` 僅供測試） |
-| `FROM_EMAIL` | Variable | 已驗證的 Single Sender | 魔術連結寄件地址 |
+| `FROM_EMAIL` | Variable | 已驗證網域下的地址（或 Single Sender） | 魔術連結寄件地址 |
 | `ADMIN_EMAILS` | Variable | `you@example.com`（逗號分隔、**勿含空格**） | 可 `PUT /api/races` 的人 |
 | `KV_NAMESPACE_ID` | Variable | _(自動)_ | **CI 管理**——首次部署自動建立並回寫；只有要釘特定 namespace 才手動填 |
 | `CLOUDFLARE_API_TOKEN` | Secret | — | 部署授權（兼建立/列出 KV） |
