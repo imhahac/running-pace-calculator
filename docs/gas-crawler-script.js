@@ -1,46 +1,24 @@
 /**
- * Running Pace Calculator - Google Apps Script (GAS) 賽事自動爬蟲同步腳本（強化診斷版）
+ * Running Pace Calculator — Google Apps Script (GAS) 賽事自動爬蟲同步腳本
  *
- * 本腳本可自動爬取「運動筆記」與「馬拉松世界」的最新賽事，並寫入 Google 試算表中，
- * 避免手動輸入的繁瑣！
+ * 自動爬取「運動筆記」與「馬拉松世界」最新賽事並寫入 Google 試算表,免手動輸入。
+ * 解析邏輯與 Cloudflare Worker 後端一致(已驗證兩來源皆可「匿名」抓取)。
  *
- * 💡 使用步驟：
- * 1. 建立一個 Google 試算表，第一行設定為以下標頭（順序要一樣）：
- *    A1: Date (日期)        B1: Name (賽事名稱)   C1: Location (地點)
- *    D1: RegistrationLink   E1: StravaFull        F1: StravaHalf
- *    G1: GpxFull            H1: GpxHalf
- * 2. 點擊「擴充功能 > Apps Script」，把本檔案程式碼貼到 Code.gs，儲存後重新整理試算表。
- * 3. 上方選單會出現「🏃‍♂️ 賽事助手」，點「🔄 從運動筆記與馬拉松世界更新賽事」即可同步。
+ * 💡 使用步驟:
+ * 1. 建立 Google 試算表,第一列標頭(順序一致):
+ *    A1: Date  B1: Name  C1: Location  D1: RegistrationLink
+ *    E1: StravaFull  F1: StravaHalf  G1: GpxFull  H1: GpxHalf
+ *    I1: Distances  J1: RegClose
+ *    (A–H 為前端必要欄;I/J 為新增的距離與報名截止,選填)
+ * 2.「擴充功能 → Apps Script」,把本檔貼到 Code.gs,儲存後重新整理試算表。
+ * 3. 上方選單「🏃‍♂️ 賽事助手 → 🔄 從運動筆記與馬拉松世界更新賽事」即可同步。
  *
- * ⚠️ 重要（2026 起的來源變更）：
- *  - 「運動筆記」與「馬拉松世界」的賽事清單已改為 JS/AJAX 動態載入（運動筆記另加登入牆），
- *    舊版以靜態 HTML regex 解析的方式會抓到 0 筆。
- *  - 本版會「明確告警」而非靜默回報「無須更新」，並嘗試改打 AJAX/JSON 端點。
- *  - 若某來源仍抓不到，請打開「執行紀錄」(編輯器上方「執行紀錄」/ Executions) 查看本腳本
- *    記錄的「HTTP 狀態 + 內容樣本 + 首筆 JSON 欄位」，據此調整下方 CONFIG，或改用手動輸入。
- *  - 手動在試算表輸入賽事永遠是最可靠的來源（前端 API 會照常讀取）。
+ * 同步策略:append-only,以「日期_名稱」去重、只加未來賽事;手填的 Strava/GPX 不受影響。
+ * 來源若再改版導致解析 0 筆,請看「執行紀錄」的內容樣本調整下方解析 regex
+ * (或對照 worker/src/lib.js 的 parseBijiRaces / parseMwRaces)。
  */
 
-// ===== 待重對接：在登入的瀏覽器擷取真實端點後填回下方 CONFIG =====
-// 兩來源已改 JS/SPA + 登入牆，匿名抓取取得 0 筆。要恢復自動爬取，請在「已登入」的
-// 瀏覽器開發者工具 → Network 面板，找到載入賽事清單的 XHR/fetch 請求，擷取：
-//   1) URL 與 method（GET / POST）
-//   2) 送出的 query 參數 / POST payload（表單或 JSON 內容）
-//   3) 必要的 request headers（特別是 Referer、Cookie、X-Requested-With）
-//   4) 回應 JSON 的結構：首筆物件中「日期 / 名稱 / 地點 / 連結」對應的欄位名
-// 取得後：marathonsWorld 改 url+payload+referer；runningBiji 把真實 URL 放進
-// candidateUrls（必要時於 fetchJson 加上 headers），並對齊 tryParse* 的欄位對映。
-//
-// ── 回報範本（擷取後把以下填好貼回／交付，即可據此重新對接）──────────────
-//   來源：       [ ] 馬拉松世界   [ ] 運動筆記
-//   請求 URL：   <完整 URL，含 query>
-//   方法：       GET / POST
-//   送出內容：   <POST body 或 query 參數，原樣貼>
-//   必要 headers：Referer / Cookie / X-Requested-With ...（有就附）
-//   回應首筆範例：<貼一筆 JSON 物件，用來對映 日期/名稱/地點/連結 欄位>
-//   ★ 最省事：DevTools 對該請求按右鍵 → Copy → "Copy as cURL"，整段貼回即可。
-// ──────────────────────────────────────────────────────────────────────
-// ===== 可調整設定（來源網站若再改版，改這裡即可）=====
+// ===== 可調整設定(來源網站若改版,改這裡)=====
 var CONFIG = {
   marathonsWorld: {
     url: 'https://www.marathonsworld.com/artapp/racePage.php',
@@ -55,24 +33,19 @@ var CONFIG = {
     referer: 'https://www.marathonsworld.com/artapp/racelist.php?p=1'
   },
   runningBiji: {
-    // 舊的 ?q=competition&act=list 已失效（回 404 + 登入牆）。
-    // 下列為候選清單端點；若全部取不到，多半已需登入，請改用手動輸入。
-    candidateUrls: [
-      'https://running.biji.co/index.php?q=competition&act=list_item',
-      'https://running.biji.co/index.php?q=competition&act=list'
-    ]
+    url: 'https://running.biji.co/?q=competition'
   },
-  sampleLogChars: 800 // 記錄到執行紀錄的內容樣本長度
+  sampleLogChars: 800
 };
 
 var UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 ' +
   '(KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
-// 1. 當試算表開啟時，自動建立自訂選單
+// 1. 試算表開啟時建立自訂選單
 function onOpen() {
-  var ui = SpreadsheetApp.getUi();
-  ui.createMenu('🏃‍♂️ 賽事助手')
+  SpreadsheetApp.getUi()
+    .createMenu('🏃‍♂️ 賽事助手')
     .addItem('🔄 從運動筆記與馬拉松世界更新賽事', 'syncRaces')
     .addToUi();
 }
@@ -84,21 +57,17 @@ function syncRaces() {
 
   var response = ui.alert(
     '確認同步',
-    '即將從馬拉松世界與運動筆記爬取最新路跑賽事，這可能需要數秒鐘，是否繼續？',
+    '即將從馬拉松世界與運動筆記爬取最新賽事,可能需數秒,是否繼續?',
     ui.ButtonSet.YES_NO
   );
-  if (response !== ui.Button.YES) {
-    return;
-  }
+  if (response !== ui.Button.YES) return;
 
   var existingRaces = getExistingRaces(sheet);
 
-  // 分站爬取（各自回傳含成功/失敗旗標的結果物件，不再裸回 []）
   var mw = crawlMarathonsWorld();
   var biji = crawlRunningBiji();
   var sites = [mw, biji];
 
-  // 合併、過濾過期、去重
   var today = new Date();
   today.setHours(0, 0, 0, 0);
 
@@ -112,7 +81,7 @@ function syncRaces() {
     var key = race.date + '_' + race.name;
     if (!existingRaces[key]) {
       newRaces.push(race);
-      existingRaces[key] = true; // 避免本次同步內部重複
+      existingRaces[key] = true;
     }
   }
 
@@ -130,38 +99,34 @@ function syncRaces() {
       nr.stravaFull,
       nr.stravaHalf,
       nr.gpxFull,
-      nr.gpxHalf
+      nr.gpxHalf,
+      nr.distances,
+      nr.regClose
     ]);
   }
 
-  // 分站狀態報告 —— 關鍵：不再以「無須更新」掩蓋失敗
   var lines = [];
   var anyFailed = false;
   for (var s = 0; s < sites.length; s++) {
     var st = sites[s];
     if (st.ok) {
-      lines.push('✅ ' + st.site + '：抓取 ' + st.races.length + ' 筆（' + st.note + '）');
+      lines.push('✅ ' + st.site + ':抓取 ' + st.races.length + ' 筆(' + st.note + ')');
     } else {
       anyFailed = true;
-      lines.push('⚠️ ' + st.site + '：失敗或 0 筆（HTTP ' + st.status + '）— ' + st.note);
+      lines.push('⚠️ ' + st.site + ':失敗或 0 筆(HTTP ' + st.status + ')— ' + st.note);
     }
   }
   lines.push('');
-  lines.push('本次新增寫入試算表：' + newRaces.length + ' 筆。');
-
+  lines.push('本次新增寫入試算表:' + newRaces.length + ' 筆。');
   if (anyFailed) {
     lines.push('');
-    lines.push(
-      '部分來源已失效（多半因網站改版／登入牆）。請改用手動輸入，' +
-        '或打開「執行紀錄」查看內容樣本後調整 CONFIG。'
-    );
+    lines.push('部分來源 0 筆(多半因網站改版)。請看「執行紀錄」內容樣本後調整解析,或手動輸入。');
   }
 
-  var title = anyFailed ? '同步完成（含失效來源警告）' : '同步完成！';
-  ui.alert(title, lines.join('\n'), ui.ButtonSet.OK);
+  ui.alert(anyFailed ? '同步完成(含警告)' : '同步完成!', lines.join('\n'), ui.ButtonSet.OK);
 }
 
-// 取得試算表中已存在的「日期_名稱」對照表
+// 已存在的「日期_名稱」對照表
 function getExistingRaces(sheet) {
   var data = sheet.getDataRange().getValues();
   var existing = {};
@@ -176,7 +141,7 @@ function getExistingRaces(sheet) {
   return existing;
 }
 
-// ===== 共用 HTTP / 結果物件 / 賽事物件 =====
+// ===== 共用 =====
 
 function fetch_(url, options) {
   options = options || {};
@@ -192,20 +157,30 @@ function siteResult_(name) {
   return { site: name, ok: false, races: [], status: 0, bytes: 0, note: '' };
 }
 
-function makeRace_(date, name, location, link) {
+function makeRace_(date, name, location, link, distances, regClose) {
   return {
     date: date,
     name: name,
-    location: location || '台灣',
+    location: location || '',
     registrationLink: link || '',
     stravaFull: '',
     stravaHalf: '',
     gpxFull: '',
-    gpxHalf: ''
+    gpxHalf: '',
+    distances: distances || '',
+    regClose: regClose || ''
   };
 }
 
-// ===== 馬拉松世界 (MarathonsWorld) =====
+function stripTags_(s) {
+  return String(s || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// ===== 馬拉松世界 (MarathonsWorld) — POST racePage.php(免 cookie),回 HTML 片段 =====
 
 function crawlMarathonsWorld() {
   var r = siteResult_('馬拉松世界');
@@ -214,258 +189,169 @@ function crawlMarathonsWorld() {
     var res = fetch_(cfg.url, {
       method: 'post',
       payload: cfg.payload,
-      headers: { Referer: cfg.referer }
+      headers: {
+        Referer: cfg.referer,
+        Origin: 'https://www.marathonsworld.com',
+        'X-Requested-With': 'XMLHttpRequest'
+      }
     });
     r.status = res.code;
     r.bytes = res.bytes;
     Logger.log('[馬拉松世界] HTTP ' + res.code + ', ' + res.bytes + ' bytes');
-    Logger.log('[馬拉松世界] 內容樣本: ' + res.text.substring(0, CONFIG.sampleLogChars));
-
+    Logger.log('[馬拉松世界] 樣本: ' + res.text.substring(0, CONFIG.sampleLogChars));
     if (res.code !== 200) {
-      r.note = 'HTTP ' + res.code + '（來源拒絕或端點變更）';
+      r.note = 'HTTP ' + res.code;
       return r;
     }
-
-    // 1) racePage.php 是 AJAX 端點，回應很可能是 JSON —— 先試 JSON
-    var fromJson = parseMarathonsWorldJson_(res.text);
-    if (fromJson.length > 0) {
-      r.races = fromJson;
-      r.ok = true;
-      r.note = 'JSON 解析成功';
-      return r;
-    }
-
-    // 2) 退回 HTML <tr> 解析（整頁或片段皆可）
-    var fromHtml = parseMarathonsWorldHtml_(res.text);
-    if (fromHtml.length > 0) {
-      r.races = fromHtml;
-      r.ok = true;
-      r.note = 'HTML 解析成功';
-      return r;
-    }
-
-    r.note = '取得回應但解析 0 筆（JSON 與 HTML 皆未命中，來源結構已變更）。請依執行紀錄的內容樣本調整解析。';
+    r.races = parseMwHtml_(res.text);
+    r.ok = r.races.length > 0;
+    r.note = r.ok ? 'HTML 解析成功' : '取得回應但解析 0 筆(結構可能已變更)';
     return r;
   } catch (e) {
-    r.note = '例外：' + e;
+    r.note = '例外:' + e;
     Logger.log('[馬拉松世界] 例外: ' + e);
     return r;
   }
 }
 
-function parseMarathonsWorldJson_(text) {
-  var trimmed = (text || '').replace(/^﻿/, '').trim();
-  if (trimmed.charAt(0) !== '[' && trimmed.charAt(0) !== '{') return [];
-
-  var data;
-  try {
-    data = JSON.parse(trimmed);
-  } catch (e) {
-    return [];
-  }
-
-  var list = Array.isArray(data)
-    ? data
-    : data.data || data.list || data.races || data.result || data.rows || [];
-  if (!Array.isArray(list) || list.length === 0) return [];
-
-  Logger.log('[馬拉松世界] JSON 首筆欄位: ' + JSON.stringify(Object.keys(list[0] || {})));
-
+// 資料列 <tr class='ColorBar9|11'>;日期格僅 MM/DD,年份由 YYYY年M月 區塊標頭追蹤。
+function parseMwHtml_(html) {
   var races = [];
-  for (var i = 0; i < list.length; i++) {
-    var row = list[i] || {};
-    var date = normalizeDate_(
-      row.date || row.raceDate || row.race_date || row.startDate || row.start_date || ''
-    );
-    var name = String(row.name || row.title || row.raceName || row.race_name || '').trim();
-    if (!date || !name) continue;
-
-    var rid = row.rid || row.id || row.raceId || row.race_id || '';
-    var link =
-      row.url || row.link || (rid ? 'https://www.marathonsworld.com/artapp/race.php?rid=' + rid : '');
-    var location = String(row.location || row.place || row.city || row.area || '').trim();
-
-    races.push(makeRace_(date, name, location, link));
-  }
-  return races;
-}
-
-function parseMarathonsWorldHtml_(html) {
-  var races = [];
-  var trPattern = /<tr[^>]*>([\s\S]*?)<\/tr>/gi;
-  var trMatches;
-
-  while ((trMatches = trPattern.exec(html)) !== null) {
-    var trContent = trMatches[1];
-
-    var dateMatch = trContent.match(/\d{4}-\d{2}-\d{2}/);
-    if (!dateMatch) continue;
-
-    var nameMatch = trContent.match(/href=['"](race\.php\?rid=\d+)['"][^>]*>([\s\S]*?)<\/a>/i);
-    if (!nameMatch) continue;
-
-    var link = 'https://www.marathonsworld.com/artapp/' + nameMatch[1];
-    var name = nameMatch[2].replace(/<[^>]+>/g, '').trim();
-
-    var tdPattern = /<td[^>]*>([\s\S]*?)<\/td>/gi;
-    var tds = [];
-    var tdMatch;
-    while ((tdMatch = tdPattern.exec(trContent)) !== null) {
-      tds.push(tdMatch[1].replace(/<[^>]+>/g, '').trim());
+  var year = '';
+  var re = /(\d{4})年\d{1,2}月|<tr class='ColorBar(?:9|11)'>([\s\S]*?)<\/tr>/g;
+  var m;
+  while ((m = re.exec(html)) !== null) {
+    if (m[1]) {
+      year = m[1];
+      continue;
     }
-    var location = tds.length > 2 ? tds[2] : '台灣';
-
-    races.push(makeRace_(dateMatch[0], name, location, link));
+    var row = m[2];
+    var rid = row.match(/racedetail\.php\?rid=(\d+)'[^>]*>([\s\S]*?)<\/a>/);
+    var dm = row.match(/>(\d{1,2})\/(\d{1,2})\(/);
+    if (!rid || !dm || !year) continue;
+    var name = stripTags_(rid[2]).replace(/^[\s*]+/, '');
+    var date = normalizeDate_(year + '-' + dm[1] + '-' + dm[2]);
+    if (!name || !date) continue;
+    var loc = row.match(/width='150'[^>]*>([\s\S]*?)<\/td>/);
+    var dist = row.match(/width='130'[^>]*>([\s\S]*?)<\/td>/);
+    races.push(
+      makeRace_(
+        date,
+        name,
+        loc ? stripTags_(loc[1]) : '',
+        'https://www.marathonsworld.com/artapp/racedetail.php?rid=' + rid[1],
+        dist ? stripTags_(dist[1]) : '',
+        ''
+      )
+    );
   }
   return races;
 }
 
-// ===== 運動筆記 (Running Biji) =====
+// ===== 運動筆記 (Running Biji) — GET ?q=competition,伺服器端渲染 HTML =====
 
 function crawlRunningBiji() {
   var r = siteResult_('運動筆記');
-  var cfg = CONFIG.runningBiji;
-
-  for (var u = 0; u < cfg.candidateUrls.length; u++) {
-    var url = cfg.candidateUrls[u];
-    try {
-      var res = fetch_(url, {});
-      r.status = res.code;
-      r.bytes = res.bytes;
-      Logger.log('[運動筆記] ' + url + ' -> HTTP ' + res.code + ', ' + res.bytes + ' bytes');
-      Logger.log('[運動筆記] 內容樣本: ' + res.text.substring(0, CONFIG.sampleLogChars));
-
-      if (res.code !== 200) continue;
-
-      var fromJson = parseRunningBijiJson_(res.text);
-      if (fromJson.length > 0) {
-        r.races = fromJson;
-        r.ok = true;
-        r.note = 'JSON 解析成功 (' + url + ')';
-        return r;
-      }
-
-      var fromHtml = parseRunningBijiHtml_(res.text);
-      if (fromHtml.length > 0) {
-        r.races = fromHtml;
-        r.ok = true;
-        r.note = 'HTML 解析成功 (' + url + ')';
-        return r;
-      }
-    } catch (e) {
-      Logger.log('[運動筆記] 例外 (' + url + '): ' + e);
-    }
-  }
-
-  r.note =
-    '所有候選端點皆未取得賽事。運動筆記賽事清單已改為需登入 / JS 動態載入，匿名爬取無法取得。' +
-    '建議改用手動輸入，或在可登入環境取得其內部 API 後更新 CONFIG.runningBiji.candidateUrls。';
-  return r;
-}
-
-function parseRunningBijiJson_(text) {
-  var trimmed = (text || '').replace(/^﻿/, '').trim();
-  if (trimmed.charAt(0) !== '[' && trimmed.charAt(0) !== '{') return [];
-
-  var data;
   try {
-    data = JSON.parse(trimmed);
+    var res = fetch_(CONFIG.runningBiji.url, {
+      headers: { 'Accept-Language': 'zh-TW,zh;q=0.9' }
+    });
+    r.status = res.code;
+    r.bytes = res.bytes;
+    Logger.log('[運動筆記] HTTP ' + res.code + ', ' + res.bytes + ' bytes');
+    Logger.log('[運動筆記] 樣本: ' + res.text.substring(0, CONFIG.sampleLogChars));
+    if (res.code !== 200) {
+      r.note = 'HTTP ' + res.code;
+      return r;
+    }
+    r.races = parseBijiHtml_(res.text);
+    r.ok = r.races.length > 0;
+    r.note = r.ok ? 'HTML 解析成功' : '取得回應但解析 0 筆(結構可能已變更)';
+    return r;
   } catch (e) {
-    return [];
+    r.note = '例外:' + e;
+    Logger.log('[運動筆記] 例外: ' + e);
+    return r;
   }
-
-  var list = Array.isArray(data)
-    ? data
-    : data.data || data.list || data.competitions || data.result || data.rows || [];
-  if (!Array.isArray(list) || list.length === 0) return [];
-
-  Logger.log('[運動筆記] JSON 首筆欄位: ' + JSON.stringify(Object.keys(list[0] || {})));
-
-  var races = [];
-  for (var i = 0; i < list.length; i++) {
-    var row = list[i] || {};
-    var date = normalizeDate_(
-      row.date || row.eventDate || row.event_date || row.startDate || row.start_date || ''
-    );
-    var name = String(row.name || row.title || row.eventName || row.event_name || '').trim();
-    if (!date || !name) continue;
-
-    var cid = row.cid || row.id || row.sid || row.eventId || row.event_id || '';
-    var link =
-      row.url ||
-      row.link ||
-      (cid ? 'https://running.biji.co/index.php?q=competition&act=list_item&sid=' + cid : '');
-    var location = String(row.location || row.place || row.city || row.area || '').trim();
-
-    races.push(makeRace_(date, name, location, link));
-  }
-  return races;
 }
 
-function parseRunningBijiHtml_(html) {
+// 每筆以 competition-name 錨點;日期取行事曆 dates=YYYYMMDD、地點取 competition-place、
+// 距離取 event-item、報名截止取「報名日期:…~CLOSE」。
+function parseBijiHtml_(html) {
   var races = [];
-  var itemPattern = /<a[^>]+href=["']([^"']*(?:q=competition&act=info|competition\/info)[^"']*)["'][^>]*>([\s\S]*?)<\/a>/gi;
-  var match;
+  var nameRe = /<div class="competition-name">\s*<a href='([^']+)'>([\s\S]*?)<\/a>/g;
+  var matches = [];
+  var mm;
+  while ((mm = nameRe.exec(html)) !== null) {
+    matches.push({ index: mm.index, len: mm[0].length, href: mm[1], inner: mm[2] });
+  }
+  for (var i = 0; i < matches.length; i++) {
+    var it = matches[i];
+    var name = stripTags_(it.inner);
+    var cidM = it.href.match(/cid=(\d+)/);
+    if (!name || !cidM) continue;
 
-  while ((match = itemPattern.exec(html)) !== null) {
-    var rawLink = match[1];
-    var inner = match[2];
+    var before = html.substring(
+      i > 0 ? matches[i - 1].index + matches[i - 1].len : 0,
+      it.index
+    );
+    var after = html.substring(
+      it.index + it.len,
+      i + 1 < matches.length ? matches[i + 1].index : html.length
+    );
 
-    if (rawLink.indexOf('cid=') === -1 && rawLink.indexOf('/info/') === -1) continue;
-
-    var link =
-      rawLink.indexOf('http') === 0
-        ? rawLink
-        : 'https://running.biji.co' + (rawLink.indexOf('/') === 0 ? '' : '/') + rawLink;
-
-    var titleMatch =
-      inner.match(/<div class="[^"]*title[^"]*">([\s\S]*?)<\/div>/i) ||
-      inner.match(/<h[2-4][^>]*>([\s\S]*?)<\/h[2-4]>/i);
-    var name = titleMatch ? titleMatch[1].replace(/<[^>]+>/g, '').trim() : '';
-    if (!name) {
-      name = inner.replace(/<[^>]+>/g, '').replace(/\s+/g, ' ').trim();
-      if (name.length > 50) name = name.substring(0, 30);
-    }
-
-    var date = normalizeDate_(inner.match(/\d{4}[\/\-\.]\d{1,2}[\/\-\.]\d{1,2}/));
+    var cal = before.match(/dates=(\d{8})/);
+    var date = cal
+      ? normalizeDate_(cal[1].slice(0, 4) + '-' + cal[1].slice(4, 6) + '-' + cal[1].slice(6, 8))
+      : '';
     if (!date) continue;
 
-    var locMatch =
-      inner.match(/<div class="[^"]*location[^"]*">([\s\S]*?)<\/div>/i) ||
-      inner.match(/<span class="[^"]*location[^"]*">([\s\S]*?)<\/span>/i);
-    var location = locMatch ? locMatch[1].replace(/<[^>]+>/g, '').trim() : '';
-    if (!location) {
-      var cityMatch = inner.match(
-        /(台北|臺北|新北|桃園|台中|臺中|台南|臺南|高雄|基隆|新竹|苗栗|彰化|南投|雲林|嘉義|屏東|宜蘭|花蓮|台東|臺東|澎湖|金門|連江)[市縣]?[^\s<]*/
-      );
-      if (cityMatch) location = cityMatch[0];
+    var place = before.match(/competition-place"><span>([^<]*)<\/span>/);
+
+    var distRe = /event-item[^>]*>([^<]+)<\/div>/g;
+    var dlist = [];
+    var seen = {};
+    var dmt;
+    while ((dmt = distRe.exec(after)) !== null) {
+      var dv = dmt[1].trim();
+      if (dv && !seen[dv]) {
+        seen[dv] = true;
+        dlist.push(dv);
+      }
     }
 
-    if (name && date) races.push(makeRace_(date, name, location, link));
+    var reg = before.match(/報名日期[:：]\s*\d{4}-\d{2}-\d{2}[^~]*~\s*(\d{4}-\d{2}-\d{2})/);
+    var regClose = reg ? reg[1] : '';
+
+    var href = it.href;
+    var link =
+      href.indexOf('http') === 0
+        ? href
+        : 'https://running.biji.co' + (href.indexOf('/') === 0 ? '' : '/') + href;
+
+    races.push(
+      makeRace_(date, name, place ? place[1].trim() : '', link, dlist.join(', '), regClose)
+    );
   }
   return races;
 }
 
 // ===== 日期工具 =====
 
-// 將各種日期輸入正規化為 YYYY-MM-DD（無法解析回 ''）
 function normalizeDate_(raw) {
   if (!raw) return '';
   var s = (raw instanceof Array ? raw[0] : String(raw)).trim();
-
-  var m = s.match(/(\d{4})[\/\-\.](\d{1,2})[\/\-\.](\d{1,2})/);
+  var m = s.match(/(\d{4})[\/\-.](\d{1,2})[\/\-.](\d{1,2})/);
   if (m) {
     var mm = m[2].length === 1 ? '0' + m[2] : m[2];
     var dd = m[3].length === 1 ? '0' + m[3] : m[3];
     return m[1] + '-' + mm + '-' + dd;
   }
-
   var d = new Date(s);
   if (!isNaN(d.getTime())) return formatDate(d);
   return '';
 }
 
-// 格式化 Date 為 YYYY-MM-DD
 function formatDate(dateObj) {
   var d = dateObj.getDate();
   var m = dateObj.getMonth() + 1;

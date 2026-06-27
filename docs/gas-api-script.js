@@ -12,6 +12,8 @@
  *    F1: StravaHalf (e.g., https://www.strava.com/routes/67890)
  *    G1: GpxFull (e.g., https://example.com/route_full.gpx)
  *    H1: GpxHalf (e.g., https://example.com/route_half.gpx)
+ *    I1: Distances (optional, e.g., 42.2K, 21.1K)
+ *    J1: RegClose (optional, registration close date, e.g., 2026-05-30)
  * 3. Go to Extensions > Apps Script.
  * 4. Paste this entire code into Code.gs.
  * 5. Click Deploy > New deployment.
@@ -57,7 +59,9 @@ function doGet(e) {
       stravaFull: String(row[4] || ""),
       stravaHalf: String(row[5] || ""),
       gpxFull: String(row[6] || ""),
-      gpxHalf: String(row[7] || "")
+      gpxHalf: String(row[7] || ""),
+      distances: String(row[8] || ""),
+      regClose: String(row[9] || "")
     };
     
     result.push(event);
