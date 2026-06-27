@@ -1,8 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 
 import worker from '../src/index.js';
 import { sha256Hex } from '../src/lib.js';
+
+const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
 // In-memory KV stub honouring expirationTtl (mirrors the bits the Worker uses).
 function makeKV() {
@@ -131,4 +134,41 @@ test('auth: request rate-limited per email; verify is hash-matched + single-use'
 
   const bad = await worker.fetch(req('GET', '/api/auth/verify?token=nope'), env);
   assert.equal(bad.status, 401);
+});
+
+test('POST /api/races/refresh: admin-gated; on-demand crawl (stubbed) populates KV', async () => {
+  const env = makeEnv();
+  await env.KV.put('session:admintok', 'admin@test.com');
+  await env.KV.put('session:usertok', 'user@test.com');
+
+  // Rejected before any crawl runs.
+  assert.equal(
+    (await worker.fetch(req('POST', '/api/races/refresh', { token: 'usertok' }), env)).status,
+    403
+  );
+  assert.equal((await worker.fetch(req('POST', '/api/races/refresh'), env)).status, 403);
+
+  // Stub the source fetches with the committed fixtures.
+  const origFetch = globalThis.fetch;
+  globalThis.fetch = async (url) => {
+    const u = String(url);
+    const body = u.includes('running.biji.co')
+      ? fixture('biji.html')
+      : u.includes('marathonsworld.com')
+        ? fixture('mw-racelist.html')
+        : '';
+    return new Response(body, { status: 200 });
+  };
+  try {
+    const res = await worker.fetch(req('POST', '/api/races/refresh', { token: 'admintok' }), env);
+    assert.equal(res.status, 200);
+    const out = await res.json();
+    assert.equal(out.ok, true);
+    assert.equal(out.sources.biji.fetched, 2);
+    assert.equal(out.sources.marathonsworld.fetched, 3);
+    assert.equal(out.added, 5); // 2 + 3, no overlap
+    assert.equal(JSON.parse(await env.KV.get('races')).length, 5);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
 });

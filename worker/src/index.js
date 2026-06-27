@@ -115,19 +115,31 @@ async function sendMagicEmail(env, email, link) {
 
 // ── Route handlers ──────────────────────────────────────────────────────────
 
+/** Session email if it belongs to an ADMIN_EMAILS address, else null. */
+async function adminEmail(env, request) {
+  const email = await getSessionEmail(request, env);
+  const admins = (env.ADMIN_EMAILS || '')
+    .split(',')
+    .map((e) => normalizeEmail(e))
+    .filter(Boolean);
+  return email && admins.includes(email) ? email : null;
+}
+
 async function handleGetRaces(env, request) {
   // Tolerate corrupt/non-array KV content rather than throwing a 500.
   const races = safeParseArray(await env.KV.get('races'));
   return json(races, 200, env, request, { 'Cache-Control': 'public, max-age=300' });
 }
 
+/** Admin-only on-demand crawl (same work as the daily cron) — populate now. */
+async function handleRacesRefresh(env, request) {
+  if (!(await adminEmail(env, request))) return json({ error: 'forbidden' }, 403, env, request);
+  const result = await refreshRaces(env);
+  return json({ ok: true, ...result }, 200, env, request);
+}
+
 async function handlePutRaces(env, request) {
-  const email = await getSessionEmail(request, env);
-  const admins = (env.ADMIN_EMAILS || '')
-    .split(',')
-    .map((e) => normalizeEmail(e))
-    .filter(Boolean);
-  if (!email || !admins.includes(email)) {
+  if (!(await adminEmail(env, request))) {
     return json({ error: 'forbidden' }, 403, env, request);
   }
   let body;
@@ -250,6 +262,38 @@ async function crawlMarathonsWorld() {
   return parseMwRaces(await resp.text());
 }
 
+/**
+ * Crawl every source in isolation and append-only merge into KV `races`
+ * (dedupe by date+name; admin PUT entries and their Strava/GPX are preserved).
+ * Shared by the daily cron and the admin POST /api/races/refresh. Returns a
+ * per-source report.
+ */
+async function refreshRaces(env) {
+  const sources = [
+    ['biji', crawlBiji],
+    ['marathonsworld', crawlMarathonsWorld]
+  ];
+  let list = safeParseArray(await env.KV.get('races'));
+  let totalAdded = 0;
+  const report = {};
+  for (const [name, crawl] of sources) {
+    try {
+      const fresh = await crawl();
+      const merged = mergeRaces(list, fresh);
+      list = merged.list;
+      totalAdded += merged.added;
+      report[name] = { fetched: fresh.length, added: merged.added };
+      console.log(`[refresh] ${name}: fetched ${fresh.length}, merged ${merged.added} new`);
+    } catch (err) {
+      report[name] = { error: String(err) };
+      console.log(`[refresh] ${name} error:`, String(err));
+    }
+  }
+  if (totalAdded > 0) await env.KV.put('races', JSON.stringify(list));
+  console.log(`[refresh] total merged: ${totalAdded} new races`);
+  return { added: totalAdded, total: list.length, sources: report };
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -262,6 +306,8 @@ export default {
     try {
       if (pathname === '/api/races' && request.method === 'GET')
         return handleGetRaces(env, request);
+      if (pathname === '/api/races/refresh' && request.method === 'POST')
+        return handleRacesRefresh(env, request);
       if (pathname === '/api/races' && request.method === 'PUT')
         return handlePutRaces(env, request);
       if (pathname === '/api/auth/request' && request.method === 'POST')
@@ -279,30 +325,8 @@ export default {
     }
   },
 
-  /**
-   * Daily multi-source race refresh. Each source is crawled in isolation (a
-   * failure in one never aborts the others), then append-only merged into KV
-   * (dedupe by date+name; admin PUT entries and their Strava/GPX are preserved).
-   */
+  /** Daily multi-source race refresh (see refreshRaces). */
   async scheduled(event, env) {
-    const sources = [
-      ['biji', crawlBiji],
-      ['marathonsworld', crawlMarathonsWorld]
-    ];
-    let list = safeParseArray(await env.KV.get('races'));
-    let totalAdded = 0;
-    for (const [name, crawl] of sources) {
-      try {
-        const fresh = await crawl();
-        const merged = mergeRaces(list, fresh);
-        list = merged.list;
-        totalAdded += merged.added;
-        console.log(`[cron] ${name}: fetched ${fresh.length}, merged ${merged.added} new`);
-      } catch (err) {
-        console.log(`[cron] ${name} error:`, String(err));
-      }
-    }
-    if (totalAdded > 0) await env.KV.put('races', JSON.stringify(list));
-    console.log(`[cron] total merged: ${totalAdded} new races`);
+    await refreshRaces(env);
   }
 };
