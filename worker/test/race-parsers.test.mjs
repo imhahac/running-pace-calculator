@@ -54,6 +54,8 @@ test('parseBijiRaces: full date from calendar dates=, place + cid link', () => {
   assert.equal(races[0].distances, '42.2K, 22.24K'); // from event-item divs
   assert.equal(races[1].distances, '10K');
   assert.equal(races[0].source, 'biji');
+  assert.equal(races[0].regClose, '2026-05-30'); // registration close from 報名日期
+  assert.equal(races[1].regClose, ''); // no 報名日期 in this block
 });
 
 test('parseBijiRaces: non-matching / empty input → []', () => {

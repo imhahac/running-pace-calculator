@@ -144,6 +144,7 @@ const BACKFILL_FIELDS = [
   'location',
   'registrationLink',
   'distances',
+  'regClose',
   'source',
   'stravaFull',
   'stravaHalf',
@@ -219,6 +220,7 @@ export function parseMwRaces(html) {
       name,
       location: loc ? stripTags(loc[1]) : '',
       distances: dist ? stripTags(dist[1]) : '',
+      regClose: '', // marathonsworld list has no registration deadline
       source: 'marathonsworld',
       registrationLink: `https://www.marathonsworld.com/artapp/racedetail.php?rid=${rid[1]}`,
       stravaFull: '',
@@ -271,6 +273,10 @@ export function parseBijiRaces(html) {
           .filter(Boolean)
       )
     ].join(', ');
+    // Registration window lives (as literal text) in the calendar link's details:
+    // "報名日期:2026-04-16 00:00:00~2026-05-30 23:59:00" — capture the close date.
+    const reg = before.match(/報名日期[:：]\s*\d{4}-\d{2}-\d{2}[^~]*~\s*(\d{4}-\d{2}-\d{2})/);
+    const regClose = reg ? reg[1] : '';
     const link = href.startsWith('http')
       ? href
       : `https://running.biji.co${href.startsWith('/') ? '' : '/'}${href}`;
@@ -280,6 +286,7 @@ export function parseBijiRaces(html) {
       name,
       location: place ? place[1].trim() : '',
       distances,
+      regClose,
       source: 'biji',
       registrationLink: link,
       stravaFull: '',

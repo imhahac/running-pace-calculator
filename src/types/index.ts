@@ -398,6 +398,8 @@ export interface IRaceEvent {
   gpxHalf: string;
   /** Distance options (e.g. "42.2K, 22.24K" or "全馬 | 半馬"); '' when unknown. */
   distances?: string;
+  /** Registration close date (YYYY-MM-DD); '' when unknown. */
+  regClose?: string;
   /** Crawl source id: 'biji' | 'marathonsworld' | ''. */
   source?: string;
 }

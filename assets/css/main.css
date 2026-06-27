@@ -1718,6 +1718,19 @@ input.diff {
 .race-dist {
     white-space: nowrap;
 }
+.race-reg {
+    white-space: nowrap;
+}
+.race-reg.open {
+    color: var(--success);
+}
+.race-reg.closing {
+    color: var(--warning);
+    font-weight: 600;
+}
+.race-reg.closed {
+    color: var(--text-muted);
+}
 .race-src {
     white-space: nowrap;
     font-size: 0.7rem;

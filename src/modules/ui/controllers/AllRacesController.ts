@@ -77,6 +77,22 @@ const todayISO = (): string => {
 };
 const localeOf = (): string => (StateManager.getLanguage() === 'zh' ? 'zh-TW' : 'en');
 
+/** Registration status from the close date: 報名中 / 即將截止(≤7d) / 已截止, or null. */
+const regStatus = (regClose: string, todayMs: number): { label: string; cls: string } | null => {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(regClose)) return null;
+  const [y, m, d] = regClose.split('-').map(Number);
+  const closeMs = new Date(y, m - 1, d, 23, 59, 59).getTime();
+  const days = Math.ceil((closeMs - todayMs) / 86400000);
+  const by = TranslationManager.format('allraces_reg_close', { date: `${pad(m)}/${pad(d)}` });
+  const [cls, key] =
+    days < 0
+      ? ['closed', 'allraces_reg_closed']
+      : days <= 7
+        ? ['closing', 'allraces_reg_closing']
+        : ['open', 'allraces_reg_open'];
+  return { label: `${by} · ${TranslationManager.get(key)}`, cls };
+};
+
 const SELECT_IDS = [
   'all-races-month',
   'all-races-region',
@@ -244,6 +260,7 @@ export class AllRacesController {
         const regionLabel = rg || r.location || t.allraces_unclassified || '未分類';
         const dist = r.distances || '';
         const src = sourceLabel(r);
+        const reg = regStatus(r.regClose || '', todayMs);
         const link = esc(r.registrationLink || '');
         const name = link
           ? `<a class="race-name" href="${link}" target="_blank" rel="noopener noreferrer">${esc(r.name)}</a>`
@@ -254,6 +271,7 @@ export class AllRacesController {
           `<div class="race-body">${name}<div class="race-meta">` +
           `<span class="race-region">📍 ${esc(regionLabel)}</span>` +
           (dist ? `<span class="race-dist">🏁 ${esc(dist)}</span>` : '') +
+          (reg ? `<span class="race-reg ${reg.cls}">${esc(reg.label)}</span>` : '') +
           (src ? `<span class="race-src">${esc(src)}</span>` : '') +
           `<span class="race-cd ${cdCls}">${esc(cd)}</span>` +
           `</div></div>` +

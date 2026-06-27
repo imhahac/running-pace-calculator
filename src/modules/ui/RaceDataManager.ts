@@ -105,6 +105,7 @@ export class RaceDataManager {
         gpxFull: item.gpxFull || '',
         gpxHalf: item.gpxHalf || '',
         distances: item.distances || '',
+        regClose: item.regClose || '',
         source: item.source || ''
       }));
       this.updatedAt = response.headers.get('X-Races-Updated') || '';
