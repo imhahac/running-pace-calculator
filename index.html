@@ -107,6 +107,7 @@
             <div class="tab-item active" id="tabbtn-pace" data-tab="tab-pace" tabindex="0" role="tab" aria-selected="true" aria-controls="tab-pace">🏃 <span data-i18n="tab_pace">配速與分析</span></div>
             <div class="tab-item" id="tabbtn-triathlon" data-tab="tab-triathlon" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-triathlon">🏊‍♂️ <span data-i18n="tab_triathlon">鐵人三項</span></div>
             <div class="tab-item" id="tabbtn-training" data-tab="tab-training" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-training">📅 <span data-i18n="tab_training">課表與賽事</span></div>
+            <div class="tab-item" id="tabbtn-races" data-tab="tab-races" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-races">🗓️ <span data-i18n="tab_races">賽事列表</span></div>
             <div class="tab-item" id="tabbtn-assessment" data-tab="tab-assessment" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-assessment">🧪 <span data-i18n="tab_assessment">科學評估</span></div>
             <div class="tab-item" id="tabbtn-workout" data-tab="tab-workout" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-workout">🏗️ <span data-i18n="tab_workout">課表設計</span></div>
             <div class="tab-item" id="tabbtn-monitoring" data-tab="tab-monitoring" tabindex="0" role="tab" aria-selected="false" aria-controls="tab-monitoring">📈 <span data-i18n="tab_monitoring">監控與適應</span></div>
@@ -1491,6 +1492,19 @@
                 </div></div>
             </div>
         </div> <!-- End of tab-environment -->
+
+        <div class="tab-pane" id="tab-races" role="tabpanel" aria-labelledby="tabbtn-races">
+            <div class="container" style="margin-top: 10px;">
+                <div class="box input-group" style="flex-direction: column; align-items: flex-start;">
+                    <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="allraces_title">🗓️ 全部賽事</span></h3>
+                    <div class="helper-text" data-i18n="allraces_hint" style="margin-bottom: 8px;">來源：運動筆記＋馬拉松世界，每日自動更新；點 ↗ 開啟賽事頁。</div>
+                    <input type="search" id="all-races-search" placeholder="搜尋名稱／地點" style="width: 100%; max-width: 30ch; padding: 4px; margin-bottom: 8px;" aria-label="搜尋賽事">
+                    <div id="all-races-count" class="helper-text" style="margin-bottom: 6px;"></div>
+                    <div id="all-races-empty" class="helper-text" data-i18n="allraces_empty" style="display: none;">尚無賽事資料（後端尚未抓取或未設定後端 URL）。</div>
+                    <div id="all-races-list" style="width: 100%;"></div>
+                </div>
+            </div>
+        </div>
 
         <div class="tab-pane" id="tab-settings" role="tabpanel" aria-labelledby="tabbtn-settings">
             <div id="settings-panel" class="container" style="margin-top: 10px;" role="region" aria-label="Settings Panel">

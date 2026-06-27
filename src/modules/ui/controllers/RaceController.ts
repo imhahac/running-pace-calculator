@@ -1,7 +1,6 @@
 import { FULL_MARATHON_METERS } from '../../../constants/index.js';
 import RaceDataManager from '../../ui/RaceDataManager.js';
 import TranslationManager from '../../state/TranslationManager.js';
-import StateManager from '../../state/StateManager.js';
 import MapController from './MapController.js';
 
 export class RaceController {
@@ -10,7 +9,11 @@ export class RaceController {
     const container = document.getElementById('race-selector-container');
     if (!raceList || !container) return;
 
-    if (!StateManager.getGasApiUrl()) {
+    // Show whenever ANY races source is configured. getApiUrl() is the resolved
+    // source (Worker `/api/races` if a backend URL is set, else the legacy GAS
+    // URL) — gating on it (not on the GAS URL alone) means a Worker-only setup
+    // still shows the selector.
+    if (!RaceDataManager.getApiUrl()) {
       container.style.display = 'none';
       return;
     }

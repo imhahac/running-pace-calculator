@@ -13,6 +13,7 @@ import BackendClient from '../state/BackendClient.js';
 import TrainingCycleManager from './TrainingCycleManager.js';
 import ThemeController from './ThemeController.js';
 import RaceController from './controllers/RaceController.js';
+import AllRacesController from './controllers/AllRacesController.js';
 import ShareController from './controllers/ShareController.js';
 import TrainingController from './controllers/TrainingController.js';
 import SettingsController from './controllers/SettingsController.js';
@@ -129,6 +130,7 @@ export class UIController {
     // otherwise fall back to the legacy GAS URL.
     RaceDataManager.setApiUrl(BackendClient.racesUrl() || StateManager.getGasApiUrl());
     RaceController.fetchAndPopulateRaces();
+    AllRacesController.initialize();
 
     void SyncController.initialize();
     VersionController.initialize();

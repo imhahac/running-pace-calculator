@@ -11,6 +11,7 @@ import VdotController from './VdotController.js';
 import TriathlonController from './TriathlonController.js';
 import TrainingController from './TrainingController.js';
 import RaceController from './RaceController.js';
+import AllRacesController from './AllRacesController.js';
 import HeartRateController from './HeartRateController.js';
 import IntervalController from './IntervalController.js';
 import RacePlanController from './RacePlanController.js';
@@ -62,6 +63,7 @@ const DYNAMIC_VIEWS: { calculate(): void }[] = [
   AltitudeController,
   FitnessTrendController,
   ReadinessController,
+  AllRacesController,
   VersionController
 ];
 
