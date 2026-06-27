@@ -139,17 +139,37 @@ export async function sha256Hex(input) {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('');
 }
 
-/** Merge fresh races into an existing list, deduped by date+name. */
+// Fields a fresh crawl may backfill onto an existing entry (only when empty).
+const BACKFILL_FIELDS = [
+  'location',
+  'registrationLink',
+  'distances',
+  'source',
+  'stravaFull',
+  'stravaHalf',
+  'gpxFull',
+  'gpxHalf'
+];
+
+/**
+ * Merge fresh races into an existing list, deduped by date+name. New races are
+ * appended; for races already present, only EMPTY fields are backfilled from the
+ * fresh data — so newer crawler fields (distances, source) populate older
+ * records while admin-entered values (Strava/GPX) are never overwritten.
+ */
 export function mergeRaces(existing, fresh) {
   const list = Array.isArray(existing) ? existing.slice() : [];
-  const seen = new Set(list.map((r) => `${r.date}_${r.name}`));
+  const idxByKey = new Map(list.map((r, i) => [`${r.date}_${r.name}`, i]));
   let added = 0;
   for (const r of fresh) {
     const key = `${r.date}_${r.name}`;
-    if (!seen.has(key)) {
+    if (!idxByKey.has(key)) {
       list.push(r);
-      seen.add(key);
+      idxByKey.set(key, list.length - 1);
       added += 1;
+    } else {
+      const cur = list[idxByKey.get(key)];
+      for (const f of BACKFILL_FIELDS) if (!cur[f] && r[f]) cur[f] = r[f];
     }
   }
   return { list, added };
@@ -192,11 +212,14 @@ export function parseMwRaces(html) {
     const date = normalizeRaceDate(`${year}-${dm[1]}-${dm[2]}`);
     if (!name || !date) continue;
     const loc = row.match(/width='150'[^>]*>([\s\S]*?)<\/td>/);
+    const dist = row.match(/width='130'[^>]*>([\s\S]*?)<\/td>/); // 組別 / distances cell
     out.push({
       id: '',
       date,
       name,
       location: loc ? stripTags(loc[1]) : '',
+      distances: dist ? stripTags(dist[1]) : '',
+      source: 'marathonsworld',
       registrationLink: `https://www.marathonsworld.com/artapp/racedetail.php?rid=${rid[1]}`,
       stravaFull: '',
       stravaHalf: '',
@@ -218,23 +241,36 @@ export function parseBijiRaces(html) {
   const out = [];
   if (!html || typeof html !== 'string') return out;
   const nameRe = /<div class="competition-name">\s*<a href='([^']+)'>([\s\S]*?)<\/a>/g;
-  let m;
-  let prevEnd = 0;
-  while ((m = nameRe.exec(html))) {
+  const matches = [...html.matchAll(nameRe)];
+  for (let i = 0; i < matches.length; i++) {
+    const m = matches[i];
     const href = m[1];
     const name = stripTags(m[2]);
     const cid = href.match(/cid=(\d+)/);
-    const win = html.slice(prevEnd, m.index); // date/place precede the name
-    prevEnd = nameRe.lastIndex;
+    // date/place precede the name; the event-list (distances) follows it.
+    const before = html.slice(i > 0 ? matches[i - 1].index + matches[i - 1][0].length : 0, m.index);
+    const after = html.slice(
+      m.index + m[0].length,
+      i + 1 < matches.length ? matches[i + 1].index : html.length
+    );
     if (!name || !cid) continue;
 
     let date = '';
-    const cal = win.match(/dates=(\d{8})(?!.*dates=\d{8})/s); // last calendar date in window
+    const cal = before.match(/dates=(\d{8})(?!.*dates=\d{8})/s); // last calendar date before name
     if (cal) date = `${cal[1].slice(0, 4)}-${cal[1].slice(4, 6)}-${cal[1].slice(6, 8)}`;
     date = normalizeRaceDate(date);
     if (!date) continue;
 
-    const place = win.match(/competition-place"><span>([^<]*)<\/span>(?![\s\S]*competition-place)/);
+    const place = before.match(
+      /competition-place"><span>([^<]*)<\/span>(?![\s\S]*competition-place)/
+    );
+    const distances = [
+      ...new Set(
+        [...after.matchAll(/event-item[^>]*>([^<]+)<\/div>/g)]
+          .map((d) => d[1].trim())
+          .filter(Boolean)
+      )
+    ].join(', ');
     const link = href.startsWith('http')
       ? href
       : `https://running.biji.co${href.startsWith('/') ? '' : '/'}${href}`;
@@ -243,6 +279,8 @@ export function parseBijiRaces(html) {
       date,
       name,
       location: place ? place[1].trim() : '',
+      distances,
+      source: 'biji',
       registrationLink: link,
       stravaFull: '',
       stravaHalf: '',

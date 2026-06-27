@@ -19,6 +19,8 @@ test('parseMwRaces: parses rows, tracks year across YYYY年M月 headers, cleans 
     taipingshan.registrationLink,
     'https://www.marathonsworld.com/artapp/racedetail.php?rid=23897'
   );
+  assert.equal(taipingshan.distances, '全馬 | 半馬'); // 組別 cell
+  assert.equal(taipingshan.source, 'marathonsworld');
 
   // Year flips to 2027 once the 2027年1月 header is seen.
   const newYear = races.find((r) => r.registrationLink.endsWith('rid=25000'));
@@ -49,6 +51,9 @@ test('parseBijiRaces: full date from calendar dates=, place + cid link', () => {
   );
   assert.equal(races[1].name, 'TOYOTA RUN 高雄 樂齡專場');
   assert.equal(races[1].location, '高雄市');
+  assert.equal(races[0].distances, '42.2K, 22.24K'); // from event-item divs
+  assert.equal(races[1].distances, '10K');
+  assert.equal(races[0].source, 'biji');
 });
 
 test('parseBijiRaces: non-matching / empty input → []', () => {
@@ -65,4 +70,44 @@ test('crawled races from both sources merge with dedupe (date_name)', () => {
   // Re-merging the same sources adds nothing.
   const { added } = mergeRaces(list, [...mw, ...biji]);
   assert.equal(added, 0);
+});
+
+test('mergeRaces backfills empty fields on existing entries without overwriting', () => {
+  // Existing entry lacks distances/source but has an admin-entered gpxFull.
+  const existing = [
+    {
+      id: '',
+      date: '2026-06-06',
+      name: 'X',
+      location: '',
+      distances: '',
+      source: '',
+      registrationLink: '',
+      stravaFull: '',
+      stravaHalf: '',
+      gpxFull: 'admin.gpx',
+      gpxHalf: ''
+    }
+  ];
+  const fresh = [
+    {
+      id: '',
+      date: '2026-06-06',
+      name: 'X',
+      location: '宜蘭縣',
+      distances: '全馬 | 半馬',
+      source: 'marathonsworld',
+      registrationLink: 'https://example/r',
+      stravaFull: '',
+      stravaHalf: '',
+      gpxFull: 'crawler.gpx',
+      gpxHalf: ''
+    }
+  ];
+  const { list, added } = mergeRaces(existing, fresh);
+  assert.equal(added, 0); // same date_name → not a new row
+  assert.equal(list[0].distances, '全馬 | 半馬'); // empty → backfilled
+  assert.equal(list[0].source, 'marathonsworld');
+  assert.equal(list[0].location, '宜蘭縣');
+  assert.equal(list[0].gpxFull, 'admin.gpx'); // non-empty → preserved
 });

@@ -51,6 +51,7 @@ function corsHeaders(env, request) {
     ),
     'Access-Control-Allow-Methods': 'GET,POST,PUT,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type, Authorization',
+    'Access-Control-Expose-Headers': 'X-Races-Updated',
     'Access-Control-Max-Age': '86400',
     Vary: 'Origin'
   };
@@ -128,7 +129,11 @@ async function adminEmail(env, request) {
 async function handleGetRaces(env, request) {
   // Tolerate corrupt/non-array KV content rather than throwing a 500.
   const races = safeParseArray(await env.KV.get('races'));
-  return json(races, 200, env, request, { 'Cache-Control': 'public, max-age=300' });
+  const updated = (await env.KV.get('races_updated_at')) || '';
+  return json(races, 200, env, request, {
+    'Cache-Control': 'public, max-age=300',
+    'X-Races-Updated': updated
+  });
 }
 
 /** Admin-only on-demand crawl (same work as the daily cron) — populate now. */
@@ -151,6 +156,7 @@ async function handlePutRaces(env, request) {
   const v = validateRaces(body);
   if (!v.ok) return json({ error: v.error }, 400, env, request);
   await env.KV.put('races', JSON.stringify(body));
+  await env.KV.put('races_updated_at', new Date().toISOString());
   return json({ ok: true, count: body.length }, 200, env, request);
 }
 
@@ -275,6 +281,7 @@ async function refreshRaces(env) {
   ];
   let list = safeParseArray(await env.KV.get('races'));
   let totalAdded = 0;
+  let totalFetched = 0;
   const report = {};
   for (const [name, crawl] of sources) {
     try {
@@ -282,6 +289,7 @@ async function refreshRaces(env) {
       const merged = mergeRaces(list, fresh);
       list = merged.list;
       totalAdded += merged.added;
+      totalFetched += fresh.length;
       report[name] = { fetched: fresh.length, added: merged.added };
       console.log(`[refresh] ${name}: fetched ${fresh.length}, merged ${merged.added} new`);
     } catch (err) {
@@ -289,9 +297,15 @@ async function refreshRaces(env) {
       console.log(`[refresh] ${name} error:`, String(err));
     }
   }
-  if (totalAdded > 0) await env.KV.put('races', JSON.stringify(list));
+  const updatedAt = new Date().toISOString();
+  // Write when anything was fetched: new races may have been added AND existing
+  // ones backfilled (distances/source), so persist even when added === 0.
+  if (totalFetched > 0) {
+    await env.KV.put('races', JSON.stringify(list));
+    await env.KV.put('races_updated_at', updatedAt);
+  }
   console.log(`[refresh] total merged: ${totalAdded} new races`);
-  return { added: totalAdded, total: list.length, sources: report };
+  return { added: totalAdded, total: list.length, updatedAt, sources: report };
 }
 
 export default {

@@ -168,6 +168,10 @@ test('POST /api/races/refresh: admin-gated; on-demand crawl (stubbed) populates 
     assert.equal(out.sources.marathonsworld.fetched, 3);
     assert.equal(out.added, 5); // 2 + 3, no overlap
     assert.equal(JSON.parse(await env.KV.get('races')).length, 5);
+
+    // GET now exposes the last-updated timestamp header.
+    const list = await worker.fetch(req('GET', '/api/races'), env);
+    assert.ok(list.headers.get('X-Races-Updated'), 'X-Races-Updated header present after write');
   } finally {
     globalThis.fetch = origFetch;
   }
