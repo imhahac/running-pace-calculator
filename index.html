@@ -1498,10 +1498,15 @@
                 <div class="box input-group" style="flex-direction: column; align-items: flex-start;">
                     <h3 style="margin: 5px 0 8px 0; font-size: 1rem;"><span data-i18n="allraces_title">🗓️ 全部賽事</span></h3>
                     <div class="helper-text" data-i18n="allraces_hint" style="margin-bottom: 8px;">來源：運動筆記＋馬拉松世界，每日自動更新；點 ↗ 開啟賽事頁。</div>
-                    <input type="search" id="all-races-search" placeholder="搜尋名稱／地點" style="width: 100%; max-width: 30ch; padding: 4px; margin-bottom: 8px;" aria-label="搜尋賽事">
+                    <div class="races-filters">
+                        <select id="all-races-month" aria-label="月份篩選"></select>
+                        <select id="all-races-region" aria-label="地點篩選"></select>
+                        <input type="search" id="all-races-search" placeholder="搜尋名稱／地點／日期" aria-label="搜尋賽事">
+                        <label class="races-upcoming"><input type="checkbox" id="all-races-upcoming" checked> <span data-i18n="allraces_upcoming_only">只看即將</span></label>
+                    </div>
                     <div id="all-races-count" class="helper-text" style="margin-bottom: 6px;"></div>
                     <div id="all-races-empty" class="helper-text" data-i18n="allraces_empty" style="display: none;">尚無賽事資料（後端尚未抓取或未設定後端 URL）。</div>
-                    <div id="all-races-list" style="width: 100%;"></div>
+                    <div id="all-races-list" class="races-list"></div>
                 </div>
             </div>
         </div>

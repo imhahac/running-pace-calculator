@@ -1623,3 +1623,109 @@ input.diff {
     background-color: var(--box-bg) !important;
     border: 1px solid var(--border-color);
 }
+
+/* ── Races tab (全部賽事) ───────────────────────────────────────────────── */
+.races-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    width: 100%;
+    align-items: center;
+    margin-bottom: 8px;
+}
+.races-filters select,
+.races-filters input[type='search'] {
+    padding: 5px 8px;
+    border-radius: 8px;
+    border: 1px solid var(--border-color);
+    background: var(--option-bg);
+    color: var(--text-light);
+    font-size: 0.85rem;
+}
+.races-filters input[type='search'] {
+    flex: 1 1 160px;
+    min-width: 140px;
+}
+.races-upcoming {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    white-space: nowrap;
+}
+.races-list {
+    width: 100%;
+}
+.race-month {
+    position: sticky;
+    top: 0;
+    z-index: 1;
+    background: var(--bg-secondary);
+    color: var(--highlight);
+    font-weight: 700;
+    font-size: 0.85rem;
+    padding: 6px 8px;
+    margin: 10px 0 2px;
+    border-radius: 6px;
+}
+.race-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 6px;
+    border-bottom: 1px solid var(--border-color);
+}
+.race-date {
+    flex: 0 0 auto;
+    width: 50px;
+    text-align: center;
+    line-height: 1.15;
+}
+.race-md {
+    display: block;
+    font-family: var(--font-mono);
+    font-weight: 700;
+    color: var(--text-light);
+}
+.race-wd {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--text-muted);
+}
+.race-body {
+    flex: 1 1 auto;
+    min-width: 0;
+}
+.race-name {
+    font-weight: 600;
+    color: var(--text-light);
+    text-decoration: none;
+    word-break: break-word;
+}
+.race-name:hover {
+    color: var(--highlight);
+    text-decoration: underline;
+}
+.race-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px 10px;
+    margin-top: 3px;
+    font-size: 0.78rem;
+    color: var(--text-muted);
+}
+.race-cd.soon {
+    color: var(--warning);
+    font-weight: 600;
+}
+.race-go {
+    flex: 0 0 auto;
+    font-size: 1.1rem;
+    text-decoration: none;
+    color: var(--highlight);
+    padding: 0 4px;
+}
+.race-row-past {
+    opacity: 0.5;
+}
