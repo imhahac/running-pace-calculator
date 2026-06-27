@@ -54,6 +54,22 @@ const regionOf = (loc: string): string => {
   return '';
 };
 
+const SOURCE_NAMES: Record<string, string> = {
+  biji: '運動筆記',
+  marathonsworld: '馬拉松世界'
+};
+/** Display name for a race's source; falls back to inferring from the link. */
+const sourceLabel = (r: { source?: string; registrationLink: string }): string => {
+  const s =
+    r.source ||
+    (/running\.biji\.co/.test(r.registrationLink)
+      ? 'biji'
+      : /marathonsworld\.com/.test(r.registrationLink)
+        ? 'marathonsworld'
+        : '');
+  return SOURCE_NAMES[s] || '';
+};
+
 const pad = (n: number): string => String(n).padStart(2, '0');
 const todayISO = (): string => {
   const d = new Date();
@@ -174,6 +190,20 @@ export class AllRacesController {
       });
     }
 
+    const updatedEl = document.getElementById('all-races-updated');
+    if (updatedEl) {
+      const iso = RaceDataManager.getUpdatedAt();
+      const dt = iso ? new Date(iso) : null;
+      updatedEl.textContent =
+        dt && !isNaN(dt.getTime())
+          ? TranslationManager.format('allraces_updated', {
+              date: new Intl.DateTimeFormat(loc, { dateStyle: 'short', timeStyle: 'short' }).format(
+                dt
+              )
+            })
+          : '';
+    }
+
     if (!races.length) {
       listEl.innerHTML = `<div class="helper-text" style="padding:10px 0;">${esc(t.allraces_no_match || '沒有符合條件的賽事')}</div>`;
       return;
@@ -212,6 +242,8 @@ export class AllRacesController {
         const cdCls = diff < 0 ? 'past' : diff <= 14 ? 'soon' : '';
         const rg = regionOf(r.location);
         const regionLabel = rg || r.location || t.allraces_unclassified || '未分類';
+        const dist = r.distances || '';
+        const src = sourceLabel(r);
         const link = esc(r.registrationLink || '');
         const name = link
           ? `<a class="race-name" href="${link}" target="_blank" rel="noopener noreferrer">${esc(r.name)}</a>`
@@ -219,7 +251,12 @@ export class AllRacesController {
         html +=
           `<div class="race-row${diff < 0 ? ' race-row-past' : ''}">` +
           `<div class="race-date"><span class="race-md">${pad(m)}/${pad(d)}</span><span class="race-wd">${esc(wdFmt.format(dt))}</span></div>` +
-          `<div class="race-body">${name}<div class="race-meta"><span class="race-region">📍 ${esc(regionLabel)}</span><span class="race-cd ${cdCls}">${esc(cd)}</span></div></div>` +
+          `<div class="race-body">${name}<div class="race-meta">` +
+          `<span class="race-region">📍 ${esc(regionLabel)}</span>` +
+          (dist ? `<span class="race-dist">🏁 ${esc(dist)}</span>` : '') +
+          (src ? `<span class="race-src">${esc(src)}</span>` : '') +
+          `<span class="race-cd ${cdCls}">${esc(cd)}</span>` +
+          `</div></div>` +
           (link
             ? `<a class="race-go" href="${link}" target="_blank" rel="noopener noreferrer" aria-label="${esc(r.name)}">↗</a>`
             : '') +

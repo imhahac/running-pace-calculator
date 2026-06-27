@@ -396,6 +396,10 @@ export interface IRaceEvent {
   stravaHalf: string;
   gpxFull: string;
   gpxHalf: string;
+  /** Distance options (e.g. "42.2K, 22.24K" or "全馬 | 半馬"); '' when unknown. */
+  distances?: string;
+  /** Crawl source id: 'biji' | 'marathonsworld' | ''. */
+  source?: string;
 }
 
 /**

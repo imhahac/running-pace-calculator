@@ -30,6 +30,7 @@ test('fetchRaces ignores corrupted cache and still uses API data', async () => {
 
   w.fetch = async () => ({
     ok: true,
+    headers: { get: () => '2026-10-01T09:00:00Z' },
     json: async () => [
       {
         id: 'race-1',
@@ -47,6 +48,7 @@ test('fetchRaces ignores corrupted cache and still uses API data', async () => {
 
   assert.equal(races.length, 1);
   assert.equal(races[0].id, 'race-1');
+  assert.equal(RaceDataManager.getUpdatedAt(), '2026-10-01T09:00:00Z'); // X-Races-Updated header
 
   w.fetch = originalFetch;
   w.localStorage = originalLocalStorage;

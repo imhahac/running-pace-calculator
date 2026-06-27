@@ -6,6 +6,7 @@ const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
 interface ICacheData {
   timestamp: number;
   data: IRaceEvent[];
+  updatedAt?: string;
 }
 
 function readCache(): ICacheData | null {
@@ -19,6 +20,7 @@ function readCache(): ICacheData | null {
 
     return {
       timestamp: parsed.timestamp,
+      updatedAt: typeof parsed.updatedAt === 'string' ? parsed.updatedAt : '',
       data: parsed.data.filter((item): item is IRaceEvent => {
         return !!item && typeof item.id === 'string';
       })
@@ -28,9 +30,10 @@ function readCache(): ICacheData | null {
   }
 }
 
-function writeCache(data: IRaceEvent[]): void {
+function writeCache(data: IRaceEvent[], updatedAt: string): void {
   const cacheData: ICacheData = {
     timestamp: Date.now(),
+    updatedAt,
     data
   };
   localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
@@ -39,6 +42,7 @@ function writeCache(data: IRaceEvent[]): void {
 export class RaceDataManager {
   private static apiBaseUrl: string = '';
   private static races: IRaceEvent[] = [];
+  private static updatedAt: string = '';
 
   static setApiUrl(url: string) {
     this.apiBaseUrl = url;
@@ -46,6 +50,11 @@ export class RaceDataManager {
 
   static getApiUrl(): string {
     return this.apiBaseUrl;
+  }
+
+  /** ISO timestamp of the backend's last race refresh (from X-Races-Updated), or ''. */
+  static getUpdatedAt(): string {
+    return this.updatedAt;
   }
 
   static getRaces(): IRaceEvent[] {
@@ -67,6 +76,7 @@ export class RaceDataManager {
         const cached = readCache();
         if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
           this.races = cached.data;
+          this.updatedAt = cached.updatedAt || '';
           return this.races;
         }
       }
@@ -93,10 +103,13 @@ export class RaceDataManager {
         stravaFull: item.stravaFull || '',
         stravaHalf: item.stravaHalf || '',
         gpxFull: item.gpxFull || '',
-        gpxHalf: item.gpxHalf || ''
+        gpxHalf: item.gpxHalf || '',
+        distances: item.distances || '',
+        source: item.source || ''
       }));
+      this.updatedAt = response.headers.get('X-Races-Updated') || '';
 
-      writeCache(this.races);
+      writeCache(this.races, this.updatedAt);
 
       return this.races;
     } catch (err) {
@@ -105,6 +118,7 @@ export class RaceDataManager {
       const cached = readCache();
       if (cached) {
         this.races = cached.data;
+        this.updatedAt = cached.updatedAt || '';
         return this.races;
       }
       return [];

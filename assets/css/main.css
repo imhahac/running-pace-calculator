@@ -1715,6 +1715,17 @@ input.diff {
     font-size: 0.78rem;
     color: var(--text-muted);
 }
+.race-dist {
+    white-space: nowrap;
+}
+.race-src {
+    white-space: nowrap;
+    font-size: 0.7rem;
+    padding: 1px 6px;
+    border-radius: 999px;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-color);
+}
 .race-cd.soon {
     color: var(--warning);
     font-weight: 600;
