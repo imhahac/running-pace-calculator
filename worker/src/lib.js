@@ -154,3 +154,101 @@ export function mergeRaces(existing, fresh) {
   }
   return { list, added };
 }
+
+const stripTags = (s) =>
+  String(s || '')
+    .replace(/<[^>]*>/g, '')
+    .replace(/&nbsp;/g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+
+/**
+ * Parse 馬拉松世界 (marathonsworld) racePage.php HTML into IRaceEvent records.
+ * The list is an HTML table whose data rows are `<tr class='ColorBar9|11'>`; each
+ * date cell carries only MM/DD, so the YEAR is tracked from the `YYYY年M月`
+ * section headers that precede each month block (scanned in document order).
+ * Best-effort: anything unparseable is skipped, returning [] for non-matching
+ * input so the cron degrades cleanly.
+ */
+export function parseMwRaces(html) {
+  const out = [];
+  if (!html || typeof html !== 'string') return out;
+  let year = '';
+  // Year headers and data rows, in document order (alternation keeps order).
+  const re = /(\d{4})年\d{1,2}月|<tr class='ColorBar(?:9|11)'>([\s\S]*?)<\/tr>/g;
+  let m;
+  while ((m = re.exec(html))) {
+    if (m[1]) {
+      year = m[1];
+      continue;
+    }
+    const row = m[2];
+    const rid = row.match(/racedetail\.php\?rid=(\d+)'[^>]*>([\s\S]*?)<\/a>/);
+    const dm = row.match(/>(\d{1,2})\/(\d{1,2})\(/); // date cell: >MM/DD(週)
+    if (!rid || !dm || !year) continue;
+    const name = stripTags(rid[2])
+      .replace(/^[\s*]+/, '')
+      .trim();
+    const date = normalizeRaceDate(`${year}-${dm[1]}-${dm[2]}`);
+    if (!name || !date) continue;
+    const loc = row.match(/width='150'[^>]*>([\s\S]*?)<\/td>/);
+    out.push({
+      id: '',
+      date,
+      name,
+      location: loc ? stripTags(loc[1]) : '',
+      registrationLink: `https://www.marathonsworld.com/artapp/racedetail.php?rid=${rid[1]}`,
+      stravaFull: '',
+      stravaHalf: '',
+      gpxFull: '',
+      gpxHalf: ''
+    });
+  }
+  return out;
+}
+
+/**
+ * Parse 運動筆記 (running.biji.co) `?q=competition` HTML into IRaceEvent records.
+ * Each race block holds a calendar link with `dates=YYYYMMDD` (the reliable full
+ * date), a `competition-place` county and a `competition-name` anchor carrying
+ * `cid`. We anchor on the name anchor and read the date/place from the preceding
+ * window. Best-effort: unparseable entries are skipped.
+ */
+export function parseBijiRaces(html) {
+  const out = [];
+  if (!html || typeof html !== 'string') return out;
+  const nameRe = /<div class="competition-name">\s*<a href='([^']+)'>([\s\S]*?)<\/a>/g;
+  let m;
+  let prevEnd = 0;
+  while ((m = nameRe.exec(html))) {
+    const href = m[1];
+    const name = stripTags(m[2]);
+    const cid = href.match(/cid=(\d+)/);
+    const win = html.slice(prevEnd, m.index); // date/place precede the name
+    prevEnd = nameRe.lastIndex;
+    if (!name || !cid) continue;
+
+    let date = '';
+    const cal = win.match(/dates=(\d{8})(?!.*dates=\d{8})/s); // last calendar date in window
+    if (cal) date = `${cal[1].slice(0, 4)}-${cal[1].slice(4, 6)}-${cal[1].slice(6, 8)}`;
+    date = normalizeRaceDate(date);
+    if (!date) continue;
+
+    const place = win.match(/competition-place"><span>([^<]*)<\/span>(?![\s\S]*competition-place)/);
+    const link = href.startsWith('http')
+      ? href
+      : `https://running.biji.co${href.startsWith('/') ? '' : '/'}${href}`;
+    out.push({
+      id: '',
+      date,
+      name,
+      location: place ? place[1].trim() : '',
+      registrationLink: link,
+      stravaFull: '',
+      stravaHalf: '',
+      gpxFull: '',
+      gpxHalf: ''
+    });
+  }
+  return out;
+}

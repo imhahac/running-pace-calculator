@@ -1,16 +1,17 @@
 /**
  * ReadinessCalculator
- * Synthesises a single daily training-readiness score from up to three signals
- * the app already computes — HRV status, ACWR load zone, and recovery debt.
- * Pure and dependency-free (callers pass the other tools' outputs). Deliberately
- * a TRANSPARENT heuristic, not a validated index: each present factor maps to a
- * 0–100 sub-score and the readiness is their average; MISSING factors are 'na'
- * and simply excluded (so the dashboard is useful even when partly filled).
+ * Synthesises a single daily training-readiness score from up to four signals
+ * the app already computes — HRV status, ACWR load zone, recovery debt, and
+ * subjective wellness. Pure and dependency-free (callers pass the other tools'
+ * outputs). Deliberately a TRANSPARENT heuristic, not a validated index: each
+ * present factor maps to a 0–100 sub-score and the readiness is their average;
+ * MISSING factors are 'na' and simply excluded (so the dashboard is useful even
+ * when partly filled).
  */
 
 export type THrvStatusIn = 'low' | 'normal' | 'high';
 export type TAcwrZoneIn = 'undertraining' | 'sweet' | 'caution' | 'highrisk';
-export type TFactorKey = 'hrv' | 'acwr' | 'recovery';
+export type TFactorKey = 'hrv' | 'acwr' | 'recovery' | 'wellness';
 export type TFactorState = 'good' | 'ok' | 'bad' | 'na';
 export type TReadinessLevel = 'go' | 'caution' | 'easy' | 'rest';
 
@@ -19,6 +20,8 @@ export interface IReadinessInput {
   acwrZone?: TAcwrZoneIn | null;
   /** RecoveryCalculator.beforeHardDays for the last logged hard effort, or null. */
   recoveryDays?: number | null;
+  /** WellnessCalculator score (0–100) from subjective self-report, or null. */
+  wellnessScore?: number | null;
 }
 
 export interface IReadinessFactor {
@@ -61,11 +64,18 @@ export class ReadinessCalculator {
     return days <= 1 ? 100 : days <= 3 ? 70 : 45;
   }
 
+  /** Subjective wellness 0–100 (already a sub-score); clamped, or null. */
+  static wellnessScore(score?: number | null): number | null {
+    if (score === null || score === undefined || !isFinite(score)) return null;
+    return Math.max(0, Math.min(100, Math.round(score)));
+  }
+
   static compute(input: IReadinessInput): IReadiness {
     const raw: { key: TFactorKey; score: number | null }[] = [
       { key: 'hrv', score: this.hrvScore(input.hrvStatus) },
       { key: 'acwr', score: this.acwrScore(input.acwrZone) },
-      { key: 'recovery', score: this.recoveryScore(input.recoveryDays) }
+      { key: 'recovery', score: this.recoveryScore(input.recoveryDays) },
+      { key: 'wellness', score: this.wellnessScore(input.wellnessScore) }
     ];
     const factors: IReadinessFactor[] = raw.map((f) => ({
       key: f.key,

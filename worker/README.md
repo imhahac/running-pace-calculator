@@ -6,7 +6,7 @@
 - **Magic-link 登入** — 免密碼，透過 [SendGrid](https://sendgrid.com) 寄 Email 魔術連結。
 - **個人雲端同步** — `GET/PUT /api/data` 儲存每位使用者的工具輸入與偏好，跨裝置同步。
 
-> ⚠️ 賽事網站多為 JS/SPA＋登入牆，匿名爬取仍困難（同 GAS 註記）。可靠做法是管理員以 `PUT /api/races` 維護清單；每日 cron 僅記錄各來源目前回傳的內容，以便日後調整。
+> 每日 cron 會自動從**運動筆記**與**馬拉松世界**抓取賽事並 append-only 合併進 KV（見 [賽事爬取與重對接](#賽事爬取與重對接)）。管理員 `PUT /api/races` 仍用於整理清單與補上 Strava／GPX（cron 不會覆寫手填值）。
 
 ## Endpoints
 
@@ -82,3 +82,60 @@ curl -X PUT "$WORKER/api/races" \
 ```
 
 （`$SESSION` = 以 `ADMIN_EMAILS` 內的信箱經 `/api/auth/verify` 取得的 token。）
+
+## 賽事爬取與重對接
+
+賽事的**唯一真實來源是 KV 的 `races` key**；前端只讀 `GET /api/races`。寫入有兩條路：管理員 `PUT`（可靠）與每日 cron 爬取（best-effort）。
+
+### 讀取：`GET /api/races`
+- 讀 KV `races`，以 `safeParseArray` 容錯（`null`／壞 JSON → `[]`，不丟 500）。
+- 回應帶 `Cache-Control: public, max-age=300`（邊緣快取 5 分鐘）。
+
+### 寫入（canonical）：`PUT /api/races`
+- 需 `Authorization: Bearer <session>`，且該 session 的 Email ∈ `ADMIN_EMAILS`，否則 `403 forbidden`。
+- `validateRaces`（[src/lib.js](src/lib.js)）守門：須為陣列、**≤ 5000 筆**、序列化後 **≤ 512 KB**、每筆需有字串 `date` 與 `name`，否則 `400`。
+- 通過即 `KV.put('races', …)` **整份覆寫**。範例見上節〈灌入賽事〉。
+
+### cron 爬蟲機制（`scheduled()`，每日 18:00 UTC）
+`wrangler.toml` 的 `crons = ["0 18 * * *"]` 觸發 [src/index.js](src/index.js) 的 `scheduled()`。流程:**逐來源**(運動筆記、馬拉松世界)各自抓取+解析成 `IRaceEvent[]`(單一來源失敗只 log、不影響其他)，再以 `mergeRaces` **append-only 去重**(`date_name` 鍵,**不覆寫**手動 `PUT` 的 Strava／GPX)合併進 KV `races`,有新增才寫回。`stravaFull/stravaHalf/gpxFull/gpxHalf` 一律留空待管理員補。
+
+#### 來源 1 — 運動筆記 biji.co（HTML 解析）
+- **抓取**:`GET https://running.biji.co/?q=competition`,headers `User-Agent` + `Accept-Language: zh-TW`(伺服器端渲染,免登入)。
+- **解析** `parseBijiRaces(html)`（[src/lib.js](src/lib.js)）:每筆賽事區塊以 `competition-name` 的 `<a href='…cid=…'>` 為錨,向前讀:
+  - **日期**取行事曆連結的 `dates=YYYYMMDD`(可靠完整日期);
+  - **地點**取 `competition-place` 的 county;**連結**用 `cid` 的詳情頁絕對化。
+
+#### 來源 2 — 馬拉松世界 marathonsworld（XHR + HTML 片段）
+- **抓取**:`POST https://www.marathonsworld.com/artapp/racePage.php`,本文 `action=getRaceListByCountryYear&user_id=1&country=1&year=0&sort=0&type=0`,**必要 headers**:`Content-Type: application/x-www-form-urlencoded`、`X-Requested-With: XMLHttpRequest`、`Referer: …/racelist.php?p=1`、`Origin`、`User-Agent`。**免 cookie**(已驗證:無 PHPSESSID 也回完整清單)。
+- **解析** `parseMwRaces(html)`（[src/lib.js](src/lib.js)）:資料列為 `<tr class='ColorBar9|11'>`;日期格僅 `MM/DD`,**年份**由 `YYYY年M月` 區塊標頭(依文件順序追蹤,正確跨 2026→2027);名稱取 `racedetail.php?rid=…` 連結文字(去前導 `*`、`<img>`);地點取 `width='150'` 格。
+
+### 部署與啟用爬蟲
+爬蟲就是 Worker 的 **Cron Trigger**(`wrangler.toml` 的 `[triggers] crons = ["0 18 * * *"]`)——**隨 Worker 一起部署,不需獨立步驟、不需新增金鑰**(純公開抓取)。
+
+1. **部署** — 同上節〈設定與部署〉:推送 `worker/**`(走 GitHub Actions)或本機 `npm run deploy`。Cron 觸發器會一併上線。
+2. **確認已排程** — Cloudflare Dashboard → **Workers & Pages → 你的 Worker → Settings → Triggers → Cron Triggers**,應見 `0 18 * * *`(每日 18:00 UTC)。
+3. **觀察執行** — `npx wrangler tail`,排程跑時會印 `[cron] biji: fetched N, merged M new` 與 `[cron] marathonsworld: …`。
+4. **立即觸發(不等每日)** — 本機 `npx wrangler dev --test-scheduled`,另一終端 `curl "http://localhost:8787/__scheduled?cron=0+18+*+*+*"` 即手動跑一次 `scheduled()`(會真連網抓取並寫入你連線的 KV)。或先用 `PUT /api/races` 灌入,首跑 cron 後即自動補進。
+5. **改排程頻率** — 編輯 `wrangler.toml` 的 `crons`(cron 語法,UTC),重新部署即生效。
+
+> 首次部署後 KV `races` 在**第一次 cron(或手動觸發)**後才有內容;`GET /api/races` 在那之前回 `[]`。
+
+### 🔧 站方改版時的重對接
+若某來源 HTML 結構改版導致解析回 `[]`:
+1. **觀察** — 瀏覽器 DevTools → Network,找出載入賽事的請求(biji 為頁面本身;marathonsworld 為 `racePage.php` 的 XHR),右鍵 **Copy as cURL** 記下 URL／method／payload／必要 headers。
+2. **對映** — 比對新回應,把日期／名稱／地點／連結對到 `IRaceEvent`。
+3. **改 Worker** — 調整 `crawlBiji`／`crawlMarathonsWorld` 的請求,並更新對應 `parseBijiRaces`／`parseMwRaces`(仍回 `IRaceEvent[]`、缺 `date`/`name` 略過)。
+4. **驗證** — 更新 `worker/test/fixtures/` 樣本與測試;`npx wrangler tail` 看 `[cron] <source>: fetched N, merged M new`。
+5. **後備** — 真無法匿名抓取時,維持管理員 `PUT` 為主。
+
+歷史脈絡與「待重對接」回報模板見 [docs/gas-crawler-script.js](../docs/gas-crawler-script.js)。
+
+### 本地測試
+`npm test`（`worker/test/*.test.mjs`）涵蓋 `parseBijiRaces`／`parseMwRaces`(對 `test/fixtures/` 的精簡真實樣本)、`mergeRaces`、`validateRaces` 等,可當規格佐證——改解析邏輯後請一併更新樣本/測試。要實跑整條 cron(真連網抓取+合併),可用 mock KV 呼叫 `scheduled()`:
+```js
+import worker from './src/index.js';
+const store = new Map();
+const KV = { get:async k=>store.get(k)??null, put:async (k,v)=>store.set(k,v), delete:async k=>store.delete(k) };
+await worker.scheduled({}, { KV });
+console.log(JSON.parse(store.get('races')).length);
+```

@@ -832,7 +832,7 @@ export const TRANSLATIONS: ITranslations = {
     detail_rec_stages:
       '0–24h 黃金窗：補碳水＋蛋白質、補水、睡眠；接著數天全休或輕鬆活動恢復；達建議天數後，先以一次短質量試水溫，再逐步回到正常課表。',
     detail_rec_note:
-      '證據強度：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）對主觀疲勞有益但可能鈍化長期適應，賽後用可、平時少用。疼痛異常請就醫。',
+      '證據強度：補給/補水/睡眠最強，主動恢復次之，冷水浸泡（CWI）對主觀疲勞有益但可能鈍化長期適應，賽後用可、平時少用；同理，避免常規使用消炎止痛藥（NSAIDs），以免抑制肌肉適應（Schoenfeld 2012）。疼痛異常請就醫。',
     gap_title: '⛰️ GPX 路線 GAP 配速分析',
     hint_gap_intro: '上傳賽事 GPX 並輸入平路目標配速，算出每公里坡度修正配速與爬升',
     gap_file: 'GPX 檔案',
@@ -889,11 +889,35 @@ export const TRANSLATIONS: ITranslations = {
     detail_hrv_principle:
       'HRV（以晨起 RMSSD 衡量）反映自律神經的恢復狀態。把連續數日的 RMSSD 取平均 ± 1 標準差當作個人「正常帶」，今日值相對於這條帶的位置，比單一絕對值更能判讀恢復（Plews 法）。',
     detail_hrv_how:
-      '每天起床後同條件量 RMSSD（同姿勢、同時間、未喝咖啡），輸入逗號分隔的 3–7 天、最後一筆為今天。落在帶內照計畫；明顯偏低改輕鬆／恢復；偏高多為適應良好但也留意是否過勞飽和。',
+      '每天起床後同條件量 RMSSD（同姿勢、同時間、未喝咖啡），輸入逗號分隔的 3–7 天、最後一筆為今天。落在帶內照計畫；明顯偏低改輕鬆／恢復；偏高多為適應良好但也留意是否過勞飽和。另可填睡眠品質／肌肉痠痛／壓力／心情等主觀狀態，與 HRV 合成「今日訓練建議」——主觀自評對訓練負荷往往比客觀指標更敏感（Saw 2016）。',
     detail_hrv_stages:
       '陰影帶為個人正常範圍（基線 ± 1 標準差），折線為每日 RMSSD，末點為今天。趨勢比單日更重要：連續下降代表累積疲勞，平穩或上升代表恢復良好。',
     detail_hrv_note:
-      '需穩定的量測條件才可靠；酒精、生病、缺水、壓力都會影響。變異係數（CV）越大越不穩定、宜保守。單日數字僅供參考，請對齊體感與睡眠。',
+      '需穩定的量測條件才可靠；酒精、生病、缺水、壓力都會影響。變異係數（CV）越大越不穩定、宜保守。單日數字僅供參考，請對齊體感與睡眠。晨起 RMSSD 是實用的代理，但夜間連續量測對訓練反應可能更敏感（Nuuttila 2024）。',
+    hrv_wellness_title: '主觀狀態（選填，未填不計）',
+    hrv_sleep_label: '睡眠品質',
+    hrv_soreness_label: '肌肉痠痛',
+    hrv_stress_label: '壓力',
+    hrv_mood_label: '心情',
+    hrv_opt_na: '—',
+    hrv_sleep_good: '好',
+    hrv_sleep_fair: '普通',
+    hrv_sleep_poor: '差',
+    hrv_soreness_none: '無',
+    hrv_soreness_mild: '輕',
+    hrv_soreness_high: '明顯',
+    hrv_stress_low: '低',
+    hrv_stress_mid: '中',
+    hrv_stress_high: '高',
+    hrv_mood_good: '佳',
+    hrv_mood_normal: '普通',
+    hrv_mood_low: '低落',
+    hrv_rec_label: '今日訓練建議',
+    hrv_rec_quality: '可進行品質課表',
+    hrv_rec_moderate: '適度訓練即可',
+    hrv_rec_easy: '以輕鬆／恢復為主',
+    hrv_rec_rest: '建議休息／恢復',
+    hrv_rec_saturation_note: '（HRV 偏高但主觀狀態差，可能是副交感飽和或累積疲勞，別貿然加量。）',
     cycle_title: '🌸 月經週期訓練調整',
     hint_cycle_intro:
       '填「最近一次月經第一天」自動推算週期天數（或直接填第幾天）；日期越久未更新越不準。',
@@ -1007,13 +1031,14 @@ export const TRANSLATIONS: ITranslations = {
     detail_trend_note:
       'VDOT 為單筆成績推估，受當天狀態、天氣、賽道影響；趨勢看長期方向比單點更可靠。資料僅存於你的瀏覽器（登入則同步到你的後端）。',
     readiness_title: '🧭 今日訓練準備度',
-    hint_readiness_intro: '整合下方 ACWR、HRV 與恢復工具的輸入；未填的因子不計分',
+    hint_readiness_intro: '整合下方 ACWR、HRV、恢復與主觀狀態的輸入；未填的因子不計分',
     readiness_level_label: '準備度',
     readiness_none: '尚無足夠資料 — 填下方 ACWR／HRV／恢復任一項即可。',
     readiness_na: 'n/a（未填）',
     readiness_factor_hrv: 'HRV（自律神經）',
     readiness_factor_acwr: 'ACWR（負荷）',
     readiness_factor_recovery: '恢復需求',
+    readiness_factor_wellness: '主觀狀態',
     readiness_state_good: '🟢 良好',
     readiness_state_ok: '🟡 普通',
     readiness_state_bad: '🔴 不佳',
@@ -1023,9 +1048,9 @@ export const TRANSLATIONS: ITranslations = {
     readiness_level_rest: '建議休息／恢復',
     readiness_readout: '今日準備度 {score}/100：{level}。此為啟發式整合，請結合體感判斷。',
     explain_readiness:
-      '把 HRV（自律神經）、ACWR（負荷／傷害風險）與恢復需求整合成單一每日準備度。這是「啟發式整合」非經驗證的指標，僅供參考，請以體感與專業判斷為準。',
+      '把 HRV（自律神經）、ACWR（負荷／傷害風險）、恢復需求與主觀狀態整合成單一每日準備度。這是「啟發式整合」非經驗證的指標，僅供參考，請以體感與專業判斷為準。',
     detail_readiness_principle:
-      '三個訊號各映成 0–100 子分：HRV 正常/偏高/偏低、ACWR 甜蜜區→高風險、恢復需求天數。讀數取「有值因子」的平均；未填者不計分。分數越高越適合高品質訓練。',
+      '四個訊號各映成 0–100 子分：HRV 正常/偏高/偏低、ACWR 甜蜜區→高風險、恢復需求天數、主觀狀態（睡眠／痠痛／壓力／心情）。讀數取「有值因子」的平均；未填者不計分。分數越高越適合高品質訓練。',
     detail_readiness_how:
       '先在下方填 ACWR 週里程、HRV 晨起讀數、賽後恢復；本卡會自動綜合成今日準備度與建議。只填其中一兩項也可用，缺的記 n/a。',
     detail_readiness_note:
@@ -1713,7 +1738,7 @@ export const TRANSLATIONS: ITranslations = {
     detail_rec_stages:
       'First 24 h golden window: carbs + protein, rehydrate, sleep; then several days of full rest or easy active recovery; once past the suggested days, test the waters with one short quality session before returning to normal training.',
     detail_rec_note:
-      'Evidence strength: refuel/rehydrate/sleep strongest, then active recovery; cold-water immersion (CWI) helps perceived soreness but may blunt long-term adaptation — fine post-race, sparing in normal training. See a clinician for abnormal pain.',
+      'Evidence strength: refuel/rehydrate/sleep strongest, then active recovery; cold-water immersion (CWI) helps perceived soreness but may blunt long-term adaptation — fine post-race, sparing in normal training; likewise, avoid routine anti-inflammatory drugs (NSAIDs), which may suppress muscle adaptation (Schoenfeld 2012). See a clinician for abnormal pain.',
     gap_title: '⛰️ GPX Route GAP Analysis',
     hint_gap_intro:
       'Upload a race GPX and a flat-ground target pace for per-km grade-adjusted pace and climb',
@@ -1773,11 +1798,36 @@ export const TRANSLATIONS: ITranslations = {
     detail_hrv_principle:
       'HRV (measured as morning RMSSD) reflects autonomic recovery. Taking several days’ RMSSD as a personal “normal band” (mean ± 1 SD), today’s position relative to that band reads recovery better than any single absolute value (Plews method).',
     detail_hrv_how:
-      'Measure RMSSD each morning under the same conditions (same posture, time, before caffeine). Enter 3–7 comma-separated days with today last. Inside the band → proceed; clearly low → go easy/recovery; high → usually good adaptation, but watch for overload saturation.',
+      'Measure RMSSD each morning under the same conditions (same posture, time, before caffeine). Enter 3–7 comma-separated days with today last. Inside the band → proceed; clearly low → go easy/recovery; high → usually good adaptation, but watch for overload saturation. You can also rate sleep / soreness / stress / mood; these subjective factors blend with the HRV status into a single recommendation — self-report often tracks training load more sensitively than objective markers (Saw 2016).',
     detail_hrv_stages:
       'The shaded band is your normal range (baseline ± 1 SD); the line is daily RMSSD with the last point being today. Trend matters more than one day: a steady decline signals accumulating fatigue; flat or rising signals good recovery.',
     detail_hrv_note:
-      'Reliable only with consistent measurement; alcohol, illness, dehydration and stress all affect it. A higher CV means less stability — be conservative. Treat any single day as a hint and align it with how you feel and your sleep.',
+      'Reliable only with consistent measurement; alcohol, illness, dehydration and stress all affect it. A higher CV means less stability — be conservative. Treat any single day as a hint and align it with how you feel and your sleep. Morning RMSSD is a practical proxy, but nocturnal recordings may track the training response more sensitively (Nuuttila 2024).',
+    hrv_wellness_title: 'Subjective wellness (optional; blanks ignored)',
+    hrv_sleep_label: 'Sleep quality',
+    hrv_soreness_label: 'Muscle soreness',
+    hrv_stress_label: 'Stress',
+    hrv_mood_label: 'Mood',
+    hrv_opt_na: '—',
+    hrv_sleep_good: 'Good',
+    hrv_sleep_fair: 'Fair',
+    hrv_sleep_poor: 'Poor',
+    hrv_soreness_none: 'None',
+    hrv_soreness_mild: 'Mild',
+    hrv_soreness_high: 'Marked',
+    hrv_stress_low: 'Low',
+    hrv_stress_mid: 'Moderate',
+    hrv_stress_high: 'High',
+    hrv_mood_good: 'Good',
+    hrv_mood_normal: 'Normal',
+    hrv_mood_low: 'Low',
+    hrv_rec_label: "Today's recommendation",
+    hrv_rec_quality: 'Quality session OK',
+    hrv_rec_moderate: 'Keep it moderate',
+    hrv_rec_easy: 'Easy / recovery',
+    hrv_rec_rest: 'Rest / recover',
+    hrv_rec_saturation_note:
+      '(HRV elevated but subjective state poor — possible parasympathetic saturation or accumulated fatigue; don’t ramp up.)',
     cycle_title: '🌸 Menstrual-Cycle Adjustment',
     hint_cycle_intro:
       'Enter your last period’s first day to auto-derive the cycle day (or type the day directly); accuracy drifts the longer ago that date was.',
@@ -1894,13 +1944,14 @@ export const TRANSLATIONS: ITranslations = {
       'VDOT is estimated from a single result and is affected by conditions, weather and course; trust the long-term direction over single points. Data lives only in your browser (synced to your backend when signed in).',
     readiness_title: '🧭 Daily Readiness',
     hint_readiness_intro:
-      'Combines the ACWR, HRV and Recovery inputs below; unfilled factors are not scored',
+      'Combines the ACWR, HRV, Recovery and subjective-wellness inputs below; unfilled factors are not scored',
     readiness_level_label: 'Readiness',
     readiness_none: 'Not enough data yet — fill any of ACWR / HRV / Recovery below.',
     readiness_na: 'n/a (unfilled)',
     readiness_factor_hrv: 'HRV (autonomic)',
     readiness_factor_acwr: 'ACWR (load)',
     readiness_factor_recovery: 'Recovery need',
+    readiness_factor_wellness: 'Subjective wellness',
     readiness_state_good: '🟢 Good',
     readiness_state_ok: '🟡 Fair',
     readiness_state_bad: '🔴 Poor',
@@ -1911,9 +1962,9 @@ export const TRANSLATIONS: ITranslations = {
     readiness_readout:
       'Today’s readiness {score}/100: {level}. A heuristic blend — combine with how you feel.',
     explain_readiness:
-      'Blends HRV (autonomic), ACWR (load / injury risk) and recovery need into one daily readiness. A transparent heuristic, not a validated index — for guidance; go by feel and professional judgement.',
+      'Blends HRV (autonomic), ACWR (load / injury risk), recovery need and subjective wellness into one daily readiness. A transparent heuristic, not a validated index — for guidance; go by feel and professional judgement.',
     detail_readiness_principle:
-      'Each signal maps to a 0–100 sub-score (HRV normal/high/low; ACWR sweet→high-risk; recovery days needed). Readiness is the average of available factors; unfilled ones are not scored. Higher = better suited to quality work.',
+      'Each signal maps to a 0–100 sub-score (HRV normal/high/low; ACWR sweet→high-risk; recovery days needed; subjective wellness from sleep/soreness/stress/mood). Readiness is the average of available factors; unfilled ones are not scored. Higher = better suited to quality work.',
     detail_readiness_how:
       'Fill ACWR weekly mileage, morning HRV and post-race recovery below; this card auto-combines them into today’s readiness and advice. One or two filled is fine — missing ones show n/a.',
     detail_readiness_note:

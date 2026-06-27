@@ -40,14 +40,55 @@
 
 ## 賽事資料來源
 
-賽事清單由後端提供，兩種方式：
+賽事清單由後端提供；前端的載入、顯示、倒數與地圖都圍繞單一資料來源運作。後端內部機制、cron 爬蟲與**換來源重對接**詳見 [worker/README.md → 賽事爬取與重對接](worker/README.md#賽事爬取與重對接)。
 
-- **Cloudflare Worker（推薦）**：穩定、由你掌控，一站包辦賽事 API（`GET /api/races`，KV 提供）、Email magic-link 登入、跨裝置個人雲端同步。部署全走 GitHub Actions（金鑰不入 repo，KV namespace 由 CI 自動建立）——**完整設定見 [worker/README.md](worker/README.md)**。
-- **Google Apps Script（備選／手動）**：用 Google 試算表當免費資料庫——把 [docs/gas-api-script.js](docs/gas-api-script.js) 部署為 Web App。試算表第一列欄位：`Date`(YYYY-MM-DD)／`Name`／`Location`／`RegistrationLink`／`StravaFull`／`StravaHalf`，新增列即可維護賽事。
+### 資料流
 
-後端 URL 可由 GitHub Actions Variable `BACKEND_URL` 於 build 時注入為站台預設，或在 **⚙️ 系統設定** 自行填入（手填值優先）。設定後即出現賽事選單與 Email 登入框。
+```mermaid
+flowchart TD
+    Browser["瀏覽器 App（4 小時 localStorage 快取）"] -->|"GET /api/races"| Worker["Cloudflare Worker"]
+    Worker -->|讀取| KV[("KV: races")]
+    Admin["管理員"] -->|"PUT /api/races（Bearer + ADMIN_EMAILS）"| Worker
+    Cron["每日 cron 18:00 UTC"] -.->|抓取| Biji["運動筆記 biji.co"]
+    Cron -.->|抓取| MW["馬拉松世界 marathonsworld"]
+    Cron -.->|"merge by date_name（append-only）"| KV
+    GAS["Google Apps Script（備選，試算表）"] -.->|回退來源| Browser
+    Browser -->|"有 GPX"| Leaflet["Leaflet / OSM 地圖"]
+    Browser -->|"無 GPX"| Strava["Strava 路線嵌入"]
+```
 
-> ⚠️ **自動爬蟲已失效（2026 起）**：運動筆記、馬拉松世界皆改為 JS/SPA 動態載入（運動筆記另加登入牆），匿名抓取無法取得賽事。最可靠的方式是手動維護（試算表新增列，或 Worker `PUT /api/races`）。
+> 若上圖未渲染：瀏覽器 →（4 小時快取）→ `GET /api/races` → Worker → KV `races`；管理員 `PUT` 寫入；cron 每日抓運動筆記＋馬拉松世界並 append-only 合併；前端有 GPX 走 Leaflet/OSM，否則用 Strava 嵌入。
+
+### 兩種後端
+- **Cloudflare Worker（推薦）**：穩定、由你掌控，一站包辦賽事 API（`GET /api/races` 由 KV 提供、`PUT /api/races` 由管理員維護）、Email magic-link 登入、跨裝置個人雲端同步。資料存 KV、僅管理員可寫、前端只讀。部署全走 GitHub Actions（金鑰不入 repo，KV namespace 由 CI 自動建立）——**完整設定見 [worker/README.md](worker/README.md)**。
+- **Google Apps Script（備選／手動）**：用 Google 試算表當免費資料庫——把 [docs/gas-api-script.js](docs/gas-api-script.js) 部署為 Web App（試算表 `doGet` 直接回傳 JSON）。試算表第一列欄位：`Date`(YYYY-MM-DD)／`Name`／`Location`／`RegistrationLink`／`StravaFull`／`StravaHalf`，新增列即可維護賽事。
+
+### 前端抓取與顯示
+- 從 `${backendUrl}/api/races` 載入（未設則回退 `GAS_API_URL`）；**4 小時 localStorage 快取**、**10 秒逾時**、離線時回退舊快取。
+- 選賽事後自動填入「目標日期」並顯示倒數；有 GPX 用 Leaflet（OpenStreetMap 圖磚）畫路線（起點綠／終點紅標記），否則嵌入 Strava 路線。
+
+每筆賽事的 `IRaceEvent` 欄位：
+
+| 欄位 | 用途 |
+|---|---|
+| `id` | 唯一識別 |
+| `date` | `YYYY-MM-DD`；自動填目標日、計算倒數 |
+| `name` | 賽事名稱（選單顯示為 `日期 名稱`） |
+| `location` | 地點 |
+| `registrationLink` | 報名／官網連結 |
+| `stravaFull` / `stravaHalf` | 全／半程 Strava 路線 URL（轉 `export_embed` 嵌入） |
+| `gpxFull` / `gpxHalf` | 全／半程 GPX URL（**優先於** Strava，前端畫於 Leaflet） |
+
+### 設定後端 URL
+- **build 時注入（站台預設）**：GitHub Actions Variable `BACKEND_URL`（仍用舊來源則加 `GAS_API_URL`）會在 build 時烘進 bundle。
+- **手填覆寫**：在 **⚙️ 系統設定** 填「後端 URL (Worker)」（非空值一律優先於 build 預設）。設定後即出現賽事選單與 Email 登入框。
+
+### 維護賽事的三種方式
+1. **cron 自動爬取（預設）** — 每日 18:00 UTC 自動從**運動筆記**(`?q=competition` HTML)與**馬拉松世界**(`racePage.php` XHR)抓取並 append-only 合併;新賽事自動進清單(Strava／GPX 留空待補)。
+2. **管理員 `PUT /api/races`** — 以 JSON 整份覆寫,用於整理清單與補上 Strava／GPX(cron **不會覆寫**手填值);機制與 curl 範例見 [worker/README.md](worker/README.md)。
+3. **GAS 試算表（備選）** — 新增列即維護,欄位同 `IRaceEvent`（[docs/gas-api-script.js](docs/gas-api-script.js)）。
+
+> ℹ️ 自動爬取的解析依賴來源網站的 HTML 結構;站方若大改版,解析會**乾淨降級**為「不合併」(不報錯)。逐來源抓取/解析細節與**站方改版時的重對接步驟**,詳見 [worker/README.md → 賽事爬取與重對接](worker/README.md#賽事爬取與重對接)。
 
 ---
 

@@ -3,15 +3,35 @@ import assert from 'node:assert/strict';
 
 import ReadinessCalculator from '../src/modules/core/ReadinessCalculator.js';
 
-test('all three factors present → averaged score + level + no n/a', () => {
+test('all four factors present → averaged score + level + no n/a', () => {
   const r = ReadinessCalculator.compute({
     hrvStatus: 'normal',
     acwrZone: 'sweet',
-    recoveryDays: 1
+    recoveryDays: 1,
+    wellnessScore: 100
   });
   assert.equal(r.score, 100);
   assert.equal(r.level, 'go');
   assert.ok(r.factors.every((f) => f.state !== 'na'));
+});
+
+test('subjective wellness is the 4th factor and joins the average', () => {
+  // hrv 100, acwr 100, recovery 100, wellness 30 → avg(330/4)=82.5→83 → go
+  const r = ReadinessCalculator.compute({
+    hrvStatus: 'normal',
+    acwrZone: 'sweet',
+    recoveryDays: 1,
+    wellnessScore: 30
+  });
+  const wellness = r.factors.find((f) => f.key === 'wellness');
+  assert.equal(wellness?.score, 30);
+  assert.equal(wellness?.state, 'bad');
+  assert.equal(r.score, 83);
+
+  // wellness omitted → that factor is n/a and excluded
+  const without = ReadinessCalculator.compute({ hrvStatus: 'normal' });
+  assert.equal(without.factors.find((f) => f.key === 'wellness')?.state, 'na');
+  assert.equal(without.score, 100);
 });
 
 test('missing factor is n/a and excluded from the average', () => {

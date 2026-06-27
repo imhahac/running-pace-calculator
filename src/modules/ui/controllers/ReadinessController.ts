@@ -10,11 +10,13 @@ import AcwrCalculator from '../../core/AcwrCalculator.js';
 import HrvCalculator from '../../core/HrvCalculator.js';
 import RecoveryCalculator from '../../core/RecoveryCalculator.js';
 import ReadinessCalculator from '../../core/ReadinessCalculator.js';
+import WellnessCalculator from '../../core/WellnessCalculator.js';
 import TimeFormatter from '../../core/TimeFormatter.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { gauge } from '../viz/Charts.js';
 import { renderInsight } from '../viz/ToolInsight.js';
 import { setText, pickOption } from './dom.js';
+import HrvController from './HrvController.js';
 import type { TEffort } from '../../core/RecoveryCalculator.js';
 
 // The existing tool inputs this dashboard reads from (re-renders on their change).
@@ -24,6 +26,10 @@ const SOURCE_IDS = [
   'acwr-w3',
   'acwr-w4',
   'hrv-input',
+  'hrv-sleep-select',
+  'hrv-soreness-select',
+  'hrv-stress-select',
+  'hrv-mood-select',
   'rec-dist-select',
   'rec-effort-select',
   'rec-age-input',
@@ -76,13 +82,19 @@ export class ReadinessController {
       .beforeHardDays;
   }
 
+  /** Subjective wellness 0–100 from the HRV card's four selects (shared reader). */
+  private static wellnessScore(): number | null {
+    return WellnessCalculator.score(HrvController.readWellness()).score;
+  }
+
   static calculate(): void {
     if (!document.getElementById('readiness-chart')) return;
     const t = TranslationManager.getDict();
     const result = ReadinessCalculator.compute({
       hrvStatus: this.hrvStatus(),
       acwrZone: this.acwrZone(),
-      recoveryDays: this.recoveryDays()
+      recoveryDays: this.recoveryDays(),
+      wellnessScore: this.wellnessScore()
     });
 
     const factorsEl = document.getElementById('readiness-factors');

@@ -18,6 +18,19 @@ export interface IHrvResult {
   status: THrvStatus;
 }
 
+export type THrvRecLevel = 'quality' | 'moderate' | 'easy' | 'rest';
+export type THrvRecReason = 'normal' | 'low' | 'high' | 'wellness' | 'saturation';
+
+export interface IHrvRecommendation {
+  /** 0–100 blended readiness; null when neither HRV nor wellness is available. */
+  score: number | null;
+  level: THrvRecLevel | null;
+  reason: THrvRecReason | null;
+}
+
+// Objective HRV status → 0–100, mirroring ReadinessCalculator's mapping.
+const STATUS_SCORE: Record<THrvStatus, number> = { normal: 100, high: 85, low: 40 };
+
 export class HrvCalculator {
   /** @param rmssd morning RMSSD readings, oldest → newest (newest = today). */
   static analyze(rmssd: number[]): IHrvResult | null {
@@ -47,6 +60,40 @@ export class HrvCalculator {
       upper: r1(upper),
       status
     };
+  }
+
+  /**
+   * Synthesise today's training-intensity guidance from the objective HRV status
+   * and an optional subjective wellness score (0–100, e.g. WellnessCalculator).
+   * HRV is the primary signal; subjective wellness modulates it (60/40 blend when
+   * both present, otherwise whichever is available). A high HRV paired with poor
+   * subjective state is flagged as possible parasympathetic saturation/fatigue
+   * rather than green-lit. Returns null level when neither signal is available.
+   */
+  static recommend(status: THrvStatus | null, wellnessScore: number | null): IHrvRecommendation {
+    const hrv = status ? STATUS_SCORE[status] : null;
+    const well =
+      wellnessScore === null || wellnessScore === undefined || !isFinite(wellnessScore)
+        ? null
+        : Math.max(0, Math.min(100, wellnessScore));
+
+    let score: number | null;
+    if (hrv !== null && well !== null) score = Math.round(hrv * 0.6 + well * 0.4);
+    else if (hrv !== null) score = hrv;
+    else if (well !== null) score = well;
+    else return { score: null, level: null, reason: null };
+
+    const level: THrvRecLevel =
+      score >= 75 ? 'quality' : score >= 55 ? 'moderate' : score >= 40 ? 'easy' : 'rest';
+
+    let reason: THrvRecReason;
+    if (status === 'high' && well !== null && well < 55) reason = 'saturation';
+    else if (status === 'low') reason = 'low';
+    else if (status === null) reason = 'wellness';
+    else if (status === 'high') reason = 'high';
+    else reason = 'normal';
+
+    return { score, level, reason };
   }
 }
 

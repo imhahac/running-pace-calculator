@@ -5,9 +5,10 @@
  *  1. Race data API (a stable, you-own-it replacement for the GAS scraper):
  *       GET  /api/races          → public list (served from KV, edge-cached)
  *       PUT  /api/races          → replace list (admin only; JSON body)
- *       (scheduled) best-effort refresh — parses a JSON feed if one exists and
- *       merges it; otherwise logs (the sources are JS/SPA + login-walled, so
- *       admin curation via PUT remains the reliable path).
+ *       (scheduled) daily multi-source crawl — fetches 運動筆記 (biji.co) and
+ *       馬拉松世界 (marathonsworld), parses each to IRaceEvent[] and append-only
+ *       merges them into KV (deduped by date+name; never overwrites admin PUT
+ *       entries' Strava/GPX). Each source is best-effort and isolated.
  *  2. Magic-link auth (passwordless, email via SendGrid).
  *  3. Per-user cloud sync (Bearer session): GET/PUT /api/data.
  *
@@ -20,7 +21,8 @@ import {
   isValidEmail,
   corsAllowOrigin,
   buildMagicLinkUrl,
-  tryParseRaces,
+  parseMwRaces,
+  parseBijiRaces,
   mergeRaces,
   safeParseArray,
   validateRaces,
@@ -31,7 +33,13 @@ const MAGIC_TTL_S = 900; // 15 min
 const SESSION_TTL_S = 60 * 60 * 24 * 30; // 30 days
 const RATE_TTL_S = 60; // 1 magic-link request per email per minute
 const MAX_DATA_BYTES = 100 * 1024; // per-user sync blob cap (DoS / KV-quota guard)
-const MW_URL = 'https://www.marathonsworld.com/artapp/racePage.php';
+// Race sources (see scheduled()). marathonsworld's racePage.php returns the full
+// list to a plain POST (no session cookie needed — confirmed); biji.co's
+// ?q=competition page is server-rendered HTML.
+const MW_API_URL = 'https://www.marathonsworld.com/artapp/racePage.php';
+const MW_RACELIST_URL = 'https://www.marathonsworld.com/artapp/racelist.php?p=1';
+const MW_BODY = 'action=getRaceListByCountryYear&user_id=1&country=1&year=0&sort=0&type=0';
+const BIJI_URL = 'https://running.biji.co/?q=competition';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
 
@@ -208,6 +216,40 @@ async function handlePutData(env, request) {
   return json({ ok: true }, 200, env, request);
 }
 
+// ── Race source crawlers (best-effort; return [] on any failure) ─────────────
+
+/** 運動筆記: server-rendered ?q=competition list → IRaceEvent[]. */
+async function crawlBiji() {
+  const resp = await fetch(BIJI_URL, {
+    headers: { 'User-Agent': UA, 'Accept-Language': 'zh-TW,zh;q=0.9' }
+  });
+  if (!resp.ok) {
+    console.log('[cron] biji status', resp.status);
+    return [];
+  }
+  return parseBijiRaces(await resp.text());
+}
+
+/** 馬拉松世界: POST racePage.php (XHR-style) → HTML fragment → IRaceEvent[]. */
+async function crawlMarathonsWorld() {
+  const resp = await fetch(MW_API_URL, {
+    method: 'POST',
+    headers: {
+      'User-Agent': UA,
+      'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+      'X-Requested-With': 'XMLHttpRequest',
+      Referer: MW_RACELIST_URL,
+      Origin: 'https://www.marathonsworld.com'
+    },
+    body: MW_BODY
+  });
+  if (!resp.ok) {
+    console.log('[cron] marathonsworld status', resp.status);
+    return [];
+  }
+  return parseMwRaces(await resp.text());
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -237,34 +279,30 @@ export default {
     }
   },
 
-  /** Best-effort scheduled race refresh: parse a JSON feed if present, merge it. */
+  /**
+   * Daily multi-source race refresh. Each source is crawled in isolation (a
+   * failure in one never aborts the others), then append-only merged into KV
+   * (dedupe by date+name; admin PUT entries and their Strava/GPX are preserved).
+   */
   async scheduled(event, env) {
-    try {
-      const resp = await fetch(MW_URL, {
-        method: 'POST',
-        headers: { 'User-Agent': UA },
-        body: new URLSearchParams({
-          action: 'getRaceListByCountryYear',
-          user_id: '1',
-          country: '1',
-          year: '0',
-          sort: '0',
-          type: '0'
-        })
-      });
-      const text = await resp.text();
-      console.log('[cron] marathonsworld status', resp.status, 'bytes', text.length);
-
-      const fresh = tryParseRaces(text);
-      if (!fresh.length) {
-        console.log('[cron] no parseable races (source likely JS/SPA) — use PUT /api/races');
-        return;
+    const sources = [
+      ['biji', crawlBiji],
+      ['marathonsworld', crawlMarathonsWorld]
+    ];
+    let list = safeParseArray(await env.KV.get('races'));
+    let totalAdded = 0;
+    for (const [name, crawl] of sources) {
+      try {
+        const fresh = await crawl();
+        const merged = mergeRaces(list, fresh);
+        list = merged.list;
+        totalAdded += merged.added;
+        console.log(`[cron] ${name}: fetched ${fresh.length}, merged ${merged.added} new`);
+      } catch (err) {
+        console.log(`[cron] ${name} error:`, String(err));
       }
-      const { list, added } = mergeRaces(safeParseArray(await env.KV.get('races')), fresh);
-      if (added > 0) await env.KV.put('races', JSON.stringify(list));
-      console.log('[cron] merged', added, 'new races');
-    } catch (err) {
-      console.log('[cron] refresh error:', String(err));
     }
+    if (totalAdded > 0) await env.KV.put('races', JSON.stringify(list));
+    console.log(`[cron] total merged: ${totalAdded} new races`);
   }
 };
