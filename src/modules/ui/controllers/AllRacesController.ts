@@ -9,6 +9,11 @@
 import RaceDataManager from '../RaceDataManager.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import StateManager from '../../state/StateManager.js';
+import {
+  raceMatchesDistance,
+  DISTANCE_CATEGORIES,
+  type DistanceCategory
+} from '../raceDistance.js';
 
 const esc = (s: string): string =>
   String(s).replace(/[&<>"']/g, (c) =>
@@ -96,6 +101,7 @@ const regStatus = (regClose: string, todayMs: number): { label: string; cls: str
 const SELECT_IDS = [
   'all-races-month',
   'all-races-region',
+  'all-races-distance',
   'all-races-search',
   'all-races-upcoming'
 ];
@@ -154,6 +160,20 @@ export class AllRacesController {
           : '');
       regionEl.value = [...regions, '', '__none__'].includes(cur) ? cur : '';
     }
+
+    // Distance filter: a fixed category set (not data-derived). Labels are
+    // re-translated on every render so a language toggle relabels the dropdown.
+    const distEl = document.getElementById('all-races-distance') as HTMLSelectElement | null;
+    if (distEl) {
+      const cur = distEl.value;
+      distEl.innerHTML =
+        `<option value="">${esc(t.allraces_distance_all || '全部距離')}</option>` +
+        DISTANCE_CATEGORIES.map(
+          (c) =>
+            `<option value="${c}">${esc(TranslationManager.get('allraces_dist_' + c))}</option>`
+        ).join('');
+      distEl.value = cur === '' || (DISTANCE_CATEGORIES as string[]).includes(cur) ? cur : '';
+    }
   }
 
   static render(): void {
@@ -183,6 +203,7 @@ export class AllRacesController {
 
     const month = this.getVal('all-races-month');
     const region = this.getVal('all-races-region');
+    const distance = this.getVal('all-races-distance');
     const upcoming =
       (document.getElementById('all-races-upcoming') as HTMLInputElement | null)?.checked ?? false;
     const q = this.getVal('all-races-search').trim().toLowerCase();
@@ -194,6 +215,7 @@ export class AllRacesController {
         const rg = regionOf(r.location);
         if (region === '__none__' ? rg !== '' : rg !== region) return false;
       }
+      if (distance && !raceMatchesDistance(r.distances, distance as DistanceCategory)) return false;
       if (upcoming && r.date < today) return false;
       if (q && !`${r.name} ${r.location} ${r.date}`.toLowerCase().includes(q)) return false;
       return true;
