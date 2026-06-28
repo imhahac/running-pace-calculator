@@ -4,14 +4,19 @@
  * 自動爬取「運動筆記」與「馬拉松世界」最新賽事並寫入 Google 試算表,免手動輸入。
  * 解析邏輯與 Cloudflare Worker 後端一致(已驗證兩來源皆可「匿名」抓取)。
  *
- * 💡 使用步驟:
+ * 📘 完整設定指南(含與 gas-api-script.js 的關係、部署、觸發器、疑難排解):
+ *    見 docs/GAS_SETUP.md。本檔(爬蟲)與 gas-api-script.js(API)貼在「同一個」
+ *    容器繫結 Apps Script 專案的兩個檔即可共用同一張試算表。
+ *
+ * 💡 快速步驟:
  * 1. 建立 Google 試算表,第一列標頭(順序一致):
  *    A1: Date  B1: Name  C1: Location  D1: RegistrationLink
  *    E1: StravaFull  F1: StravaHalf  G1: GpxFull  H1: GpxHalf
  *    I1: Distances  J1: RegClose
  *    (A–H 為前端必要欄;I/J 為新增的距離與報名截止,選填)
- * 2.「擴充功能 → Apps Script」,把本檔貼到 Code.gs,儲存後重新整理試算表。
+ * 2.「擴充功能 → Apps Script」,把本檔貼成一個檔(如 Crawler.gs),儲存後重新整理試算表。
  * 3. 上方選單「🏃‍♂️ 賽事助手 → 🔄 從運動筆記與馬拉松世界更新賽事」即可同步。
+ *    (選用)設「時間驅動」觸發器每日自動跑 syncRaces,等同 Worker cron。
  *
  * 同步策略:append-only,以「日期_名稱」去重、只加未來賽事;手填的 Strava/GPX 不受影響。
  * 來源若再改版導致解析 0 筆,請看「執行紀錄」的內容樣本調整下方解析 regex
@@ -134,7 +139,7 @@ function getExistingRaces(sheet) {
     var dateVal = data[i][0];
     var nameVal = data[i][1];
     if (dateVal && nameVal) {
-      var dateStr = dateVal instanceof Date ? formatDate(dateVal) : String(dateVal).trim();
+      var dateStr = dateVal instanceof Date ? formatDate_(dateVal) : String(dateVal).trim();
       existing[dateStr + '_' + String(nameVal).trim()] = true;
     }
   }
@@ -348,11 +353,13 @@ function normalizeDate_(raw) {
     return m[1] + '-' + mm + '-' + dd;
   }
   var d = new Date(s);
-  if (!isNaN(d.getTime())) return formatDate(d);
+  if (!isNaN(d.getTime())) return formatDate_(d);
   return '';
 }
 
-function formatDate(dateObj) {
+// 私有命名(尾底線):與 gas-api-script.js 的 formatDate 同名會在同一專案重複宣告,
+// 故爬蟲端改名 formatDate_,讓兩支檔可同放一個容器繫結專案。
+function formatDate_(dateObj) {
   var d = dateObj.getDate();
   var m = dateObj.getMonth() + 1;
   var y = dateObj.getFullYear();

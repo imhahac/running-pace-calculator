@@ -61,7 +61,7 @@ flowchart TD
 
 ### 兩種後端
 - **Cloudflare Worker（推薦）**：穩定、由你掌控，一站包辦賽事 API（`GET /api/races` 由 KV 提供、`PUT /api/races` 由管理員維護）、Email magic-link 登入、跨裝置個人雲端同步。資料存 KV、僅管理員可寫、前端只讀。部署全走 GitHub Actions（金鑰不入 repo，KV namespace 由 CI 自動建立）——**完整設定見 [worker/README.md](worker/README.md)**。
-- **Google Apps Script（備選／手動）**：用 Google 試算表當免費資料庫——把 [docs/gas-api-script.js](docs/gas-api-script.js) 部署為 Web App（試算表 `doGet` 直接回傳 JSON）。試算表第一列欄位：`Date`(YYYY-MM-DD)／`Name`／`Location`／`RegistrationLink`／`StravaFull`／`StravaHalf`，新增列即可維護賽事。
+- **Google Apps Script（備選／手動）**：用 Google 試算表當免費資料庫——把 [docs/gas-api-script.js](docs/gas-api-script.js) 部署為 Web App（試算表 `doGet` 直接回傳 JSON），並可選配 [docs/gas-crawler-script.js](docs/gas-crawler-script.js) 自動爬取賽事。試算表第一列欄位：`Date`(YYYY-MM-DD)／`Name`／`Location`／`RegistrationLink`／`StravaFull`／`StravaHalf`，新增列即可維護賽事。**完整設定（兩支腳本的關係、部署、觸發器、疑難排解）見 [docs/GAS_SETUP.md](docs/GAS_SETUP.md)**。
 
 ### 前端抓取與顯示
 - 從 `${backendUrl}/api/races` 載入（未設則回退 `GAS_API_URL`）；**4 小時 localStorage 快取**、**10 秒逾時**、離線時回退舊快取。
@@ -86,7 +86,7 @@ flowchart TD
 ### 維護賽事的三種方式
 1. **cron 自動爬取（預設）** — 每日 18:00 UTC 自動從**運動筆記**(`?q=competition` HTML)與**馬拉松世界**(`racePage.php` XHR)抓取並 append-only 合併;新賽事自動進清單(Strava／GPX 留空待補)。
 2. **管理員 `PUT /api/races`** — 以 JSON 整份覆寫,用於整理清單與補上 Strava／GPX(cron **不會覆寫**手填值);機制與 curl 範例見 [worker/README.md](worker/README.md)。
-3. **GAS 試算表（備選）** — 新增列即維護,欄位同 `IRaceEvent`（[docs/gas-api-script.js](docs/gas-api-script.js)）。
+3. **GAS 試算表（備選）** — 新增列即維護,欄位同 `IRaceEvent`,並可用 [docs/gas-crawler-script.js](docs/gas-crawler-script.js) 自動爬取;設定見 [docs/GAS_SETUP.md](docs/GAS_SETUP.md)。
 
 > ℹ️ 自動爬取的解析依賴來源網站的 HTML 結構;站方若大改版,解析會**乾淨降級**為「不合併」(不報錯)。逐來源抓取/解析細節與**站方改版時的重對接步驟**,詳見 [worker/README.md → 賽事爬取與重對接](worker/README.md#賽事爬取與重對接)。
 
@@ -148,7 +148,9 @@ eslint.config.js / .prettierrc / .c8rc.json   # 品質工具設定
 ---
 
 ## 後續規劃 (Roadmap)
-即時語言重譯體驗優化、賽事來源端點重對接（兩來源已改 JS/SPA＋登入牆，匿名爬取失效；待在登入環境擷取真實 API 端點後重接——回報範本見 [docs/gas-crawler-script.js](docs/gas-crawler-script.js) 最上方 `CONFIG` 註解）、更多個體化監控整合。
+即時語言重譯體驗優化、Strava 路線/活動整合（需使用者授權）、更多個體化監控整合。
+
+> 賽事爬取現況：運動筆記與馬拉松世界**皆可匿名抓取**,Worker cron 與 GAS 爬蟲([docs/gas-crawler-script.js](docs/gas-crawler-script.js))均已正常運作;站方改版時的重對接步驟見 [worker/README.md → 賽事爬取與重對接](worker/README.md#賽事爬取與重對接)。
 
 ---
 
