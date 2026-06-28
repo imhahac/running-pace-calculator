@@ -1,10 +1,10 @@
 {
-  "name": "配速計算機",
-  "short_name": "配速計算機",
+  "name": "跑者配速計算機",
+  "short_name": "跑者配速計算機",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#457575",
-  "theme_color": "#457575",
+  "background_color": "#0e1217",
+  "theme_color": "#0e1217",
   "icons": [
     {
       "src": "assets/images/icons8-exercise-96.png",
