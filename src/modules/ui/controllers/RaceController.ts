@@ -2,6 +2,7 @@ import { FULL_MARATHON_METERS } from '../../../constants/index.js';
 import RaceDataManager from '../../ui/RaceDataManager.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import { raceHasHalfOrFull } from '../raceDistance.js';
+import { dedupePreferBiji } from '../raceDedupe.js';
 import MapController from './MapController.js';
 
 export class RaceController {
@@ -22,8 +23,9 @@ export class RaceController {
     try {
       const races = await RaceDataManager.fetchRaces(force);
       // Keep the selector focused on goal races: only those offering a half or
-      // full marathon (the list tab still shows every distance).
-      const filtered = races.filter((race) => raceHasHalfOrFull(race.distances));
+      // full marathon (the list tab still shows every distance), then collapse
+      // the same event crawled from both sources, preferring 運動筆記 (biji).
+      const filtered = dedupePreferBiji(races.filter((race) => raceHasHalfOrFull(race.distances)));
       const promptOption = raceList.options[0];
       raceList.innerHTML = '';
       raceList.appendChild(promptOption);
