@@ -1,8 +1,8 @@
 /**
  * Running Pace Calculator - Google Apps Script Backend (API / doGet)
  *
- * 📘 Full setup guide (architecture, the crawler companion script, deployment,
- *    troubleshooting): see docs/GAS_SETUP.md.
+ * Full setup guide (architecture, the crawler companion script, deployment,
+ * troubleshooting): see docs/GAS_SETUP.md.
  *
  * Instructions:
  * 1. Create a new Google Sheet.
@@ -21,8 +21,8 @@
  *    share the project with gas-crawler-script.js (no name clash after the
  *    crawler's formatDate was renamed formatDate_).
  * 4. Click Deploy > New deployment. Type: Web App. Execute as: Me. Access: Anyone.
- * 5. Copy the Web App /exec URL and set it as the app's backend URL — in the app's
- *    ⚙️ System Settings ("後端 URL") at runtime, or inject GAS_API_URL at build
+ * 5. Copy the Web App /exec URL and set it as the app's backend URL: in the app's
+ *    System Settings ("後端 URL") at runtime, or inject GAS_API_URL at build
  *    time. (You do NOT edit constants/index.ts by hand.)
  */
 

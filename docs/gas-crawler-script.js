@@ -4,19 +4,19 @@
  * 自動爬取「運動筆記」與「馬拉松世界」最新賽事並寫入 Google 試算表,免手動輸入。
  * 解析邏輯與 Cloudflare Worker 後端一致(已驗證兩來源皆可「匿名」抓取)。
  *
- * 📘 完整設定指南(含與 gas-api-script.js 的關係、部署、觸發器、疑難排解):
- *    見 docs/GAS_SETUP.md。本檔(爬蟲)與 gas-api-script.js(API)貼在「同一個」
- *    容器繫結 Apps Script 專案的兩個檔即可共用同一張試算表。
+ * 完整設定指南(與 gas-api-script.js 的關係、部署、觸發器、疑難排解):見 docs/GAS_SETUP.md。
+ * 本檔(爬蟲)與 gas-api-script.js(API)貼在同一個容器繫結 Apps Script 專案的兩個檔,
+ * 即可共用同一張試算表。
  *
- * 💡 快速步驟:
+ * 快速步驟:
  * 1. 建立 Google 試算表,第一列標頭(順序一致):
  *    A1: Date  B1: Name  C1: Location  D1: RegistrationLink
  *    E1: StravaFull  F1: StravaHalf  G1: GpxFull  H1: GpxHalf
  *    I1: Distances  J1: RegClose
- *    (A–H 為前端必要欄;I/J 為新增的距離與報名截止,選填)
+ *    (A–H 為前端必要欄;I/J 為距離與報名截止,選填)
  * 2.「擴充功能 → Apps Script」,把本檔貼成一個檔(如 Crawler.gs),儲存後重新整理試算表。
- * 3. 上方選單「🏃‍♂️ 賽事助手 → 🔄 從運動筆記與馬拉松世界更新賽事」即可同步。
- *    (選用)設「時間驅動」觸發器每日自動跑 syncRaces,等同 Worker cron。
+ * 3. 上方選單「🏃‍♂️ 賽事助手 → 🔄 從運動筆記與馬拉松世界更新賽事」即可同步(此為腳本建立的選單)。
+ *    選用:設「時間驅動」觸發器每日自動跑 syncRaces,等同 Worker cron。
  *
  * 同步策略:append-only,以「日期_名稱」去重、只加未來賽事;手填的 Strava/GPX 不受影響。
  * 來源若再改版導致解析 0 筆,請看「執行紀錄」的內容樣本調整下方解析 regex
