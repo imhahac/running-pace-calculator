@@ -1657,6 +1657,33 @@ input.diff {
 .races-list {
     width: 100%;
 }
+.races-pager {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    margin-top: 10px;
+}
+.races-pager:empty {
+    display: none;
+}
+.races-pager-btn {
+    min-width: 40px;
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-light);
+    cursor: pointer;
+}
+.races-pager-btn:disabled {
+    opacity: 0.4;
+    cursor: default;
+}
+.races-pager-info {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+}
 .race-month {
     position: sticky;
     top: 0;

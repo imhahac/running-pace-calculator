@@ -106,12 +106,27 @@ const SELECT_IDS = [
   'all-races-upcoming'
 ];
 
+const PAGE_SIZE = 20;
+
 export class AllRacesController {
+  private static page = 1;
+
   static initialize(): void {
     SELECT_IDS.forEach((id) => {
       const el = document.getElementById(id);
-      el?.addEventListener('input', () => this.render());
-      el?.addEventListener('change', () => this.render());
+      // Any filter change resets to page 1 (the pager itself is not in this list).
+      const onFilter = (): void => {
+        this.page = 1;
+        this.render();
+      };
+      el?.addEventListener('input', onFilter);
+      el?.addEventListener('change', onFilter);
+    });
+    document.getElementById('all-races-pager')?.addEventListener('click', (e) => {
+      const btn = (e.target as HTMLElement | null)?.closest<HTMLElement>('[data-act]');
+      if (!btn || (btn as HTMLButtonElement).disabled) return;
+      this.page += btn.dataset.act === 'next' ? 1 : -1;
+      this.render();
     });
     void RaceDataManager.fetchRaces().then(() => this.render());
     this.render();
@@ -244,8 +259,15 @@ export class AllRacesController {
 
     if (!races.length) {
       listEl.innerHTML = `<div class="helper-text" style="padding:10px 0;">${esc(t.allraces_no_match || '沒有符合條件的賽事')}</div>`;
+      this.renderPager(1);
       return;
     }
+
+    // Paginate: render only the current page's slice (clamped if filters shrank
+    // the result below the current page). Month headers repeat per page.
+    const pages = Math.max(1, Math.ceil(races.length / PAGE_SIZE));
+    this.page = Math.min(Math.max(1, this.page), pages);
+    const pageRaces = races.slice((this.page - 1) * PAGE_SIZE, this.page * PAGE_SIZE);
 
     const wdFmt = new Intl.DateTimeFormat(loc, { weekday: 'short' });
     const monthLabel = (ym: string): string => {
@@ -256,9 +278,9 @@ export class AllRacesController {
     };
     const todayMs = new Date(`${today}T00:00:00`).getTime();
 
-    // Group by YYYY-MM (races already date-sorted ascending).
+    // Group by YYYY-MM (current page only; races are date-sorted ascending).
     const groups = new Map<string, typeof races>();
-    for (const r of races) {
+    for (const r of pageRaces) {
       const k = r.date.slice(0, 7);
       if (!groups.has(k)) groups.set(k, []);
       groups.get(k)!.push(r);
@@ -304,6 +326,23 @@ export class AllRacesController {
       }
     }
     listEl.innerHTML = html;
+    this.renderPager(pages);
+  }
+
+  /** Render prev / "page X of Y" / next into #all-races-pager (hidden if 1 page). */
+  private static renderPager(pages: number): void {
+    const el = document.getElementById('all-races-pager');
+    if (!el) return;
+    if (pages <= 1) {
+      el.innerHTML = '';
+      return;
+    }
+    const t = TranslationManager.getDict();
+    const label = TranslationManager.format('allraces_page', { page: this.page, pages });
+    el.innerHTML =
+      `<button type="button" class="races-pager-btn" data-act="prev"${this.page <= 1 ? ' disabled' : ''} aria-label="${esc(t.allraces_prev || '上一頁')}">◀</button>` +
+      `<span class="races-pager-info">${esc(label)}</span>` +
+      `<button type="button" class="races-pager-btn" data-act="next"${this.page >= pages ? ' disabled' : ''} aria-label="${esc(t.allraces_next || '下一頁')}">▶</button>`;
   }
 }
 
