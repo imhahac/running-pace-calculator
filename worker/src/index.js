@@ -210,11 +210,16 @@ async function handleAuthRequest(env, request) {
   } catch {
     return json({ error: 'invalid json' }, 400, env, request);
   }
+  if (!body || typeof body !== 'object') return json({ error: 'invalid json' }, 400, env, request);
   const email = normalizeEmail(body.email);
   if (!isValidEmail(email)) return json({ error: 'invalid email' }, 400, env, request);
 
   // Turnstile (only when configured) — block bots before consuming any quota.
+  // A missing token returns a DISTINCT code so an asymmetric config (secret set
+  // without the frontend site key) is diagnosable instead of looking like a
+  // failed challenge.
   if (env.TURNSTILE_SECRET) {
+    if (!body.turnstileToken) return json({ error: 'turnstile_required' }, 403, env, request);
     const ok = await verifyTurnstile(
       env,
       body.turnstileToken,
@@ -242,7 +247,9 @@ async function handleAuthRequest(env, request) {
   }
   await env.KV.put(rlKey, '1', { expirationTtl: RATE_TTL_S });
 
-  // Consume the IP + global counters now that this request will send an email.
+  // Consume the IP + global counters now that all caps passed. Best-effort:
+  // KV has no atomic increment, so a concurrent burst can slightly overshoot —
+  // acceptable, and GLOBAL_DAILY_MAX sits under the SendGrid quota for headroom.
   await env.KV.put(ipKey, String((parseInt(ipCount || '0', 10) || 0) + 1), {
     expirationTtl: IP_WINDOW_S
   });
@@ -412,7 +419,8 @@ export default {
 
     try {
       const route = ROUTES.find((r) => r.method === request.method && r.path === pathname);
-      if (route) return route.handler(env, request, url);
+      // `await` so an async handler rejection is caught here (clean 500 + log).
+      if (route) return await route.handler(env, request, url);
       return json({ error: 'not_found' }, 404, env, request);
     } catch (err) {
       console.log('[worker] error:', err && err.stack ? err.stack : String(err));

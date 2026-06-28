@@ -75,6 +75,8 @@ export class SyncController {
 
   private static async onLogout(): Promise<void> {
     await BackendClient.logout();
+    // Drop any unsent snapshot so it isn't later pushed into another account.
+    StorageManager.remove(PENDING_KEY);
     this.updateAuthUI();
     this.status('auth_logged_out_msg');
   }

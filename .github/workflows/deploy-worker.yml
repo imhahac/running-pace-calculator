@@ -176,5 +176,5 @@ jobs:
           if [ -n "$TURNSTILE_SECRET" ]; then
             printf '%s' "$TURNSTILE_SECRET" | npx --yes wrangler@"$WRANGLER_VERSION" secret put TURNSTILE_SECRET
           else
-            echo "::notice::TURNSTILE_SECRET not set — magic-link Turnstile verification disabled (IP + global + per-email limits still apply)."
+            echo "::notice::TURNSTILE_SECRET not set — Turnstile verification stays as-is (IP + global + per-email limits still apply). NOTE: a previously-set secret is NOT removed here; to turn Turnstile off run 'wrangler secret delete TURNSTILE_SECRET' once, and also unset the TURNSTILE_SITE_KEY repo variable."
           fi

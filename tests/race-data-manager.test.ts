@@ -54,6 +54,34 @@ test('fetchRaces ignores corrupted cache and still uses API data', async () => {
   w.localStorage = originalLocalStorage;
 });
 
+test('fetchRaces derives a stable id from date+name when the source has none', async () => {
+  // Worker-crawled races carry id: '' — without a derived id every dropdown
+  // option shares value "" and getRaceById('') returns the first race.
+  const w = globalThis as unknown as Record<string, unknown>;
+  const originalFetch = w.fetch;
+  const originalLocalStorage = w.localStorage;
+  w.localStorage = createMemoryStorage();
+  RaceDataManager.setApiUrl('https://example.com/races');
+
+  w.fetch = async () => ({
+    ok: true,
+    headers: { get: () => '' },
+    json: async () => [
+      { id: '', date: '2026-10-18', name: 'City Run', location: 'Taipei' },
+      { id: '', date: '2026-11-01', name: 'Hill Race', location: 'Hualien' }
+    ]
+  });
+
+  const races = await RaceDataManager.fetchRaces(true);
+  assert.equal(races[0].id, '2026-10-18_City Run');
+  assert.equal(races[1].id, '2026-11-01_Hill Race');
+  // getRaceById resolves each distinct race (not always the first).
+  assert.equal(RaceDataManager.getRaceById('2026-11-01_Hill Race')?.name, 'Hill Race');
+
+  w.fetch = originalFetch;
+  w.localStorage = originalLocalStorage;
+});
+
 test('fetchRaces returns empty list when cache is corrupted and api fails', async () => {
   const w = globalThis as unknown as Record<string, unknown>;
   const originalFetch = w.fetch;

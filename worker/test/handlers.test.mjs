@@ -243,3 +243,30 @@ test('POST /api/auth/request: Turnstile enabled rejects bad token (403), accepts
     globalThis.fetch = origFetch;
   }
 });
+
+test('POST /api/auth/request: Turnstile configured but no token → 403 turnstile_required (no siteverify call)', async () => {
+  const env = makeEnv({ TURNSTILE_SECRET: 'sek' });
+  const origFetch = globalThis.fetch;
+  let siteverifyCalled = false;
+  globalThis.fetch = async (url) => {
+    if (String(url).includes('siteverify')) siteverifyCalled = true;
+    return new Response('', { status: 200 });
+  };
+  try {
+    const res = await worker.fetch(
+      req('POST', '/api/auth/request', { body: { email: 'd@test.com' } }), // no turnstileToken
+      env
+    );
+    assert.equal(res.status, 403);
+    assert.equal((await res.json()).error, 'turnstile_required');
+    assert.equal(siteverifyCalled, false); // short-circuits before the network call
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});
+
+test('POST /api/auth/request: null JSON body → 400 (not 500)', async () => {
+  const env = makeEnv();
+  const res = await worker.fetch(req('POST', '/api/auth/request', { body: 'null' }), env);
+  assert.equal(res.status, 400);
+});

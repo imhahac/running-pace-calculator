@@ -95,7 +95,10 @@ export class RaceDataManager {
 
       const data: Partial<IRaceEvent>[] = await response.json();
       this.races = data.map((item) => ({
-        id: item.id || '',
+        // Crawler-sourced races carry no id (the Worker emits id: ''); derive a
+        // stable one from date+name so the selector's getRaceById works and the
+        // value survives cache + refreshes (GAS already supplies "race_N").
+        id: item.id || `${item.date || ''}_${item.name || ''}`,
         date: item.date || '',
         name: item.name || '',
         location: item.location || '',

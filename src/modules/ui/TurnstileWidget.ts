@@ -40,6 +40,9 @@ export class TurnstileWidget {
     this.loading = true;
 
     const render = (): void => {
+      // Clear the guard once we've attempted: on success widgetId blocks re-render;
+      // on failure (no element / api not ready) a later init() can retry.
+      this.loading = false;
       const el = document.getElementById('auth-turnstile');
       if (!el || !window.turnstile) return;
       this.widgetId = window.turnstile.render(el, { sitekey: INJECTED_TURNSTILE_SITE_KEY });
@@ -54,6 +57,9 @@ export class TurnstileWidget {
     script.async = true;
     script.defer = true;
     script.onload = render;
+    script.onerror = () => {
+      this.loading = false; // script blocked/failed → allow a future retry
+    };
     document.head.appendChild(script);
   }
 
