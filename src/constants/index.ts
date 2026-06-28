@@ -15,8 +15,11 @@ import type {
 // safe under tsc/tests where the tokens are undefined → fall back to ''.
 declare const __GAS_API_URL__: string | undefined;
 declare const __BACKEND_URL__: string | undefined;
+declare const __TURNSTILE_SITE_KEY__: string | undefined;
 export const INJECTED_GAS_API_URL = typeof __GAS_API_URL__ !== 'undefined' ? __GAS_API_URL__ : '';
 export const INJECTED_BACKEND_URL = typeof __BACKEND_URL__ !== 'undefined' ? __BACKEND_URL__ : '';
+export const INJECTED_TURNSTILE_SITE_KEY =
+  typeof __TURNSTILE_SITE_KEY__ !== 'undefined' ? __TURNSTILE_SITE_KEY__ : '';
 
 /**
  * Conversion factors for distance units
@@ -569,6 +572,7 @@ export const TRANSLATIONS: ITranslations = {
     auth_signed_in_as: '已登入',
     auth_logout: '登出',
     auth_need_backend: '請先在上方填入後端 URL (Worker)',
+    auth_turnstile_required: '請先完成人機驗證',
     auth_sending: '寄送中…',
     auth_link_sent: '✅ 登入連結已寄出，請查收 Email（15 分鐘內有效）',
     auth_error: '⚠️ 操作失敗，請稍後再試',
@@ -1487,6 +1491,7 @@ export const TRANSLATIONS: ITranslations = {
     auth_signed_in_as: 'Signed in',
     auth_logout: 'Sign out',
     auth_need_backend: 'Set the Backend URL (Worker) above first',
+    auth_turnstile_required: 'Please complete the verification first',
     auth_sending: 'Sending…',
     auth_link_sent: '✅ Login link sent — check your email (valid 15 min)',
     auth_error: '⚠️ Something went wrong, please try again later',

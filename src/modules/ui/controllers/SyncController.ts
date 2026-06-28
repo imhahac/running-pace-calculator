@@ -10,21 +10,32 @@
 import BackendClient from '../../state/BackendClient.js';
 import FormPersistence, { TOOL_INPUT_IDS } from '../../state/FormPersistence.js';
 import StateManager from '../../state/StateManager.js';
+import StorageManager from '../../state/StorageManager.js';
 import TranslationManager from '../../state/TranslationManager.js';
 import RaceLogStore from '../../state/RaceLogStore.js';
 import RaceLog, { type IRaceEntry } from '../../core/RaceLog.js';
+import TurnstileWidget from '../TurnstileWidget.js';
 import LanguageController from './LanguageController.js';
 import FitnessTrendController from './FitnessTrendController.js';
+
+// localStorage flag: a push failed (offline) and needs resending on reconnect.
+const PENDING_KEY = 'rpc_pending_sync';
 
 export class SyncController {
   private static pushTimer: ReturnType<typeof setTimeout> | null = null;
 
   static async initialize(): Promise<void> {
     this.wireUi();
+    TurnstileWidget.init();
     await this.handleMagicLinkRedirect();
     this.updateAuthUI();
     if (BackendClient.isLoggedIn()) await this.pull();
     this.bindPushTriggers();
+    // Resend any change made while offline: now (if back online) and on reconnect.
+    if (typeof window !== 'undefined') {
+      window.addEventListener('online', () => void this.flushPending());
+    }
+    void this.flushPending();
   }
 
   private static wireUi(): void {
@@ -48,8 +59,17 @@ export class SyncController {
       this.status('auth_need_backend');
       return;
     }
+    let token: string | undefined;
+    if (TurnstileWidget.isEnabled()) {
+      token = TurnstileWidget.getToken();
+      if (!token) {
+        this.status('auth_turnstile_required');
+        return;
+      }
+    }
     this.status('auth_sending');
-    const ok = await BackendClient.requestMagicLink(email);
+    const ok = await BackendClient.requestMagicLink(email, token);
+    if (TurnstileWidget.isEnabled()) TurnstileWidget.reset(); // tokens are single-use
     this.status(ok ? 'auth_link_sent' : 'auth_error');
   }
 
@@ -135,8 +155,20 @@ export class SyncController {
     if (!BackendClient.isLoggedIn()) return;
     if (this.pushTimer) clearTimeout(this.pushTimer);
     this.pushTimer = setTimeout(() => {
-      void BackendClient.putData(this.collect());
+      void (async () => {
+        const ok = await BackendClient.putData(this.collect());
+        // Offline / failed → remember so we resend on reconnect (last-write-wins).
+        if (ok) StorageManager.remove(PENDING_KEY);
+        else StorageManager.set(PENDING_KEY, '1');
+      })();
     }, 1200);
+  }
+
+  /** Resend the latest local snapshot if a previous push failed while offline. */
+  static async flushPending(): Promise<void> {
+    if (!BackendClient.isLoggedIn() || StorageManager.get(PENDING_KEY) !== '1') return;
+    const ok = await BackendClient.putData(this.collect());
+    if (ok) StorageManager.remove(PENDING_KEY);
   }
 
   private static bindPushTriggers(): void {

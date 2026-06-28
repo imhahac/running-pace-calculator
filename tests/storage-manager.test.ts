@@ -58,3 +58,17 @@ test('get/set expose raw key access', () => {
   StorageManager.set('arbitrary_key', 'value');
   assert.equal(StorageManager.get('arbitrary_key'), 'value');
 });
+
+// Underpins the offline-sync pending flag (SyncController PENDING_KEY): set on a
+// failed push, cleared on a successful resend.
+test('remove clears a single key; absent-key remove is a safe no-op', () => {
+  const KEY = 'rpc_pending_sync';
+  StorageManager.set(KEY, '1');
+  assert.equal(StorageManager.get(KEY), '1');
+
+  StorageManager.remove(KEY);
+  assert.equal(StorageManager.get(KEY), null);
+
+  StorageManager.remove(KEY); // no throw on absent key
+  assert.equal(StorageManager.get(KEY), null);
+});

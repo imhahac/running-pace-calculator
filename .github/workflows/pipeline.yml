@@ -75,6 +75,7 @@ jobs:
         env:
           GAS_API_URL: ${{ vars.GAS_API_URL }}
           BACKEND_URL: ${{ vars.BACKEND_URL }}
+          TURNSTILE_SITE_KEY: ${{ vars.TURNSTILE_SITE_KEY }}
         run: npm run build
 
       # Assemble only the runtime files — no src/, tests/, node_modules/, configs.

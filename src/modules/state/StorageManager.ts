@@ -178,6 +178,18 @@ export class StorageManager {
       console.error(`Failed to set item '${key}' in storage:`, error);
     }
   }
+
+  /**
+   * Remove a single key from storage
+   * @param key - Storage key
+   */
+  static remove(key: string): void {
+    try {
+      storage.removeItem(key);
+    } catch (error) {
+      console.error(`Failed to remove item '${key}' from storage:`, error);
+    }
+  }
 }
 
 export default StorageManager;

@@ -60,13 +60,15 @@ export class BackendClient {
   }
 
   /** Request a magic-link email. Returns true if the request was accepted. */
-  static async requestMagicLink(email: string): Promise<boolean> {
+  static async requestMagicLink(email: string, turnstileToken?: string): Promise<boolean> {
     if (!this.isConfigured()) return false;
     try {
+      const body: Record<string, string> = { email };
+      if (turnstileToken) body.turnstileToken = turnstileToken;
       const resp = await fetch(`${this.baseUrl()}/api/auth/request`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email })
+        body: JSON.stringify(body)
       });
       return resp.ok;
     } catch {

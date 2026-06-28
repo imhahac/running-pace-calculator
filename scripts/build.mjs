@@ -46,7 +46,8 @@ await build({
   // falls back to the user-entered settings exactly as before.
   define: {
     __GAS_API_URL__: JSON.stringify(process.env.GAS_API_URL ?? ''),
-    __BACKEND_URL__: JSON.stringify(process.env.BACKEND_URL ?? '')
+    __BACKEND_URL__: JSON.stringify(process.env.BACKEND_URL ?? ''),
+    __TURNSTILE_SITE_KEY__: JSON.stringify(process.env.TURNSTILE_SITE_KEY ?? '')
   },
   plugins: [resolveTsJs]
 });
