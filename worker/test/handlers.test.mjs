@@ -180,3 +180,66 @@ test('POST /api/races/refresh: admin-gated; on-demand crawl (stubbed) populates 
     globalThis.fetch = origFetch;
   }
 });
+
+test('POST /api/auth/request: succeeds without Turnstile configured', async () => {
+  const env = makeEnv(); // no TURNSTILE_SECRET
+  const res = await worker.fetch(
+    req('POST', '/api/auth/request', { body: { email: 'a@test.com' } }),
+    env
+  );
+  assert.equal(res.status, 200);
+});
+
+test('POST /api/auth/request: per-IP cap → 429 after IP_MAX (distinct emails)', async () => {
+  const env = makeEnv();
+  // Distinct emails bypass the per-email cap; same (absent) IP shares rl:ip:unknown.
+  let last = 200;
+  for (let i = 0; i < 12; i += 1) {
+    const r = await worker.fetch(
+      req('POST', '/api/auth/request', { body: { email: `u${i}@test.com` } }),
+      env
+    );
+    last = r.status;
+  }
+  assert.equal(last, 429); // IP_MAX (10) exceeded
+});
+
+test('POST /api/auth/request: global daily cap → 429', async () => {
+  const env = makeEnv();
+  const today = new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+  await env.KV.put(`send:count:${today}`, '80'); // at GLOBAL_DAILY_MAX
+  const res = await worker.fetch(
+    req('POST', '/api/auth/request', { body: { email: 'fresh@test.com' } }),
+    env
+  );
+  assert.equal(res.status, 429);
+});
+
+test('POST /api/auth/request: Turnstile enabled rejects bad token (403), accepts good (200)', async () => {
+  const env = makeEnv({ TURNSTILE_SECRET: 'sek' });
+  const origFetch = globalThis.fetch;
+  let verdict = false;
+  globalThis.fetch = async (url) => {
+    if (String(url).includes('siteverify')) {
+      return new Response(JSON.stringify({ success: verdict }), { status: 200 });
+    }
+    return new Response('', { status: 200 });
+  };
+  try {
+    verdict = false;
+    const bad = await worker.fetch(
+      req('POST', '/api/auth/request', { body: { email: 'b@test.com', turnstileToken: 'x' } }),
+      env
+    );
+    assert.equal(bad.status, 403);
+
+    verdict = true;
+    const good = await worker.fetch(
+      req('POST', '/api/auth/request', { body: { email: 'c@test.com', turnstileToken: 'ok' } }),
+      env
+    );
+    assert.equal(good.status, 200);
+  } finally {
+    globalThis.fetch = origFetch;
+  }
+});

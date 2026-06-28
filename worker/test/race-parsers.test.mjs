@@ -2,7 +2,13 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { parseMwRaces, parseBijiRaces, mergeRaces, pruneExpiredRaces } from '../src/lib.js';
+import {
+  parseMwRaces,
+  parseBijiRaces,
+  mergeRaces,
+  pruneExpiredRaces,
+  overLimit
+} from '../src/lib.js';
 
 const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
@@ -133,4 +139,14 @@ test('pruneExpiredRaces drops races before cutoff, keeps cutoff/future/undated',
 test('pruneExpiredRaces tolerates non-array input', () => {
   assert.deepEqual(pruneExpiredRaces(null, '2026-06-10'), { list: [], removed: 0 });
   assert.deepEqual(pruneExpiredRaces(undefined, '2026-06-10'), { list: [], removed: 0 });
+});
+
+test('overLimit: counts at/above max are limited; null/blank treated as 0', () => {
+  assert.equal(overLimit(null, 10), false);
+  assert.equal(overLimit('0', 10), false);
+  assert.equal(overLimit('9', 10), false);
+  assert.equal(overLimit('10', 10), true);
+  assert.equal(overLimit('11', 10), true);
+  assert.equal(overLimit('', 1), false);
+  assert.equal(overLimit('garbage', 1), false); // unparseable → 0
 });

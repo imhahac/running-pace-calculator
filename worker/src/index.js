@@ -25,6 +25,7 @@ import {
   parseBijiRaces,
   mergeRaces,
   pruneExpiredRaces,
+  overLimit,
   safeParseArray,
   validateRaces,
   sha256Hex
@@ -34,6 +35,13 @@ const MAGIC_TTL_S = 900; // 15 min
 const SESSION_TTL_S = 60 * 60 * 24 * 30; // 30 days
 const RATE_TTL_S = 60; // 1 magic-link request per email per minute
 const MAX_DATA_BYTES = 100 * 1024; // per-user sync blob cap (DoS / KV-quota guard)
+// Magic-link abuse guards (on top of the per-email limit). Random-email floods
+// from one host hit the per-IP cap; a distributed flood hits the global daily
+// cap, which is kept under the SendGrid free quota (~100/day) to protect it.
+const IP_MAX = 10; // magic-link requests per IP per window
+const IP_WINDOW_S = 3600; // 1 hour
+const GLOBAL_DAILY_MAX = 80; // total magic-link sends per day
+const GLOBAL_DAILY_TTL_S = 60 * 60 * 48; // 2 days (key is per-day)
 // Race sources (see scheduled()). marathonsworld's racePage.php returns the full
 // list to a plain POST (no session cookie needed — confirmed); biji.co's
 // ?q=competition page is server-rendered HTML.
@@ -48,9 +56,31 @@ const UA =
 // race lingers a week so users can still look it up), computed in Asia/Taipei
 // since the races are Taiwan events (Worker runs UTC; Taiwan = UTC+8, no DST).
 const PRUNE_GRACE_DAYS = 7;
+/** Today in Asia/Taipei as YYYY-MM-DD (also used for the daily send-count key). */
+function taipeiTodayISO() {
+  return new Date(Date.now() + 8 * 3600 * 1000).toISOString().slice(0, 10);
+}
 function raceCutoffISO() {
   const ms = Date.now() + 8 * 3600 * 1000 - PRUNE_GRACE_DAYS * 86400000;
   return new Date(ms).toISOString().slice(0, 10);
+}
+
+/** Verify a Cloudflare Turnstile token (only called when TURNSTILE_SECRET is set). */
+async function verifyTurnstile(env, token, ip) {
+  const form = new URLSearchParams();
+  form.set('secret', env.TURNSTILE_SECRET);
+  form.set('response', token || '');
+  if (ip) form.set('remoteip', ip);
+  try {
+    const resp = await fetch('https://challenges.cloudflare.com/turnstile/v0/siteverify', {
+      method: 'POST',
+      body: form
+    });
+    const data = await resp.json();
+    return !!(data && data.success === true);
+  } catch {
+    return false;
+  }
 }
 
 function corsHeaders(env, request) {
@@ -183,11 +213,42 @@ async function handleAuthRequest(env, request) {
   const email = normalizeEmail(body.email);
   if (!isValidEmail(email)) return json({ error: 'invalid email' }, 400, env, request);
 
+  // Turnstile (only when configured) — block bots before consuming any quota.
+  if (env.TURNSTILE_SECRET) {
+    const ok = await verifyTurnstile(
+      env,
+      body.turnstileToken,
+      request.headers.get('CF-Connecting-IP')
+    );
+    if (!ok) return json({ error: 'turnstile_failed' }, 403, env, request);
+  }
+
+  // Per-IP cap (random-email flooding from one host).
+  const ip = request.headers.get('CF-Connecting-IP') || 'unknown';
+  const ipKey = `rl:ip:${ip}`;
+  const ipCount = await env.KV.get(ipKey);
+  if (overLimit(ipCount, IP_MAX)) return json({ error: 'rate_limited' }, 429, env, request);
+
+  // Global daily cap — protects the SendGrid quota even under a distributed flood.
+  const gKey = `send:count:${taipeiTodayISO()}`;
+  const gCount = await env.KV.get(gKey);
+  if (overLimit(gCount, GLOBAL_DAILY_MAX))
+    return json({ error: 'rate_limited' }, 429, env, request);
+
+  // Per-email cap (existing).
   const rlKey = `rl:${email}`;
   if (await env.KV.get(rlKey)) {
     return json({ error: 'rate_limited' }, 429, env, request);
   }
   await env.KV.put(rlKey, '1', { expirationTtl: RATE_TTL_S });
+
+  // Consume the IP + global counters now that this request will send an email.
+  await env.KV.put(ipKey, String((parseInt(ipCount || '0', 10) || 0) + 1), {
+    expirationTtl: IP_WINDOW_S
+  });
+  await env.KV.put(gKey, String((parseInt(gCount || '0', 10) || 0) + 1), {
+    expirationTtl: GLOBAL_DAILY_TTL_S
+  });
 
   const token = randomId();
   // Store only the token HASH — a KV/log exposure can't then replay live links.
@@ -327,6 +388,19 @@ async function refreshRaces(env) {
   return { added: totalAdded, removed, total: list.length, updatedAt, sources: report };
 }
 
+// Route table — matched by exact method + path. Handlers receive
+// (env, request, url); most ignore url (only handleAuthVerify needs it).
+const ROUTES = [
+  { method: 'GET', path: '/api/races', handler: handleGetRaces },
+  { method: 'POST', path: '/api/races/refresh', handler: handleRacesRefresh },
+  { method: 'PUT', path: '/api/races', handler: handlePutRaces },
+  { method: 'POST', path: '/api/auth/request', handler: handleAuthRequest },
+  { method: 'GET', path: '/api/auth/verify', handler: handleAuthVerify },
+  { method: 'POST', path: '/api/auth/logout', handler: handleAuthLogout },
+  { method: 'GET', path: '/api/data', handler: handleGetData },
+  { method: 'PUT', path: '/api/data', handler: handlePutData }
+];
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
@@ -337,20 +411,8 @@ export default {
     }
 
     try {
-      if (pathname === '/api/races' && request.method === 'GET')
-        return handleGetRaces(env, request);
-      if (pathname === '/api/races/refresh' && request.method === 'POST')
-        return handleRacesRefresh(env, request);
-      if (pathname === '/api/races' && request.method === 'PUT')
-        return handlePutRaces(env, request);
-      if (pathname === '/api/auth/request' && request.method === 'POST')
-        return handleAuthRequest(env, request);
-      if (pathname === '/api/auth/verify' && request.method === 'GET')
-        return handleAuthVerify(env, request, url);
-      if (pathname === '/api/auth/logout' && request.method === 'POST')
-        return handleAuthLogout(env, request);
-      if (pathname === '/api/data' && request.method === 'GET') return handleGetData(env, request);
-      if (pathname === '/api/data' && request.method === 'PUT') return handlePutData(env, request);
+      const route = ROUTES.find((r) => r.method === request.method && r.path === pathname);
+      if (route) return route.handler(env, request, url);
       return json({ error: 'not_found' }, 404, env, request);
     } catch (err) {
       console.log('[worker] error:', err && err.stack ? err.stack : String(err));

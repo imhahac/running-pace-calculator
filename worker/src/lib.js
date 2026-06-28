@@ -191,6 +191,12 @@ export function pruneExpiredRaces(list, cutoffISO) {
   return { list: kept, removed: list.length - kept.length };
 }
 
+/** Whether a KV counter string (e.g. '3', null) has reached `max`. */
+export function overLimit(countStr, max) {
+  const n = parseInt(countStr || '0', 10);
+  return (Number.isFinite(n) ? n : 0) >= max;
+}
+
 const stripTags = (s) =>
   String(s || '')
     .replace(/<[^>]*>/g, '')
