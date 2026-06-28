@@ -166,8 +166,12 @@ test('POST /api/races/refresh: admin-gated; on-demand crawl (stubbed) populates 
     assert.equal(out.ok, true);
     assert.equal(out.sources.biji.fetched, 2);
     assert.equal(out.sources.marathonsworld.fetched, 3);
-    assert.equal(out.added, 5); // 2 + 3, no overlap
-    assert.equal(JSON.parse(await env.KV.get('races')).length, 5);
+    assert.equal(out.added, 5); // 2 + 3 merged (counted before expiry pruning)
+    // KV holds the merged list minus any expired races pruned on write. The
+    // fixtures include past-dated races, so assert the bookkeeping is consistent
+    // (length = added − removed) rather than a time-sensitive absolute count.
+    assert.equal(typeof out.removed, 'number');
+    assert.equal(JSON.parse(await env.KV.get('races')).length, out.added - out.removed);
 
     // GET now exposes the last-updated timestamp header.
     const list = await worker.fetch(req('GET', '/api/races'), env);

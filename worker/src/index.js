@@ -24,6 +24,7 @@ import {
   parseMwRaces,
   parseBijiRaces,
   mergeRaces,
+  pruneExpiredRaces,
   safeParseArray,
   validateRaces,
   sha256Hex
@@ -42,6 +43,15 @@ const MW_BODY = 'action=getRaceListByCountryYear&user_id=1&country=1&year=0&sort
 const BIJI_URL = 'https://running.biji.co/?q=competition';
 const UA =
   'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+
+// Expired-race cleanup: drop races more than PRUNE_GRACE_DAYS past (a finished
+// race lingers a week so users can still look it up), computed in Asia/Taipei
+// since the races are Taiwan events (Worker runs UTC; Taiwan = UTC+8, no DST).
+const PRUNE_GRACE_DAYS = 7;
+function raceCutoffISO() {
+  const ms = Date.now() + 8 * 3600 * 1000 - PRUNE_GRACE_DAYS * 86400000;
+  return new Date(ms).toISOString().slice(0, 10);
+}
 
 function corsHeaders(env, request) {
   return {
@@ -130,7 +140,10 @@ async function handleGetRaces(env, request) {
   // Tolerate corrupt/non-array KV content rather than throwing a 500.
   const races = safeParseArray(await env.KV.get('races'));
   const updated = (await env.KV.get('races_updated_at')) || '';
-  return json(races, 200, env, request, {
+  // Defence-in-depth: filter expired races at serve time too, so a not-yet-run
+  // cron (or any unpruned source) never surfaces stale races to clients.
+  const { list } = pruneExpiredRaces(races, raceCutoffISO());
+  return json(list, 200, env, request, {
     'Cache-Control': 'public, max-age=300',
     'X-Races-Updated': updated
   });
@@ -300,12 +313,18 @@ async function refreshRaces(env) {
   const updatedAt = new Date().toISOString();
   // Write when anything was fetched: new races may have been added AND existing
   // ones backfilled (distances/source), so persist even when added === 0.
+  // Prune expired races on the way out so KV stays lean (only when a source
+  // succeeded, so a transient all-source failure never wipes data).
+  let removed = 0;
   if (totalFetched > 0) {
+    const pruned = pruneExpiredRaces(list, raceCutoffISO());
+    list = pruned.list;
+    removed = pruned.removed;
     await env.KV.put('races', JSON.stringify(list));
     await env.KV.put('races_updated_at', updatedAt);
   }
-  console.log(`[refresh] total merged: ${totalAdded} new races`);
-  return { added: totalAdded, total: list.length, updatedAt, sources: report };
+  console.log(`[refresh] total merged: ${totalAdded} new races, pruned ${removed} expired`);
+  return { added: totalAdded, removed, total: list.length, updatedAt, sources: report };
 }
 
 export default {

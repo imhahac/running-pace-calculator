@@ -176,6 +176,21 @@ export function mergeRaces(existing, fresh) {
   return { list, added };
 }
 
+/**
+ * Drop races whose date is before `cutoffISO` (YYYY-MM-DD). Entries with an
+ * empty or unparseable date are KEPT — we don't classify what we can't read as
+ * expired. String comparison on YYYY-MM-DD is equivalent to date comparison.
+ */
+export function pruneExpiredRaces(list, cutoffISO) {
+  if (!Array.isArray(list)) return { list: [], removed: 0 };
+  const kept = list.filter((r) => {
+    const d = String((r && r.date) || '');
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(d)) return true;
+    return d >= cutoffISO;
+  });
+  return { list: kept, removed: list.length - kept.length };
+}
+
 const stripTags = (s) =>
   String(s || '')
     .replace(/<[^>]*>/g, '')

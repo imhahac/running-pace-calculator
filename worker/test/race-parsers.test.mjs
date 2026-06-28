@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 import { readFileSync } from 'node:fs';
 
-import { parseMwRaces, parseBijiRaces, mergeRaces } from '../src/lib.js';
+import { parseMwRaces, parseBijiRaces, mergeRaces, pruneExpiredRaces } from '../src/lib.js';
 
 const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta.url), 'utf8');
 
@@ -112,4 +112,25 @@ test('mergeRaces backfills empty fields on existing entries without overwriting'
   assert.equal(list[0].source, 'marathonsworld');
   assert.equal(list[0].location, '宜蘭縣');
   assert.equal(list[0].gpxFull, 'admin.gpx'); // non-empty → preserved
+});
+
+test('pruneExpiredRaces drops races before cutoff, keeps cutoff/future/undated', () => {
+  const races = [
+    { date: '2026-06-01', name: 'past' }, // before cutoff → drop
+    { date: '2026-06-10', name: 'cutoff' }, // == cutoff → keep
+    { date: '2026-12-31', name: 'future' }, // after → keep
+    { date: '', name: 'no-date' }, // empty → keep (unclassifiable)
+    { date: 'not a date', name: 'bad-date' } // unparseable → keep
+  ];
+  const { list, removed } = pruneExpiredRaces(races, '2026-06-10');
+  assert.equal(removed, 1);
+  assert.deepEqual(
+    list.map((r) => r.name),
+    ['cutoff', 'future', 'no-date', 'bad-date']
+  );
+});
+
+test('pruneExpiredRaces tolerates non-array input', () => {
+  assert.deepEqual(pruneExpiredRaces(null, '2026-06-10'), { list: [], removed: 0 });
+  assert.deepEqual(pruneExpiredRaces(undefined, '2026-06-10'), { list: [], removed: 0 });
 });
