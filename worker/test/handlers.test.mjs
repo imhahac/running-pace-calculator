@@ -165,8 +165,8 @@ test('POST /api/races/refresh: admin-gated; on-demand crawl (stubbed) populates 
     const out = await res.json();
     assert.equal(out.ok, true);
     assert.equal(out.sources.biji.fetched, 2);
-    assert.equal(out.sources.marathonsworld.fetched, 3);
-    assert.equal(out.added, 5); // 2 + 3 merged (counted before expiry pruning)
+    assert.equal(out.sources.marathonsworld.fetched, 2); // 3 rows − 1 不限地點 virtual
+    assert.equal(out.added, 4); // 2 + 2 merged (counted before expiry pruning)
     // KV holds the merged list minus any expired races pruned on write. The
     // fixtures include past-dated races, so assert the bookkeeping is consistent
     // (length = added − removed) rather than a time-sensitive absolute count.

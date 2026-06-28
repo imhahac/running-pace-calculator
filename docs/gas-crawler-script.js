@@ -238,12 +238,15 @@ function parseMwHtml_(html) {
     var date = normalizeDate_(year + '-' + dm[1] + '-' + dm[2]);
     if (!name || !date) continue;
     var loc = row.match(/width='150'[^>]*>([\s\S]*?)<\/td>/);
+    var location = loc ? stripTags_(loc[1]) : '';
+    // 略過馬拉松世界的虛擬/線上挑戰(星座月賽、雙人賽、健行季…):地點為「不限地點」、非實體賽事。
+    if (/不限/.test(location)) continue;
     var dist = row.match(/width='130'[^>]*>([\s\S]*?)<\/td>/);
     races.push(
       makeRace_(
         date,
         name,
-        loc ? stripTags_(loc[1]) : '',
+        location,
         'https://www.marathonsworld.com/artapp/racedetail.php?rid=' + rid[1],
         dist ? stripTags_(dist[1]) : '',
         ''

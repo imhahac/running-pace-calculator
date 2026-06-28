@@ -234,12 +234,16 @@ export function parseMwRaces(html) {
     const date = normalizeRaceDate(`${year}-${dm[1]}-${dm[2]}`);
     if (!name || !date) continue;
     const loc = row.match(/width='150'[^>]*>([\s\S]*?)<\/td>/);
+    const location = loc ? stripTags(loc[1]) : '';
+    // Skip 馬拉松世界's virtual/online challenges (zodiac monthly series, 雙人賽,
+    // 健行季…): they carry location 不限地點 and aren't dated on-site races.
+    if (/不限/.test(location)) continue;
     const dist = row.match(/width='130'[^>]*>([\s\S]*?)<\/td>/); // 組別 / distances cell
     out.push({
       id: '',
       date,
       name,
-      location: loc ? stripTags(loc[1]) : '',
+      location,
       distances: dist ? stripTags(dist[1]) : '',
       regClose: '', // marathonsworld list has no registration deadline
       source: 'marathonsworld',

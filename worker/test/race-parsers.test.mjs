@@ -14,7 +14,9 @@ const fixture = (name) => readFileSync(new URL(`./fixtures/${name}`, import.meta
 
 test('parseMwRaces: parses rows, tracks year across YYYY年M月 headers, cleans name', () => {
   const races = parseMwRaces(fixture('mw-racelist.html'));
-  assert.equal(races.length, 3);
+  // 3 rows in the fixture, but the 不限地點 virtual challenge (rid=24261) is dropped.
+  assert.equal(races.length, 2);
+  assert.ok(!races.some((r) => r.registrationLink.endsWith('rid=24261')));
 
   const taipingshan = races.find((r) => r.registrationLink.endsWith('rid=23897'));
   assert.ok(taipingshan);
@@ -40,6 +42,22 @@ test('parseMwRaces: non-matching / empty input → []', () => {
   assert.deepEqual(parseMwRaces('<html>no races here</html>'), []);
   assert.deepEqual(parseMwRaces(''), []);
   assert.deepEqual(parseMwRaces(null), []);
+});
+
+test('parseMwRaces: skips 不限地點 virtual challenges (zodiac series), keeps real races', () => {
+  const html =
+    '2026年7月' +
+    "<tr class='ColorBar9'><td>07/05(日)</td>" +
+    "<td><a href='racedetail.php?rid=100' class='FontV1-BlackS'>真實馬拉松</a></td>" +
+    "<td width='150'>臺北市</td><td width='130'>全馬 | 半馬</td></tr>" +
+    "<tr class='ColorBar11'><td>07/11(六)</td>" +
+    "<td><a href='racedetail.php?rid=24353' class='FontV1-BlackS'>2026-7月巨蟹座 Cancer (07/10~19)</a></td>" +
+    "<td width='150'>不限地點</td><td width='130'>全馬 | 半馬</td></tr>";
+  const races = parseMwRaces(html);
+  assert.equal(races.length, 1);
+  assert.equal(races[0].name, '真實馬拉松');
+  assert.equal(races[0].location, '臺北市');
+  assert.ok(!races.some((r) => /巨蟹座/.test(r.name)));
 });
 
 test('parseBijiRaces: full date from calendar dates=, place + cid link', () => {
@@ -74,7 +92,7 @@ test('crawled races from both sources merge with dedupe (date_name)', () => {
   const biji = parseBijiRaces(fixture('biji.html'));
   let { list } = mergeRaces([], mw);
   ({ list } = mergeRaces(list, biji));
-  assert.equal(list.length, 5); // 3 + 2, no overlap
+  assert.equal(list.length, 4); // 2 MW (不限地點 dropped) + 2 biji, no overlap
   // Re-merging the same sources adds nothing.
   const { added } = mergeRaces(list, [...mw, ...biji]);
   assert.equal(added, 0);
