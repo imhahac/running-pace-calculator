@@ -101,3 +101,33 @@ test('fetchRaces returns empty list when cache is corrupted and api fails', asyn
   w.fetch = originalFetch;
   w.localStorage = originalLocalStorage;
 });
+
+test('fetchRaces serves fresh cache immediately then revalidates in background', async () => {
+  const w = globalThis as unknown as Record<string, unknown>;
+  const originalFetch = w.fetch;
+  const originalLocalStorage = w.localStorage;
+  w.localStorage = createMemoryStorage();
+  RaceDataManager.setApiUrl('https://example.com/races');
+
+  // Seed a fresh cache via a forced fetch (old data + old timestamp).
+  let updated = '2026-06-01T00:00:00Z';
+  let payload = [{ id: 'a', date: '2026-06-01', name: 'Old Race' }];
+  w.fetch = async () => ({ ok: true, headers: { get: () => updated }, json: async () => payload });
+  await RaceDataManager.fetchRaces(true);
+  assert.equal(RaceDataManager.getUpdatedAt(), '2026-06-01T00:00:00Z');
+
+  // Backend now has newer data. A non-forced fetch returns the cached (stale)
+  // data immediately, then the background revalidate swaps in the fresh data.
+  updated = '2026-07-02T18:00:00Z';
+  payload = [{ id: 'b', date: '2026-07-02', name: 'New Race' }];
+  const served = await RaceDataManager.fetchRaces(false);
+  assert.equal(served[0].name, 'Old Race'); // stale-while-revalidate: instant cache
+
+  // Let the background revalidate finish.
+  await new Promise((r) => setTimeout(r, 20));
+  assert.equal(RaceDataManager.getUpdatedAt(), '2026-07-02T18:00:00Z');
+  assert.equal(RaceDataManager.getRaces()[0].name, 'New Race');
+
+  w.fetch = originalFetch;
+  w.localStorage = originalLocalStorage;
+});

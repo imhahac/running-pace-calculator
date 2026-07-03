@@ -1,7 +1,7 @@
 import type { IRaceEvent } from '../../types/index';
 
 const CACHE_KEY = 'pace_calc_race_data_cache';
-const CACHE_TTL_MS = 4 * 60 * 60 * 1000; // 4 hours
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour — fast path; a background revalidate keeps it fresh
 
 interface ICacheData {
   timestamp: number;
@@ -43,6 +43,7 @@ export class RaceDataManager {
   private static apiBaseUrl: string = '';
   private static races: IRaceEvent[] = [];
   private static updatedAt: string = '';
+  private static revalidating = false;
 
   static setApiUrl(url: string) {
     this.apiBaseUrl = url;
@@ -66,59 +67,31 @@ export class RaceDataManager {
   }
 
   /**
-   * Fetch races from GAS API, utilizing localStorage cache
+   * Fetch races (stale-while-revalidate). A fresh cache paints instantly and a
+   * background revalidate then refreshes it — so a stale cache can never persist
+   * across loads. `forceRefresh` skips the cache and awaits the network.
    */
   static async fetchRaces(forceRefresh = false): Promise<IRaceEvent[]> {
     if (!this.apiBaseUrl) return [];
 
-    try {
-      if (!forceRefresh) {
-        const cached = readCache();
-        if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-          this.races = cached.data;
-          this.updatedAt = cached.updatedAt || '';
+    if (!forceRefresh) {
+      const cached = readCache();
+      if (cached) {
+        this.races = cached.data;
+        this.updatedAt = cached.updatedAt || '';
+        if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
+          void this.revalidate(); // refresh in the background; emits 'races-updated' on change
           return this.races;
         }
       }
+    }
 
-      // Abort the request if it hangs so we fall back to cache instead of
-      // leaving the UI waiting on a stalled network indefinitely.
-      const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 10000);
-      let response: Response;
-      try {
-        response = await fetch(this.apiBaseUrl, { signal: controller.signal });
-      } finally {
-        clearTimeout(timeoutId);
-      }
-      if (!response.ok) throw new Error('API response error');
-
-      const data: Partial<IRaceEvent>[] = await response.json();
-      this.races = data.map((item) => ({
-        // Crawler-sourced races carry no id (the Worker emits id: ''); derive a
-        // stable one from date+name so the selector's getRaceById works and the
-        // value survives cache + refreshes (GAS already supplies "race_N").
-        id: item.id || `${item.date || ''}_${item.name || ''}`,
-        date: item.date || '',
-        name: item.name || '',
-        location: item.location || '',
-        registrationLink: item.registrationLink || '',
-        stravaFull: item.stravaFull || '',
-        stravaHalf: item.stravaHalf || '',
-        gpxFull: item.gpxFull || '',
-        gpxHalf: item.gpxHalf || '',
-        distances: item.distances || '',
-        regClose: item.regClose || '',
-        source: item.source || ''
-      }));
-      this.updatedAt = response.headers.get('X-Races-Updated') || '';
-
-      writeCache(this.races, this.updatedAt);
-
+    try {
+      await this.fetchFromNetwork();
       return this.races;
     } catch (err) {
       console.warn('Failed to fetch race data:', err);
-      // Fallback to cache if available even if expired, when offline
+      // Fallback to cache if available even if expired, when offline.
       const cached = readCache();
       if (cached) {
         this.races = cached.data;
@@ -126,6 +99,63 @@ export class RaceDataManager {
         return this.races;
       }
       return [];
+    }
+  }
+
+  /** Live fetch → normalise → update state + cache. Throws on network/HTTP error. */
+  private static async fetchFromNetwork(): Promise<void> {
+    // Abort if the request hangs so callers fall back to cache instead of
+    // leaving the UI waiting on a stalled network indefinitely.
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+    let response: Response;
+    try {
+      response = await fetch(this.apiBaseUrl, { signal: controller.signal });
+    } finally {
+      clearTimeout(timeoutId);
+    }
+    if (!response.ok) throw new Error('API response error');
+
+    const data: Partial<IRaceEvent>[] = await response.json();
+    this.races = data.map((item) => ({
+      // Crawler-sourced races carry no id (the Worker emits id: ''); derive a
+      // stable one from date+name so the selector's getRaceById works and the
+      // value survives cache + refreshes (GAS already supplies "race_N").
+      id: item.id || `${item.date || ''}_${item.name || ''}`,
+      date: item.date || '',
+      name: item.name || '',
+      location: item.location || '',
+      registrationLink: item.registrationLink || '',
+      stravaFull: item.stravaFull || '',
+      stravaHalf: item.stravaHalf || '',
+      gpxFull: item.gpxFull || '',
+      gpxHalf: item.gpxHalf || '',
+      distances: item.distances || '',
+      regClose: item.regClose || '',
+      source: item.source || ''
+    }));
+    this.updatedAt = response.headers.get('X-Races-Updated') || '';
+    writeCache(this.races, this.updatedAt);
+  }
+
+  /**
+   * Background refresh for the stale-while-revalidate path. Emits a
+   * `races-updated` window event when the backend's timestamp actually changed,
+   * so views re-render with fresh data without the user reloading.
+   */
+  private static async revalidate(): Promise<void> {
+    if (this.revalidating) return;
+    this.revalidating = true;
+    const before = this.updatedAt;
+    try {
+      await this.fetchFromNetwork();
+      if (this.updatedAt !== before && typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('races-updated'));
+      }
+    } catch {
+      /* keep showing cache; the next load retries */
+    } finally {
+      this.revalidating = false;
     }
   }
 

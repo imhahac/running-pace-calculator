@@ -128,6 +128,18 @@ export class AllRacesController {
       this.page += btn.dataset.act === 'next' ? 1 : -1;
       this.render();
     });
+    const refreshBtn = document.getElementById('all-races-refresh') as HTMLButtonElement | null;
+    refreshBtn?.addEventListener('click', () => {
+      refreshBtn.disabled = true;
+      void RaceDataManager.fetchRaces(true).finally(() => {
+        refreshBtn.disabled = false;
+        this.render();
+      });
+    });
+    // Background revalidate (stale-while-revalidate) finished with new data.
+    if (typeof window !== 'undefined') {
+      window.addEventListener('races-updated', () => this.render());
+    }
     void RaceDataManager.fetchRaces().then(() => this.render());
     this.render();
   }
@@ -199,6 +211,12 @@ export class AllRacesController {
 
     const searchEl = document.getElementById('all-races-search') as HTMLInputElement | null;
     if (searchEl) searchEl.placeholder = t.allraces_search_ph || '';
+    const refreshBtn = document.getElementById('all-races-refresh');
+    if (refreshBtn) {
+      const lbl = t.allraces_refresh || '重新整理';
+      refreshBtn.title = lbl;
+      refreshBtn.setAttribute('aria-label', lbl);
+    }
     const countEl = document.getElementById('all-races-count');
     const emptyEl = document.getElementById('all-races-empty');
 

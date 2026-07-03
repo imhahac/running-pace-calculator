@@ -1679,6 +1679,19 @@ input.diff {
     font-size: 0.85rem;
     color: var(--text-muted);
 }
+.races-refresh {
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    background: var(--bg-secondary);
+    color: var(--text-light);
+    cursor: pointer;
+    line-height: 1;
+}
+.races-refresh:disabled {
+    opacity: 0.5;
+    cursor: default;
+}
 .race-month {
     position: sticky;
     top: 0;
