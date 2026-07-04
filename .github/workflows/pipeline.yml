@@ -12,9 +12,11 @@ permissions:
   pages: write
   id-token: write
 
+# One deployment at a time, but never cancel an in-progress one — interrupting a
+# live Pages deploy causes "Deployment failed, try again later" (GitHub guidance).
 concurrency:
   group: 'pages'
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   # 階段 1：品質閘門 (Lint / Typecheck / Format / Test + Coverage)
