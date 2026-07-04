@@ -1692,6 +1692,15 @@ input.diff {
     opacity: 0.5;
     cursor: default;
 }
+.races-refresh.refreshing {
+    display: inline-block;
+    animation: rpc-spin 0.7s linear infinite;
+}
+@keyframes rpc-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
 .race-month {
     position: sticky;
     top: 0;

@@ -106,20 +106,27 @@ test('fetchRaces serves fresh cache immediately then revalidates in background',
   const w = globalThis as unknown as Record<string, unknown>;
   const originalFetch = w.fetch;
   const originalLocalStorage = w.localStorage;
-  w.localStorage = createMemoryStorage();
-  RaceDataManager.setApiUrl('https://example.com/races');
-
-  // Seed a fresh cache via a forced fetch (old data + old timestamp).
-  let updated = '2026-06-01T00:00:00Z';
-  let payload = [{ id: 'a', date: '2026-06-01', name: 'Old Race' }];
-  w.fetch = async () => ({ ok: true, headers: { get: () => updated }, json: async () => payload });
-  await RaceDataManager.fetchRaces(true);
-  assert.equal(RaceDataManager.getUpdatedAt(), '2026-06-01T00:00:00Z');
+  const url = 'https://example.com/races';
+  // Seed a cache that is within TTL (1h) but older than the revalidate floor
+  // (10min) so the background revalidate actually fires, and tagged with the URL.
+  const aged = Date.now() - 20 * 60 * 1000;
+  w.localStorage = createMemoryStorage({
+    pace_calc_race_data_cache: JSON.stringify({
+      timestamp: aged,
+      updatedAt: '2026-06-01T00:00:00Z',
+      url,
+      data: [{ id: 'a', date: '2026-06-01', name: 'Old Race' }]
+    })
+  });
+  RaceDataManager.setApiUrl(url);
 
   // Backend now has newer data. A non-forced fetch returns the cached (stale)
   // data immediately, then the background revalidate swaps in the fresh data.
-  updated = '2026-07-02T18:00:00Z';
-  payload = [{ id: 'b', date: '2026-07-02', name: 'New Race' }];
+  w.fetch = async () => ({
+    ok: true,
+    headers: { get: () => '2026-07-02T18:00:00Z' },
+    json: async () => [{ id: 'b', date: '2026-07-02', name: 'New Race' }]
+  });
   const served = await RaceDataManager.fetchRaces(false);
   assert.equal(served[0].name, 'Old Race'); // stale-while-revalidate: instant cache
 
@@ -127,6 +134,51 @@ test('fetchRaces serves fresh cache immediately then revalidates in background',
   await new Promise((r) => setTimeout(r, 20));
   assert.equal(RaceDataManager.getUpdatedAt(), '2026-07-02T18:00:00Z');
   assert.equal(RaceDataManager.getRaces()[0].name, 'New Race');
+
+  w.fetch = originalFetch;
+  w.localStorage = originalLocalStorage;
+});
+
+test('fetchRaces ignores a cache written for a different backend URL', async () => {
+  const w = globalThis as unknown as Record<string, unknown>;
+  const originalFetch = w.fetch;
+  const originalLocalStorage = w.localStorage;
+  w.localStorage = createMemoryStorage({
+    pace_calc_race_data_cache: JSON.stringify({
+      timestamp: Date.now(),
+      updatedAt: 'x',
+      url: 'https://old.example/api/races',
+      data: [{ id: 'stale', date: '2026-01-01', name: 'Stale Backend' }]
+    })
+  });
+  RaceDataManager.setApiUrl('https://new.example/api/races');
+
+  w.fetch = async () => ({
+    ok: true,
+    headers: { get: () => '' },
+    json: async () => [{ id: 'r', date: '2026-09-09', name: 'Correct Backend' }]
+  });
+  const races = await RaceDataManager.fetchRaces(false);
+  assert.equal(races[0].name, 'Correct Backend'); // mismatched-URL cache ignored → refetched
+
+  w.fetch = originalFetch;
+  w.localStorage = originalLocalStorage;
+});
+
+test('fetchRaces treats a non-array payload as a failure', async () => {
+  const w = globalThis as unknown as Record<string, unknown>;
+  const originalFetch = w.fetch;
+  const originalLocalStorage = w.localStorage;
+  w.localStorage = createMemoryStorage();
+  RaceDataManager.setApiUrl('https://example.com/races');
+
+  w.fetch = async () => ({
+    ok: true,
+    headers: { get: () => '' },
+    json: async () => ({ error: 'x' })
+  });
+  const races = await RaceDataManager.fetchRaces(true);
+  assert.deepEqual(races, []); // {error} is not an array → thrown → empty (no cache)
 
   w.fetch = originalFetch;
   w.localStorage = originalLocalStorage;

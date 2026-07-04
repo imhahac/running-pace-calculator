@@ -131,8 +131,10 @@ export class AllRacesController {
     const refreshBtn = document.getElementById('all-races-refresh') as HTMLButtonElement | null;
     refreshBtn?.addEventListener('click', () => {
       refreshBtn.disabled = true;
+      refreshBtn.classList.add('refreshing');
       void RaceDataManager.fetchRaces(true).finally(() => {
         refreshBtn.disabled = false;
+        refreshBtn.classList.remove('refreshing');
         this.render();
       });
     });

@@ -131,6 +131,9 @@ export class UIController {
     RaceDataManager.setApiUrl(BackendClient.racesUrl() || StateManager.getGasApiUrl());
     RaceController.fetchAndPopulateRaces();
     AllRacesController.initialize();
+    // Keep the training-tab selector in sync when a background revalidate lands
+    // fresh data (AllRacesController re-renders itself on the same event).
+    window.addEventListener('races-updated', () => void RaceController.fetchAndPopulateRaces());
 
     void SyncController.initialize();
     VersionController.initialize();

@@ -2,14 +2,16 @@ import type { IRaceEvent } from '../../types/index';
 
 const CACHE_KEY = 'pace_calc_race_data_cache';
 const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour — fast path; a background revalidate keeps it fresh
+const REVALIDATE_MIN_AGE_MS = 10 * 60 * 1000; // don't background-refresh a cache younger than this
 
 interface ICacheData {
   timestamp: number;
   data: IRaceEvent[];
   updatedAt?: string;
+  url?: string; // backend URL the data came from — guards against a settings change
 }
 
-function readCache(): ICacheData | null {
+function readCache(url: string): ICacheData | null {
   try {
     const cached = localStorage.getItem(CACHE_KEY);
     if (!cached) return null;
@@ -17,6 +19,8 @@ function readCache(): ICacheData | null {
     const parsed = JSON.parse(cached) as Partial<ICacheData>;
     if (!parsed || typeof parsed !== 'object') return null;
     if (typeof parsed.timestamp !== 'number' || !Array.isArray(parsed.data)) return null;
+    // Ignore a cache written for a different backend URL (e.g. changed in settings).
+    if (parsed.url && parsed.url !== url) return null;
 
     return {
       timestamp: parsed.timestamp,
@@ -30,12 +34,8 @@ function readCache(): ICacheData | null {
   }
 }
 
-function writeCache(data: IRaceEvent[], updatedAt: string): void {
-  const cacheData: ICacheData = {
-    timestamp: Date.now(),
-    updatedAt,
-    data
-  };
+function writeCache(url: string, data: IRaceEvent[], updatedAt: string): void {
+  const cacheData: ICacheData = { timestamp: Date.now(), updatedAt, data, url };
   localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
 }
 
@@ -44,6 +44,7 @@ export class RaceDataManager {
   private static races: IRaceEvent[] = [];
   private static updatedAt: string = '';
   private static revalidating = false;
+  private static inFlight: Promise<void> | null = null;
 
   static setApiUrl(url: string) {
     this.apiBaseUrl = url;
@@ -75,12 +76,14 @@ export class RaceDataManager {
     if (!this.apiBaseUrl) return [];
 
     if (!forceRefresh) {
-      const cached = readCache();
+      const cached = readCache(this.apiBaseUrl);
       if (cached) {
         this.races = cached.data;
         this.updatedAt = cached.updatedAt || '';
         if (Date.now() - cached.timestamp < CACHE_TTL_MS) {
-          void this.revalidate(); // refresh in the background; emits 'races-updated' on change
+          // Skip a needless refresh for a very fresh cache; older ones revalidate
+          // in the background and emit 'races-updated' on change.
+          if (Date.now() - cached.timestamp > REVALIDATE_MIN_AGE_MS) void this.revalidate();
           return this.races;
         }
       }
@@ -92,7 +95,7 @@ export class RaceDataManager {
     } catch (err) {
       console.warn('Failed to fetch race data:', err);
       // Fallback to cache if available even if expired, when offline.
-      const cached = readCache();
+      const cached = readCache(this.apiBaseUrl);
       if (cached) {
         this.races = cached.data;
         this.updatedAt = cached.updatedAt || '';
@@ -102,40 +105,52 @@ export class RaceDataManager {
     }
   }
 
-  /** Live fetch → normalise → update state + cache. Throws on network/HTTP error. */
-  private static async fetchFromNetwork(): Promise<void> {
-    // Abort if the request hangs so callers fall back to cache instead of
-    // leaving the UI waiting on a stalled network indefinitely.
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 10000);
-    let response: Response;
-    try {
-      response = await fetch(this.apiBaseUrl, { signal: controller.signal });
-    } finally {
-      clearTimeout(timeoutId);
-    }
-    if (!response.ok) throw new Error('API response error');
+  /**
+   * Live fetch → normalise → update state + cache. Throws on network/HTTP error.
+   * Concurrent callers share one in-flight request (dedup), so the two controllers
+   * that both load races on startup don't fire duplicate GETs.
+   */
+  private static fetchFromNetwork(): Promise<void> {
+    if (this.inFlight) return this.inFlight;
+    this.inFlight = (async () => {
+      // Abort if the request hangs so callers fall back to cache instead of
+      // leaving the UI waiting on a stalled network indefinitely.
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 10000);
+      let response: Response;
+      try {
+        response = await fetch(this.apiBaseUrl, { signal: controller.signal });
+      } finally {
+        clearTimeout(timeoutId);
+      }
+      if (!response.ok) throw new Error('API response error');
 
-    const data: Partial<IRaceEvent>[] = await response.json();
-    this.races = data.map((item) => ({
-      // Crawler-sourced races carry no id (the Worker emits id: ''); derive a
-      // stable one from date+name so the selector's getRaceById works and the
-      // value survives cache + refreshes (GAS already supplies "race_N").
-      id: item.id || `${item.date || ''}_${item.name || ''}`,
-      date: item.date || '',
-      name: item.name || '',
-      location: item.location || '',
-      registrationLink: item.registrationLink || '',
-      stravaFull: item.stravaFull || '',
-      stravaHalf: item.stravaHalf || '',
-      gpxFull: item.gpxFull || '',
-      gpxHalf: item.gpxHalf || '',
-      distances: item.distances || '',
-      regClose: item.regClose || '',
-      source: item.source || ''
-    }));
-    this.updatedAt = response.headers.get('X-Races-Updated') || '';
-    writeCache(this.races, this.updatedAt);
+      const json: unknown = await response.json();
+      if (!Array.isArray(json)) throw new Error('unexpected races payload');
+      const data = json as Partial<IRaceEvent>[];
+      this.races = data.map((item) => ({
+        // Crawler-sourced races carry no id (the Worker emits id: ''); derive a
+        // stable one from date+name so the selector's getRaceById works and the
+        // value survives cache + refreshes (GAS already supplies "race_N").
+        id: item.id || `${item.date || ''}_${item.name || ''}`,
+        date: item.date || '',
+        name: item.name || '',
+        location: item.location || '',
+        registrationLink: item.registrationLink || '',
+        stravaFull: item.stravaFull || '',
+        stravaHalf: item.stravaHalf || '',
+        gpxFull: item.gpxFull || '',
+        gpxHalf: item.gpxHalf || '',
+        distances: item.distances || '',
+        regClose: item.regClose || '',
+        source: item.source || ''
+      }));
+      this.updatedAt = response.headers.get('X-Races-Updated') || '';
+      writeCache(this.apiBaseUrl, this.races, this.updatedAt);
+    })().finally(() => {
+      this.inFlight = null;
+    });
+    return this.inFlight;
   }
 
   /**
